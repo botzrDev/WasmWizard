@@ -4,9 +4,10 @@
 use std::path::PathBuf;
 use tokio::fs;
 use uuid::Uuid;
-use chrono::{Utc, Duration};
+use chrono::{Utc, Duration, DateTime};
 use tracing::{info, error}; // Using tracing for logging
 
+#[allow(dead_code)]
 /// Gets the base directory for temporary Wasm modules.
 /// Ensures the directory exists.
 pub async fn get_wasm_temp_dir() -> Result<PathBuf, std::io::Error> {
@@ -15,6 +16,7 @@ pub async fn get_wasm_temp_dir() -> Result<PathBuf, std::io::Error> {
     Ok(temp_dir)
 }
 
+#[allow(dead_code)]
 /// Creates a unique temporary file path for a Wasm module.
 pub async fn create_unique_wasm_file_path() -> Result<PathBuf, std::io::Error> {
     let temp_dir = get_wasm_temp_dir().await?;
@@ -22,6 +24,7 @@ pub async fn create_unique_wasm_file_path() -> Result<PathBuf, std::io::Error> {
     Ok(temp_dir.join(file_name))
 }
 
+#[allow(dead_code)]
 /// Initiates a background task to clean up old Wasm modules.
 /// This is a simplified example; a robust solution might involve a separate worker or cron job.
 pub fn start_wasm_cleanup_task() {
@@ -36,7 +39,7 @@ pub fn start_wasm_cleanup_task() {
         };
 
         loop {
-            tokio::time::sleep(tokio::time::Duration::from_hours(1)).await; // Run every hour
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await; // Run every hour
             info!("Running Wasm cleanup task...");
             let entries = match fs::read_dir(&temp_dir).await {
                 Ok(read_dir) => read_dir,

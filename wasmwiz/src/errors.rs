@@ -2,17 +2,20 @@
 // Defines custom error types for the application.
 
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
-use derive_more::{Display, Error};
+use derive_more::{Display, From};
 use sqlx::Error as SqlxError;
 use std::io::Error as IoError;
 use wasmer_wasi::WasiError;
 use wasmer::RuntimeError;
+use std::error::Error as StdError;
+use anyhow;
 
-#[derive(Debug, Display, Error)]
+#[allow(dead_code)]
+#[derive(Debug, Display, From)]
 pub enum ApiError {
     #[display(fmt = "Internal Server Error")]
-    #[error(transparent)]
-    InternalError(#[from] anyhow::Error), // Catch-all for unexpected errors
+    #[from]
+    InternalError(anyhow::Error), // Catch-all for unexpected errors
 
     #[display(fmt = "Bad Request: {}", _0)]
     BadRequest(String),
@@ -49,6 +52,15 @@ pub enum ApiError {
     // File I/O errors
     #[display(fmt = "File System Error: {}", _0)]
     FileIoError(String),
+}
+
+impl std::error::Error for ApiError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            ApiError::InternalError(err) => Some(err.root_cause()),
+            _ => None,
+        }
+    }
 }
 
 impl ResponseError for ApiError {

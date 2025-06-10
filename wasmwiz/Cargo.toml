@@ -53,6 +53,7 @@ dotenvy = "0.15"
 # For structured logging and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] } # Enables filtering logs by environment variables
+wasmer-wasi = "3.1.1"
 
 [dev-dependencies]
 # No specific dev dependencies mentioned for the MVP yet, but would go here if needed for specific testing utilities.
