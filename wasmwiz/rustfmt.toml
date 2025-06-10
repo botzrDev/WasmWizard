@@ -1,0 +1,53 @@
+# rustfmt.toml
+# This file configures the Rust formatter (rustfmt) for your project.
+# It ensures consistent code style across all contributors.
+
+# Use a specific edition for formatting
+edition = "2021"
+
+# Maximum width of lines (default is 100).
+# Adjust based on team preference. 120 is common for wider screens.
+max_width = 100
+
+# How to format imports.
+# Crate-level imports first, then external, then internal, then `self`.
+# `merge` combines multiple imports from the same crate into one line.
+imports_granularity = "Crate" # Or "Module" for more separation
+group_imports = "StdExternalCrate" # Groups standard library, then external, then crate-local
+
+# Whether to put braces on the same line as `if`, `while`, `for`, `match`, etc.
+# `Always` means braces on the same line as the keyword.
+# `Prefer` means it tries to, but will break if needed for line length.
+brace_style = "Always"
+
+# Use trailing commas in multi-line expressions.
+# Improves diffs and makes reordering easier.
+trailing_comma = "Vertical"
+
+# Whether to put a space after `pub` in `pub(crate)`.
+space_after_visibility_modifier = true
+
+# Wrap comments to `max_width`.
+wrap_comments = true
+
+# Use `->` on the same line as the function signature.
+fn_call_width = 80 # Maximum width before arguments are wrapped.
+fn_args_density = "Compressed" # How arguments are packed (e.g., `Compressed`, `Tall`).
+
+# Align struct fields, match arms, etc.
+binop_separator = "Back" # Place binary operators (`+`, `=`, `&&`) at the end of the line.
+
+# How to format where clauses.
+where_clause_layout = "Horizontal" # Or "Vertical" for more strict line breaks.
+
+# Denotes if `pub(crate)` is preferred over `pub(in crate)`.
+# This is mainly about how `rustfmt` writes things if `pub(crate)` is an option.
+# `true` means `pub(crate)` will be used, `false` means `pub(in crate)` is preferred.
+# Default is false in 2018 edition, true in 2021.
+# prefer_const_fn = true
+# prefer_impl_param_ty = true
+# type_complexity_threshold = 10
+# use_field_init_shorthand = true
+# use_try_shorthand = true
+# indent_style = "Block"
+# tab_spaces = 4

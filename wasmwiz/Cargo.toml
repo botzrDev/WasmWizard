@@ -1,6 +1,58 @@
+# Cargo.toml
+
 [package]
 name = "wasmwiz"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# Web server framework for high performance
+actix-web = "4"
+
+# For handling multipart form data (Wasm file uploads)
+actix-multipart = "0.6"
+
+# Core WebAssembly runtime for execution
+wasmer = "6.0.1" # Updated to latest stable version
+# WASI (WebAssembly System Interface) support for standard I/O
+# Using wasmer-wasix as it appears to be the actively maintained WASI crate for Wasmer v6.x
+wasmer-wasix = "0.600.1"
+
+# For JSON serialization/deserialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# For generating unique identifiers (UUIDs) for stored Wasm modules and API keys
+uuid = { version = "1.8", features = ["v4", "serde"] } # "v4" for random UUIDs, "serde" for serialization
+
+# For asynchronous operations
+tokio = { version = "1.38", features = ["full"] } # "full" is convenient for development; can be slimmed down later
+
+# For interacting with PostgreSQL database
+# "runtime-tokio-native-tls" for async runtime and TLS support
+# "postgres" for PostgreSQL driver
+# "uuid" and "chrono" features for direct mapping of UUID and DateTime types
+# "macros" for `query!` and `query_as!` macros
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
+
+# For hashing API keys (SHA-256)
+sha2 = "0.10"
+
+# For date and time handling (e.g., created_at, updated_at timestamps)
+chrono = { version = "0.4", features = ["serde"] } # "serde" feature for serialization/deserialization
+
+# For custom error handling with derive macros like `Display` and `Error`
+derive_more = { version = "0.99", features = ["display", "error"] }
+
+# For general-purpose error handling, used as the transparent source for ApiError::InternalError
+anyhow = "1.0"
+
+# For loading environment variables from a .env file during development
+dotenvy = "0.15"
+
+# For structured logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] } # Enables filtering logs by environment variables
+
+[dev-dependencies]
+# No specific dev dependencies mentioned for the MVP yet, but would go here if needed for specific testing utilities.
