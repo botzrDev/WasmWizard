@@ -1,18 +1,28 @@
 mod models;
 mod utils;
 mod errors;
+mod handlers;
+mod middleware;
+mod services;
+mod config;
 
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
+use actix_files as fs;
 use sqlx::PgPool;
 use tracing::{info, error};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use dotenvy::dotenv;
 
-use errors::ApiError;
 use utils::file_system;
+use handlers::{health, execute, web as web_handlers, api_keys};
+use middleware::{AuthMiddleware, RateLimitMiddleware};
+use services::DatabaseService;
+use config::Config;
 
 pub struct AppState {
     pub db_pool: PgPool,
+    pub db_service: DatabaseService,
+    pub config: Config,
 }
 
 #[actix_web::main] // Marks the main function as the Actix-web entry point
@@ -28,9 +38,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok(); // Doesn't fail if .env is not found
     info!(".env file loaded (if present).");
 
-    // 3. Database connection pool setup
-    let database_url = std::env::var("DATABASE_URL")
-        .map_err(|_| "DATABASE_URL must be set in .env or environment")?;
+    // 3. Load and validate configuration
+    let config = Config::from_env()
+        .map_err(|e| {
+            error!("Failed to load configuration: {:?}", e);
+            "Failed to load configuration"
+        })?;
+    config.validate()
+        .map_err(|e| {
+            error!("Configuration validation failed: {:?}", e);
+            "Configuration validation failed"
+        })?;
+    info!("Configuration loaded and validated.");
+
+    // 4. Database connection pool setup
+    let database_url = config.database_url.clone();
     info!("Attempting to connect to database...");
     let db_pool = PgPool::connect(&database_url).await
         .map_err(|e| {
@@ -39,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })?;
     info!("Database connection pool established.");
 
-    // 4. Run database migrations (optional for prod, but good for dev/CI)
+    // 5. Run database migrations (optional for prod, but good for dev/CI)
     info!("Running database migrations...");
     sqlx::migrate!("./migrations") // Path to your migrations directory
         .run(&db_pool)
@@ -50,21 +72,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })?;
     info!("Database migrations complete.");
 
-    // 5. Start Wasm cleanup task in a background thread
+    // 6. Create database service
+    let db_service = DatabaseService::new(db_pool.clone());
+    info!("Database service initialized.");
+
+    // 7. Start Wasm cleanup task in a background thread
     file_system::start_wasm_cleanup_task();
     info!("Wasm temporary file cleanup task started.");
 
-    // 6. Set up Actix-web server
-    info!("Starting Actix-web server...");
+    // 8. Set up Actix-web server
+    info!("Starting Actix-web server on {}:{}", config.server_host, config.server_port);
     HttpServer::new(move || {
+        let auth_middleware = AuthMiddleware::new(db_service.clone());
+        let rate_limit_middleware = RateLimitMiddleware::new();
+        
         App::new()
-            .app_data(web::Data::new(AppState { db_pool: db_pool.clone() })) // Pass shared state to handlers
-            // TODO: Add middleware here (e.g., tracing, authentication, rate limiting)
-            // .wrap(TracingLogger::default()) // Example: enable request logging
-            // TODO: Define API routes here
-            .service(web::resource("/execute").post(todo!())) // Placeholder for your /execute endpoint
+            .app_data(web::Data::new(AppState { 
+                db_pool: db_pool.clone(),
+                db_service: db_service.clone(),
+                config: config.clone(),
+            }))
+            // Health check endpoint (no auth required)
+            .service(web::resource("/health").get(health::health_check))
+            // Web interface routes (no auth required)
+            .service(web::resource("/").get(web_handlers::index))
+            .service(web::resource("/api-keys").get(web_handlers::api_keys))
+            // Static file serving (no auth required)
+            .service(fs::Files::new("/static", "./static").show_files_listing())
+            // Protected API endpoints with auth and rate limiting
+            .service(
+                web::scope("/api")
+                    .wrap(rate_limit_middleware)
+                    .wrap(auth_middleware)
+                    .service(web::resource("/execute").post(execute::execute_wasm))
+            )
+            // API key management endpoints (no auth required for now - would need admin auth in production)
+            .service(
+                web::scope("/admin")
+                    .service(web::resource("/api-keys").post(api_keys::create_api_key))
+                    .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
+                    .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key))
+            )
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind((config.server_host.as_str(), config.server_port))?
     .run()
     .await?;
 

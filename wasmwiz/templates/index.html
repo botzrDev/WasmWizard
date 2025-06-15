@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">Execute WebAssembly Module</h1>
+        <p class="card-description">
+            Upload a WebAssembly (.wasm) file and provide input to execute it securely in our sandboxed environment.
+        </p>
+    </div>
+
+    <form id="execute-form" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="wasm-file" class="form-label">WebAssembly File (.wasm)</label>
+            <div class="file-upload">
+                <input type="file" id="wasm-file" name="wasm" accept=".wasm" style="display: none;">
+                <div class="upload-content">
+                    <p>📁 Click to select a .wasm file or drag and drop here</p>
+                    <p class="text-secondary">Maximum file size: 10MB</p>
+                </div>
+            </div>
+            <div class="file-info"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="input-text" class="form-label">Input Data</label>
+            <textarea 
+                id="input-text" 
+                name="input" 
+                class="form-textarea" 
+                placeholder="Enter input data for your WebAssembly module (optional)..."
+                rows="6"
+            ></textarea>
+            <small class="text-secondary">Maximum input size: 1MB</small>
+        </div>
+
+        <div class="form-group">
+            <label for="api-key" class="form-label">API Key</label>
+            <input 
+                type="password" 
+                id="api-key" 
+                class="form-input" 
+                placeholder="Enter your API key..."
+                required
+            >
+            <small class="text-secondary">
+                Don't have an API key? <a href="/api-keys">Generate one here</a>
+            </small>
+        </div>
+
+        <div id="validation-errors"></div>
+
+        <button type="submit" id="submit-button" class="btn btn-primary">
+            Execute WASM
+        </button>
+    </form>
+</div>
+
+<div id="execution-result"></div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">How to Use</h2>
+    </div>
+    <ol>
+        <li><strong>Prepare your WebAssembly module:</strong> Compile your C, C++, or Rust code to WebAssembly using tools like Emscripten or wasm-pack.</li>
+        <li><strong>Upload the .wasm file:</strong> Select your compiled WebAssembly binary file.</li>
+        <li><strong>Provide input (optional):</strong> If your WASM module reads from stdin, provide the input data.</li>
+        <li><strong>Enter your API key:</strong> Use your API key for authentication and rate limiting.</li>
+        <li><strong>Execute:</strong> Click the execute button to run your WASM module securely.</li>
+    </ol>
+    
+    <div class="alert alert-warning">
+        <strong>Limitations:</strong>
+        <ul>
+            <li>Maximum execution time: 5 seconds</li>
+            <li>Maximum memory usage: 128MB</li>
+            <li>No file system access (except stdin/stdout)</li>
+            <li>No network access</li>
+            <li>No environment variables or random number generation</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// File upload interaction
+document.addEventListener('DOMContentLoaded', function() {
+    const fileUpload = document.querySelector('.file-upload');
+    const fileInput = document.querySelector('#wasm-file');
+    const apiKeyInput = document.querySelector('#api-key');
+    
+    // Load saved API key
+    const savedApiKey = localStorage.getItem('wasmwiz-api-key');
+    if (savedApiKey) {
+        apiKeyInput.value = savedApiKey;
+    }
+    
+    // Save API key when changed
+    apiKeyInput.addEventListener('change', function() {
+        localStorage.setItem('wasmwiz-api-key', this.value);
+    });
+    
+    // File upload click handler
+    fileUpload.addEventListener('click', function() {
+        fileInput.click();
+    });
+});
+</script>
+{% endblock %}

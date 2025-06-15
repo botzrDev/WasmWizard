@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">API Key Management</h1>
+        <p class="card-description">
+            Generate and manage your API keys for accessing the WasmWiz execution API.
+        </p>
+    </div>
+
+    <div class="alert alert-warning">
+        <strong>Important:</strong> API keys are only shown once upon generation. Make sure to copy and store them securely.
+    </div>
+
+    <!-- Create API Key Form -->
+    <form id="create-api-key-form">
+        <div class="form-group">
+            <label for="user-email" class="form-label">Email Address</label>
+            <input 
+                type="email" 
+                id="user-email" 
+                name="user_email"
+                class="form-input" 
+                placeholder="your.email@example.com"
+                required
+            >
+            <small class="text-secondary">Used to associate the API key with your account</small>
+        </div>
+
+        <div class="form-group">
+            <label for="tier-select" class="form-label">Subscription Tier</label>
+            <select id="tier-select" name="tier_name" class="form-select">
+                <option value="Free">Free Tier (10 req/min, 500 req/day)</option>
+                <option value="Basic">Basic Tier (100 req/min, 10,000 req/day)</option>
+                <option value="Pro">Pro Tier (500 req/min, 50,000 req/day)</option>
+            </select>
+        </div>
+
+        <button type="submit" id="generate-button" class="btn btn-primary">
+            Create API Key
+        </button>
+    </form>
+
+    <div id="create-key-result"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">List Existing API Keys</h2>
+        <p class="card-description">
+            View and manage existing API keys for a user.
+        </p>
+    </div>
+
+    <form id="list-api-keys-form">
+        <div class="form-group">
+            <label for="list-user-email" class="form-label">User Email</label>
+            <input 
+                type="email" 
+                id="list-user-email" 
+                name="user_email"
+                class="form-input" 
+                placeholder="user@example.com"
+                required
+            >
+        </div>
+
+        <button type="submit" id="list-button" class="btn btn-secondary">
+            List API Keys
+        </button>
+    </form>
+
+    <div id="list-keys-result"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Rate Limits by Tier</h2>
+    </div>
+    
+    <table class="rate-limits-table">
+        <thead>
+            <tr>
+                <th>Tier</th>
+                <th>Requests per Minute</th>
+                <th>Requests per Day</th>
+                <th>Memory Limit</th>
+                <th>Execution Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Free</strong></td>
+                <td>10</td>
+                <td>500</td>
+                <td>128MB</td>
+                <td>5 seconds</td>
+            </tr>
+            <tr>
+                <td><strong>Basic</strong></td>
+                <td>100</td>
+                <td>10,000</td>
+                <td>256MB</td>
+                <td>10 seconds</td>
+            </tr>
+            <tr>
+                <td><strong>Pro</strong></td>
+                <td>500</td>
+                <td>50,000</td>
+                <td>512MB</td>
+                <td>30 seconds</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Using Your API Key</h2>
+    </div>
+    
+    <p>Include your API key in the <code>Authorization</code> header when making requests:</p>
+    
+    <div class="code-output">curl -X POST "https://api.wasmwiz.com/execute" \
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \
+  -F "wasm=@your_module.wasm" \
+  -F "input=your input data"</div>
+    
+    <p>Or use it in the web interface above by entering it in the API Key field.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('generate-key-form');
+    const resultDiv = document.getElementById('generation-result');
+    const generateButton = document.getElementById('generate-button');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('user-email').value;
+        const tier = document.getElementById('tier-select').value;
+        
+        generateButton.disabled = true;
+        generateButton.innerHTML = '<span class="spinner"></span> Generating...';
+        
+        try {
+            const response = await fetch('/generate-key', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    tier: tier
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>API Key Generated Successfully!</strong>
+                        <div style="margin-top: 1rem;">
+                            <label class="form-label">Your API Key (copy this now):</label>
+                            <div class="code-output" style="user-select: all;">${result.api_key}</div>
+                            <button onclick="copyToClipboard('${result.api_key}')" class="btn btn-secondary" style="margin-top: 0.5rem;">
+                                Copy to Clipboard
+                            </button>
+                        </div>
+                        <p style="margin-top: 1rem; color: #dc2626;">
+                            ⚠️ This key will not be shown again. Save it securely!
+                        </p>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Generation Failed:</strong> ${result.error || 'Unknown error'}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-error">
+                    <strong>Network Error:</strong> ${error.message}
+                </div>
+            `;
+        } finally {
+            generateButton.disabled = false;
+            generateButton.innerHTML = 'Generate API Key';
+        }
+    });
+});
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('API key copied to clipboard!');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Failed to copy to clipboard. Please copy manually.');
+    });
+}
+</script>
+
+<style>
+.rate-limits-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.rate-limits-table th,
+.rate-limits-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.rate-limits-table th {
+    background-color: var(--background-color);
+    font-weight: 600;
+}
+
+.rate-limits-table tbody tr:hover {
+    background-color: rgba(37, 99, 235, 0.05);
+}
+</style>
+{% endblock %}

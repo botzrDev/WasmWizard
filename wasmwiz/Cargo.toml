@@ -55,5 +55,23 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] } # Enables filtering logs by environment variables
 wasmer-wasi = "3.1.1"
 
+# For HTML templating (Web UI)
+askama = { version = "0.12", features = ["with-actix-web"] }
+
+# For error handling with derive macros
+thiserror = "1.0"
+
+# For async streaming utilities
+futures-util = "0.3"
+
+# For serving static files
+actix-files = "0.6"
+
+# For base64 encoding/decoding
+base64 = "0.22"
+
+# For generating secure random API keys
+rand = "0.8"
+
 [dev-dependencies]
 # No specific dev dependencies mentioned for the MVP yet, but would go here if needed for specific testing utilities.

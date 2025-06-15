@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WasmWiz - WebAssembly Execution API{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <meta name="description" content="Execute WebAssembly modules securely in the cloud">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="nav-logo">WasmWiz</h1>
+                <ul class="nav-menu">
+                    <li><a href="/">Execute</a></li>
+                    <li><a href="/api-keys">API Keys</a></li>
+                    <li><a href="/docs">Documentation</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 WasmWiz. Secure WebAssembly execution in the cloud.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
