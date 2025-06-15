@@ -140,7 +140,7 @@ async function executeWasm() {
         formData.append('wasm', fileInput.files[0]);
         formData.append('input', inputText.value);
         
-        const response = await fetch('/execute', {
+        const response = await fetch('/api/execute', {
             method: 'POST',
             body: formData,
             headers: {

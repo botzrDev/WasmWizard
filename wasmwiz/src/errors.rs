@@ -20,8 +20,11 @@ pub enum ApiError {
     #[display(fmt = "Bad Request: {}", _0)]
     BadRequest(String),
 
-    #[display(fmt = "Unauthorized")]
-    Unauthorized,
+    #[display(fmt = "Unauthorized: {}", _0)]
+    Unauthorized(String),
+
+    #[display(fmt = "Not Found: {}", _0)]
+    NotFound(String),
 
     #[display(fmt = "Forbidden: {}", _0)]
     Forbidden(String),
@@ -76,7 +79,8 @@ impl ResponseError for ApiError {
     fn status_code(&self) -> StatusCode {
         match *self {
             ApiError::BadRequest(_) => StatusCode::BAD_REQUEST,
-            ApiError::Unauthorized => StatusCode::UNAUTHORIZED,
+            ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
             ApiError::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
             ApiError::UnprocessableEntity(_) |

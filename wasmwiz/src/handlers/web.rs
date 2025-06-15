@@ -1,6 +1,6 @@
 // src/handlers/web.rs
-use actix_web::{web, HttpResponse, Result as ActixResult};
-use askama::Template;
+use actix_web::{HttpResponse, Result as ActixResult};
+use askama_actix::Template;
 use crate::errors::ApiError;
 
 #[derive(Template)]

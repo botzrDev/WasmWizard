@@ -57,6 +57,7 @@ wasmer-wasi = "3.1.1"
 
 # For HTML templating (Web UI)
 askama = { version = "0.12", features = ["with-actix-web"] }
+askama_actix = "0.14"
 
 # For error handling with derive macros
 thiserror = "1.0"

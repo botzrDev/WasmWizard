@@ -1,7 +1,7 @@
 // src/middleware/auth.rs
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpResponse, Result,
+    Error, HttpResponse, Result, HttpMessage,
     http::header::{HeaderValue, AUTHORIZATION},
 };
 use futures_util::future::{ready, Ready, LocalBoxFuture};
@@ -84,13 +84,11 @@ where
             let api_key = match extract_api_key(auth_header) {
                 Some(key) => key,
                 None => {
-                    return Ok(req.into_response(
-                        HttpResponse::Unauthorized()
-                            .json(serde_json::json!({
-                                "error": "Missing or invalid Authorization header. Expected 'Bearer <api_key>'"
-                            }))
-                            .into_body()
-                    ));
+                    let response = HttpResponse::Unauthorized()
+                        .json(serde_json::json!({
+                            "error": "Missing or invalid Authorization header. Expected 'Bearer <api_key>'"
+                        }));
+                    return Ok(req.into_response(response));
                 }
             };
 
@@ -111,23 +109,19 @@ where
                     service.call(req).await
                 }
                 Ok(None) => {
-                    Ok(req.into_response(
-                        HttpResponse::Unauthorized()
-                            .json(serde_json::json!({
-                                "error": "Invalid API key"
-                            }))
-                            .into_body()
-                    ))
+                    let response = HttpResponse::Unauthorized()
+                        .json(serde_json::json!({
+                            "error": "Invalid API key"
+                        }));
+                    Ok(req.into_response(response))
                 }
                 Err(e) => {
                     tracing::error!("Database error during authentication: {}", e);
-                    Ok(req.into_response(
-                        HttpResponse::InternalServerError()
-                            .json(serde_json::json!({
-                                "error": "Internal server error"
-                            }))
-                            .into_body()
-                    ))
+                    let response = HttpResponse::InternalServerError()
+                        .json(serde_json::json!({
+                            "error": "Internal server error"
+                        }));
+                    Ok(req.into_response(response))
                 }
             }
         })

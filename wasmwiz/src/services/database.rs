@@ -52,24 +52,25 @@ impl DatabaseService {
 
     /// Get API key with user and tier information
     pub async fn get_api_key_with_details(&self, key_hash: &str) -> Result<Option<(ApiKey, User, SubscriptionTier)>> {
-        let result = sqlx::query_as::<_, (ApiKey, User, SubscriptionTier)>(
-            r#"
-            SELECT 
-                ak.id, ak.key_hash, ak.user_id, ak.tier_id, ak.is_active, ak.created_at, ak.updated_at,
-                u.id, u.email, u.created_at, u.updated_at,
-                st.id, st.name, st.max_executions_per_minute, st.max_executions_per_day, 
-                st.max_memory_mb, st.max_execution_time_seconds, st.created_at, st.updated_at
-            FROM api_keys ak
-            JOIN users u ON ak.user_id = u.id
-            JOIN subscription_tiers st ON ak.tier_id = st.id
-            WHERE ak.key_hash = $1 AND ak.is_active = true
-            "#
-        )
-        .bind(key_hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        // First get the API key
+        let api_key = match self.find_api_key_by_hash(key_hash).await? {
+            Some(key) => key,
+            None => return Ok(None),
+        };
 
-        Ok(result)
+        // Get the user
+        let user = match self.find_user_by_id(api_key.user_id).await? {
+            Some(user) => user,
+            None => return Ok(None),
+        };
+
+        // Get the subscription tier
+        let tier = match self.find_subscription_tier_by_id(api_key.tier_id).await? {
+            Some(tier) => tier,
+            None => return Ok(None),
+        };
+
+        Ok(Some((api_key, user, tier)))
     }
 
     /// Create a new usage log entry

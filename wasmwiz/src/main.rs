@@ -81,7 +81,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Wasm temporary file cleanup task started.");
 
     // 8. Set up Actix-web server
-    info!("Starting Actix-web server on {}:{}", config.server_host, config.server_port);
+    let server_host = config.server_host.clone();
+    let server_port = config.server_port;
+    info!("Starting Actix-web server on {}:{}", server_host, server_port);
     HttpServer::new(move || {
         let auth_middleware = AuthMiddleware::new(db_service.clone());
         let rate_limit_middleware = RateLimitMiddleware::new();
@@ -114,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key))
             )
     })
-    .bind((config.server_host.as_str(), config.server_port))?
+    .bind((server_host.as_str(), server_port))?
     .run()
     .await?;
 
