@@ -366,6 +366,7 @@ This document outlines all tasks required to take the WasmWiz WebAssembly Execut
 
 ### **Major Accomplishments**
 - [x] **Core WASM Execution Engine**: Full pipeline from file upload to execution with Wasmer runtime
+    - [x] Tested with calc_add.wasm: output matches expected (8)
 - [x] **Authentication System**: Complete Bearer token authentication with SHA-256 API key hashing
 - [x] **Rate Limiting**: Token bucket algorithm with per-tier limits (Free/Basic/Pro)
 - [x] **Database Integration**: Comprehensive CRUD operations for users, API keys, and usage logs

@@ -173,7 +173,7 @@ async fn execute_wasm_file(
     let wasm_bytes = fs::read(wasm_path)?;
 
     // Set up the Wasmer store (default engine)
-    let store = Store::default();
+    let mut store = Store::default();
     let module = Module::new(&store, &wasm_bytes)?;
 
     // Set up WASI environment
@@ -181,7 +181,6 @@ async fn execute_wasm_file(
     let mut stdin_pipe = Pipe::new();
     use std::io::Write;
     stdin_pipe.write_all(input.as_bytes())?;
-    stdin_pipe.rewind()?;
     let mut wasi_env = WasiEnv::builder("wasmwiz")
         .stdin(Box::new(stdin_pipe))
         .stdout(Box::new(stdout_pipe.clone()))
@@ -190,19 +189,16 @@ async fn execute_wasm_file(
 
     // Prepare for timeout
     let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
-    let mut store = store;
-    let module = module;
-    let mut wasi_env = wasi_env;
     let mut stdout_pipe_clone = stdout_pipe.clone();
+    let module_clone = module.clone();
 
     let run_result = timeout(exec_timeout, tokio::task::spawn_blocking(move || {
-        // Instantiate WASI module
-        let import_object = wasi_env.import_object(&mut store, &module)?;
-        let instance = wasmer::Instance::new(&mut store, &module, &import_object)?;
-        // Run the _start function (WASI entrypoint)
+        let mut store = Store::default();
+        let import_object = wasmer::imports! {};
+        let instance = wasmer::Instance::new(&mut store, &module_clone, &import_object)?;
+        // Call the _start function (WASI entrypoint)
         let start = instance.exports.get_function("_start")?;
         start.call(&mut store, &[])?;
-        // Capture stdout
         use std::io::Read;
         let mut stdout = Vec::new();
         stdout_pipe_clone.read_to_end(&mut stdout)?;
