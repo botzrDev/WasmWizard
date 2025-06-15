@@ -10,6 +10,11 @@ use crate::models::usage_log::UsageLog;
 use crate::utils::file_system;
 use crate::errors::ApiError;
 use crate::middleware::auth::AuthContext;
+use wasmer::{Store, Module};
+use wasmer_wasix::{WasiEnv, Pipe};
+use std::fs;
+use std::time::Duration;
+use tokio::time::timeout;
 
 /// Execute a WebAssembly module with provided input
 pub async fn execute_wasm(
@@ -164,12 +169,51 @@ async fn execute_wasm_file(
     tier: &crate::models::subscription_tier::SubscriptionTier,
     config: &crate::config::Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    info!("Starting WASM execution");
-    
-    // For now, return a placeholder response until we fix the WASM execution
-    // This allows the rest of the application to compile and run
-    let _ = (wasm_path, input, tier, config); // Suppress unused warnings
-    
-    // TODO: Implement proper WASM execution once version conflicts are resolved
-    Ok("WASM execution placeholder - implementation pending".to_string())
+    // Read the WASM file
+    let wasm_bytes = fs::read(wasm_path)?;
+
+    // Set up the Wasmer store (default engine)
+    let store = Store::default();
+    let module = Module::new(&store, &wasm_bytes)?;
+
+    // Set up WASI environment
+    let mut stdout_pipe = Pipe::new();
+    let mut stdin_pipe = Pipe::new();
+    use std::io::Write;
+    stdin_pipe.write_all(input.as_bytes())?;
+    stdin_pipe.rewind()?;
+    let mut wasi_env = WasiEnv::builder("wasmwiz")
+        .stdin(Box::new(stdin_pipe))
+        .stdout(Box::new(stdout_pipe.clone()))
+        .stderr(Box::new(Pipe::new()))
+        .build()?;
+
+    // Prepare for timeout
+    let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
+    let mut store = store;
+    let module = module;
+    let mut wasi_env = wasi_env;
+    let mut stdout_pipe_clone = stdout_pipe.clone();
+
+    let run_result = timeout(exec_timeout, tokio::task::spawn_blocking(move || {
+        // Instantiate WASI module
+        let import_object = wasi_env.import_object(&mut store, &module)?;
+        let instance = wasmer::Instance::new(&mut store, &module, &import_object)?;
+        // Run the _start function (WASI entrypoint)
+        let start = instance.exports.get_function("_start")?;
+        start.call(&mut store, &[])?;
+        // Capture stdout
+        use std::io::Read;
+        let mut stdout = Vec::new();
+        stdout_pipe_clone.read_to_end(&mut stdout)?;
+        let output = String::from_utf8_lossy(&stdout).to_string();
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(output)
+    })).await;
+
+    match run_result {
+        Ok(Ok(Ok(output))) => Ok(output),
+        Ok(Ok(Err(e))) => Err(e),
+        Ok(Err(e)) => Err(Box::new(e)),
+        Err(_) => Err("WASM execution timed out".into()),
+    }
 }
