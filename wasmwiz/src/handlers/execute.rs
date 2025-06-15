@@ -167,7 +167,7 @@ async fn execute_wasm_file(
     wasm_path: &std::path::Path,
     input: &str,
     tier: &crate::models::subscription_tier::SubscriptionTier,
-    config: &crate::config::Config,
+    _config: &crate::config::Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     // Read the WASM file
     let wasm_bytes = fs::read(wasm_path)?;

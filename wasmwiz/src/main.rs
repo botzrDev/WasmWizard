@@ -15,7 +15,7 @@ use dotenvy::dotenv;
 
 use utils::file_system;
 use handlers::{health, execute, web as web_handlers, api_keys};
-use middleware::{AuthMiddleware, RateLimitMiddleware};
+use middleware::{AuthMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware};
 use services::DatabaseService;
 use config::Config;
 
@@ -87,6 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     HttpServer::new(move || {
         let auth_middleware = AuthMiddleware::new(db_service.clone());
         let rate_limit_middleware = RateLimitMiddleware::new();
+        let security_middleware = SecurityHeadersMiddleware::new();
         
         App::new()
             .app_data(web::Data::new(AppState { 
@@ -94,11 +95,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 db_service: db_service.clone(),
                 config: config.clone(),
             }))
+            .wrap(security_middleware)
             // Health check endpoint (no auth required)
             .service(web::resource("/health").get(health::health_check))
             // Web interface routes (no auth required)
             .service(web::resource("/").get(web_handlers::index))
             .service(web::resource("/api-keys").get(web_handlers::api_keys))
+            .service(web::resource("/upload").post(web_handlers::upload_form))
+            .service(web::resource("/generate-key").post(web_handlers::generate_key_form))
             // Static file serving (no auth required)
             .service(fs::Files::new("/static", "./static").show_files_listing())
             // Protected API endpoints with auth and rate limiting

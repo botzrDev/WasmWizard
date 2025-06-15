@@ -162,4 +162,75 @@ impl DatabaseService {
         
         Ok(())
     }
+
+    /// Clean up old usage logs (older than specified days)
+    pub async fn cleanup_old_usage_logs(&self, days_old: i32) -> Result<u64, sqlx::Error> {
+        let cutoff_date = chrono::Utc::now() - chrono::Duration::days(days_old as i64);
+        
+        let result = sqlx::query(
+            "DELETE FROM usage_logs WHERE created_at < $1"
+        )
+        .bind(cutoff_date)
+        .execute(&self.pool)
+        .await?;
+        
+        Ok(result.rows_affected())
+    }
+
+    /// Get usage statistics for a user within a date range
+    pub async fn get_user_usage_stats(
+        &self,
+        user_id: uuid::Uuid,
+        start_date: chrono::DateTime<chrono::Utc>,
+        end_date: chrono::DateTime<chrono::Utc>,
+    ) -> Result<UsageStats, sqlx::Error> {
+        let stats = sqlx::query_as::<_, UsageStatsRow>(
+            r#"
+            SELECT 
+                COUNT(*) as total_executions,
+                SUM(CASE WHEN success THEN 1 ELSE 0 END) as successful_executions,
+                AVG(CASE WHEN success THEN execution_duration_ms ELSE NULL END) as avg_execution_time,
+                SUM(wasm_file_size_bytes) as total_wasm_bytes,
+                SUM(input_size_bytes) as total_input_bytes
+            FROM usage_logs ul
+            JOIN api_keys ak ON ul.api_key_id = ak.id
+            WHERE ak.user_id = $1 
+            AND ul.created_at >= $2 
+            AND ul.created_at <= $3
+            "#
+        )
+        .bind(user_id)
+        .bind(start_date)
+        .bind(end_date)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(UsageStats {
+            total_executions: stats.total_executions,
+            successful_executions: stats.successful_executions,
+            average_execution_time_ms: stats.avg_execution_time.map(|avg| avg as i32),
+            total_wasm_bytes: stats.total_wasm_bytes,
+            total_input_bytes: stats.total_input_bytes,
+        })
+    }
+}
+
+/// Database row for usage statistics
+#[derive(sqlx::FromRow)]
+struct UsageStatsRow {
+    total_executions: i64,
+    successful_executions: i64,
+    avg_execution_time: Option<f64>,
+    total_wasm_bytes: i64,
+    total_input_bytes: i64,
+}
+
+/// Usage statistics structure
+#[derive(Debug, Clone)]
+pub struct UsageStats {
+    pub total_executions: i64,
+    pub successful_executions: i64,
+    pub average_execution_time_ms: Option<i32>,
+    pub total_wasm_bytes: i64,
+    pub total_input_bytes: i64,
 }

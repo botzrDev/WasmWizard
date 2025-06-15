@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">{{ title }}</h1>
+    </div>
+
+    {% if success %}
+        <div class="alert alert-success">
+            <h3>✅ Execution Successful</h3>
+            {% if execution_time and execution_time != "" %}
+                <p><strong>Execution Time:</strong> {{ execution_time }}</p>
+            {% endif %}
+        </div>
+
+        {% if output and output != "" %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Program Output</h3>
+                </div>
+                <div class="code-output">{{ output }}</div>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <p>The program executed successfully but produced no output.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-error">
+            <h3>❌ Execution Failed</h3>
+            {% if error and error != "" %}
+                <p><strong>Error:</strong> {{ error }}</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Next Steps</h3>
+        </div>
+        <div class="actions">
+            <a href="/" class="btn btn-primary">Upload Another WASM File</a>
+            <a href="/api-keys" class="btn btn-secondary">Manage API Keys</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.code-output {
+    background-color: #1f2937;
+    color: #d1d5db;
+    padding: 1rem;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #374151;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.actions .btn {
+    flex: 1;
+    text-align: center;
+}
+
+.alert h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+}
+
+.alert p {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .actions {
+        flex-direction: column;
+    }
+    
+    .actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

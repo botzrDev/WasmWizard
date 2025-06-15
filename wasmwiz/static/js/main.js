@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (files.length > 0) {
                 fileInput.files = files;
                 updateFileDisplay(files[0]);
+                validateFileAndShowFeedback(files[0]);
             }
         });
         
@@ -31,7 +32,41 @@ document.addEventListener('DOMContentLoaded', function() {
         fileInput.addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                 updateFileDisplay(e.target.files[0]);
+                validateFileAndShowFeedback(e.target.files[0]);
             }
+        });
+        
+        // Click to select file
+        fileUpload.addEventListener('click', function() {
+            fileInput.click();
+        });
+    }
+    
+    // Real-time input validation
+    const inputText = document.querySelector('#input-text');
+    if (inputText) {
+        inputText.addEventListener('input', function(e) {
+            validateInputAndShowFeedback(e.target.value);
+        });
+    }
+    
+    // API key input validation
+    const apiKeyInput = document.querySelector('#api-key');
+    if (apiKeyInput) {
+        apiKeyInput.addEventListener('input', function(e) {
+            validateApiKeyAndShowFeedback(e.target.value);
+        });
+        
+        // Load saved API key
+        const savedApiKey = localStorage.getItem('wasmwiz-api-key');
+        if (savedApiKey) {
+            apiKeyInput.value = savedApiKey;
+            validateApiKeyAndShowFeedback(savedApiKey);
+        }
+        
+        // Save API key when changed
+        apiKeyInput.addEventListener('change', function() {
+            localStorage.setItem('wasmwiz-api-key', this.value);
         });
     }
     
@@ -40,7 +75,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (executeForm) {
         executeForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            executeWasm();
+            if (validateForm()) {
+                executeWasm();
+            }
         });
     }
     
@@ -115,87 +152,190 @@ async function executeWasm() {
     const resultContainer = document.querySelector('#execution-result');
     const submitButton = document.querySelector('#submit-button');
     
-    // Validate inputs
-    if (!fileInput.files[0]) {
-        displayAlert('Please select a WASM file', 'error');
+    // Validate form first
+    if (!validateForm()) {
         return;
     }
     
-    if (!validateFile(fileInput.files[0])) {
-        return;
-    }
-    
-    if (!validateInput(inputText.value)) {
-        displayAlert('Input validation failed', 'error');
-        return;
-    }
-    
-    // Show loading state
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<span class="spinner"></span> Executing...';
-    resultContainer.innerHTML = '<div class="alert">Executing WASM module...</div>';
+    // Show enhanced loading state
+    setLoadingState(submitButton, true);
+    showProgressBar(resultContainer);
     
     try {
         const formData = new FormData();
         formData.append('wasm', fileInput.files[0]);
         formData.append('input', inputText.value);
         
+        const apiKey = getApiKey();
+        if (!apiKey) {
+            throw new Error('API key is required');
+        }
+        
         const response = await fetch('/api/execute', {
             method: 'POST',
             body: formData,
             headers: {
-                'Authorization': `Bearer ${getApiKey()}`
+                'Authorization': `Bearer ${apiKey}`
             }
         });
         
         const result = await response.json();
         
         if (response.ok) {
-            displayExecutionResult(result);
+            displayExecutionResult(result, response.status);
         } else {
             displayAlert(`Execution failed: ${result.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
         displayAlert(`Network error: ${error.message}`, 'error');
     } finally {
-        // Reset button state
-        submitButton.disabled = false;
-        submitButton.innerHTML = 'Execute WASM';
+        setLoadingState(submitButton, false);
+        hideProgressBar();
     }
 }
 
-function displayExecutionResult(result) {
-    const resultContainer = document.querySelector('#execution-result');
-    
-    if (result.error) {
-        resultContainer.innerHTML = `
-            <div class="alert alert-error">
-                <strong>Execution Error:</strong><br>
-                <div class="code-output">${escapeHtml(result.error)}</div>
-            </div>
-        `;
+function setLoadingState(button, loading) {
+    if (loading) {
+        button.disabled = true;
+        button.classList.add('loading');
+        button.setAttribute('data-original-text', button.textContent);
+        button.innerHTML = '<span class="spinner"></span> Executing...';
     } else {
-        resultContainer.innerHTML = `
-            <div class="alert alert-success">
-                <strong>Execution Successful!</strong>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Output</h3>
-                </div>
-                <div class="code-output">${escapeHtml(result.output || '(no output)')}</div>
-            </div>
-        `;
+        button.disabled = false;
+        button.classList.remove('loading');
+        button.textContent = button.getAttribute('data-original-text') || 'Execute WASM';
     }
 }
 
-function displayAlert(message, type = 'error') {
-    const resultContainer = document.querySelector('#execution-result');
-    resultContainer.innerHTML = `
-        <div class="alert alert-${type}">
-            ${escapeHtml(message)}
+function showProgressBar(container) {
+    const progressHtml = `
+        <div id="execution-progress" class="progress-container">
+            <div class="progress-bar indeterminate">
+                <div class="progress-bar-fill"></div>
+            </div>
+            <p class="progress-text">Executing WebAssembly module...</p>
         </div>
     `;
+    container.innerHTML = progressHtml;
+}
+
+function hideProgressBar() {
+    const progressElement = document.getElementById('execution-progress');
+    if (progressElement) {
+        progressElement.remove();
+    }
+}
+
+// Enhanced execution result display
+function displayExecutionResult(result, statusCode) {
+    const resultContainer = document.querySelector('#execution-result');
+    const hasOutput = result.output && result.output.trim().length > 0;
+    const hasError = result.error && result.error.trim().length > 0;
+    
+    let statusBadge = '';
+    if (statusCode === 200) {
+        statusBadge = '<span class="status-badge success">✅ Success</span>';
+    } else if (statusCode >= 400) {
+        statusBadge = '<span class="status-badge error">❌ Error</span>';
+    }
+    
+    const resultHtml = `
+        <div class="execution-result-card">
+            <div class="result-header">
+                <h3>Execution Result</h3>
+                ${statusBadge}
+            </div>
+            
+            ${hasOutput ? `
+                <div class="result-section">
+                    <h4>Program Output</h4>
+                    <div class="code-output">${escapeHtml(result.output)}</div>
+                    <button onclick="copyToClipboard('${escapeHtml(result.output).replace(/'/g, "\\'")}', 'output')" 
+                            class="btn btn-secondary btn-sm">
+                        📋 Copy Output
+                    </button>
+                </div>
+            ` : ''}
+            
+            ${hasError ? `
+                <div class="result-section error-section">
+                    <h4>Error Details</h4>
+                    <div class="error-output">${escapeHtml(result.error)}</div>
+                </div>
+            ` : ''}
+            
+            ${!hasOutput && !hasError ? `
+                <div class="result-section">
+                    <p class="no-output">The program executed but produced no output.</p>
+                </div>
+            ` : ''}
+            
+            <div class="result-actions">
+                <button onclick="clearResults()" class="btn btn-secondary">Clear Results</button>
+                <button onclick="downloadResults()" class="btn btn-secondary">💾 Download Results</button>
+            </div>
+        </div>
+    `;
+    
+    resultContainer.innerHTML = resultHtml;
+    resultContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+function clearResults() {
+    const resultContainer = document.querySelector('#execution-result');
+    resultContainer.innerHTML = '';
+}
+
+function downloadResults() {
+    const resultContainer = document.querySelector('#execution-result');
+    const outputElement = resultContainer.querySelector('.code-output');
+    const errorElement = resultContainer.querySelector('.error-output');
+    
+    let content = '';
+    if (outputElement) {
+        content += 'Program Output:\n' + outputElement.textContent + '\n\n';
+    }
+    if (errorElement) {
+        content += 'Error Details:\n' + errorElement.textContent + '\n';
+    }
+    
+    if (content) {
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `wasmwiz-result-${new Date().toISOString().slice(0, 19)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+}
+
+function copyToClipboard(text, type) {
+    navigator.clipboard.writeText(text).then(function() {
+        showToast(`${type} copied to clipboard!`, 'success');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+        showToast('Failed to copy to clipboard', 'error');
+    });
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
 }
 
 function getApiKey() {
@@ -388,4 +528,91 @@ async function deactivateApiKey(keyId) {
     } catch (error) {
         alert(`Network error: ${error.message}`);
     }
+}
+
+function validateFileAndShowFeedback(file) {
+    const errors = [];
+    
+    if (!validateFile(file)) {
+        errors.push('Invalid file selected');
+    }
+    
+    showValidationFeedback('file', errors);
+    return errors.length === 0;
+}
+
+function validateInputAndShowFeedback(input) {
+    const errors = [];
+    
+    if (!validateInput(input)) {
+        errors.push('Input too large (max 1MB)');
+    }
+    
+    showValidationFeedback('input', errors);
+    return errors.length === 0;
+}
+
+function validateApiKeyAndShowFeedback(apiKey) {
+    const errors = [];
+    
+    if (!apiKey || apiKey.trim().length === 0) {
+        errors.push('API key is required');
+    } else if (!apiKey.startsWith('ww_')) {
+        errors.push('Invalid API key format (should start with "ww_")');
+    } else if (apiKey.length < 30) {
+        errors.push('API key appears to be too short');
+    }
+    
+    showValidationFeedback('api-key', errors);
+    return errors.length === 0;
+}
+
+function showValidationFeedback(fieldType, errors) {
+    const fieldElement = document.querySelector(`#${fieldType.replace('api-key', 'api-key')}`);
+    if (!fieldElement) return;
+    
+    // Remove existing feedback
+    const existingFeedback = fieldElement.parentElement.querySelector('.validation-feedback');
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+    
+    if (errors.length > 0) {
+        const feedback = document.createElement('div');
+        feedback.className = 'validation-feedback error';
+        feedback.innerHTML = errors.map(error => `<small>❌ ${error}</small>`).join('<br>');
+        fieldElement.parentElement.appendChild(feedback);
+        fieldElement.classList.add('error');
+    } else if (fieldElement.value || fieldElement.files?.length > 0) {
+        const feedback = document.createElement('div');
+        feedback.className = 'validation-feedback success';
+        feedback.innerHTML = '<small>✅ Valid</small>';
+        fieldElement.parentElement.appendChild(feedback);
+        fieldElement.classList.remove('error');
+        fieldElement.classList.add('success');
+    }
+}
+
+function validateForm() {
+    const fileInput = document.querySelector('#wasm-file');
+    const inputText = document.querySelector('#input-text');
+    const apiKeyInput = document.querySelector('#api-key');
+    
+    let isValid = true;
+    
+    // Validate file
+    if (!fileInput.files[0]) {
+        showValidationFeedback('file', ['Please select a WASM file']);
+        isValid = false;
+    } else {
+        isValid = validateFileAndShowFeedback(fileInput.files[0]) && isValid;
+    }
+    
+    // Validate input
+    isValid = validateInputAndShowFeedback(inputText.value) && isValid;
+    
+    // Validate API key
+    isValid = validateApiKeyAndShowFeedback(apiKeyInput.value) && isValid;
+    
+    return isValid;
 }

@@ -144,7 +144,7 @@ fn extract_api_key(auth_header: Option<&HeaderValue>) -> Option<String> {
 }
 
 /// Hash an API key using SHA-256
-fn hash_api_key(api_key: &str) -> String {
+pub fn hash_api_key(api_key: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(api_key.as_bytes());
     format!("{:x}", hasher.finalize())
