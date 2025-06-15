@@ -10,7 +10,7 @@ use std::{
     rc::Rc,
     sync::{Arc, Mutex},
     task::{Context, Poll},
-    time::{Duration, Instant},
+    time::{Instant},
 };
 use uuid::Uuid;
 use crate::middleware::auth::AuthContext;
@@ -121,7 +121,7 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<actix_web::body::EitherBody<actix_web::body::BoxBody, B>>;
     type Error = Error;
     type InitError = ();
     type Transform = RateLimitMiddlewareService<S>;
@@ -146,7 +146,7 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<actix_web::body::EitherBody<actix_web::body::BoxBody, B>>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -159,18 +159,17 @@ where
         let state = self.state.clone();
 
         Box::pin(async move {
-            // Get authentication context
-            let auth_context = match req.extensions().get::<AuthContext>() {
-                Some(ctx) => ctx.clone(),
-                None => {
-                    tracing::warn!("Rate limit middleware called without authentication context");
-                    let response = HttpResponse::InternalServerError()
-                        .json(serde_json::json!({
-                            "error": "Internal server error"
-                        }));
-                    return Ok(req.into_response(response));
-                }
-            };
+            // Extract AuthContext before any early return to avoid borrow checker issues
+            let auth_context_opt = req.extensions().get::<AuthContext>().cloned();
+            if auth_context_opt.is_none() {
+                tracing::warn!("Rate limit middleware called without authentication context");
+                let response = HttpResponse::InternalServerError()
+                    .json(serde_json::json!({
+                        "error": "Internal server error"
+                    }));
+                return Ok(req.into_response(response).map_into_left_body());
+            }
+            let auth_context = auth_context_opt.unwrap();
 
             let api_key_id = auth_context.api_key.id;
             let rate_limit = RateLimit::from_tier_name(&auth_context.tier.name);
@@ -214,11 +213,11 @@ where
                     );
                 }
 
-                return Ok(req.into_response(response));
+                return Ok(req.into_response(response).map_into_left_body());
             }
 
             // Add rate limit headers to successful requests
-            let mut response = service.call(req).await?;
+            let mut response = service.call(req).await?.map_into_right_body();
             
             // Add rate limit information to response headers
             let headers = response.headers_mut();

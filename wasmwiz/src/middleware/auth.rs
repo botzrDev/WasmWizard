@@ -40,7 +40,7 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<actix_web::body::EitherBody<actix_web::body::BoxBody, B>>;
     type Error = Error;
     type InitError = ();
     type Transform = AuthMiddlewareService<S>;
@@ -65,7 +65,7 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<actix_web::body::EitherBody<actix_web::body::BoxBody, B>>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -88,7 +88,7 @@ where
                         .json(serde_json::json!({
                             "error": "Missing or invalid Authorization header. Expected 'Bearer <api_key>'"
                         }));
-                    return Ok(req.into_response(response));
+                    return Ok(req.into_response(response).map_into_left_body());
                 }
             };
 
@@ -98,22 +98,20 @@ where
             // Look up API key in database
             match db_service.get_api_key_with_details(&key_hash).await {
                 Ok(Some((api_key_record, user, tier))) => {
-                    // Add authentication context to request extensions
                     req.extensions_mut().insert(AuthContext {
                         api_key: api_key_record,
                         user,
                         tier,
                     });
-
                     // Continue to the next service
-                    service.call(req).await
+                    service.call(req).await.map(|res| res.map_into_right_body())
                 }
                 Ok(None) => {
                     let response = HttpResponse::Unauthorized()
                         .json(serde_json::json!({
                             "error": "Invalid API key"
                         }));
-                    Ok(req.into_response(response))
+                    Ok(req.into_response(response).map_into_left_body())
                 }
                 Err(e) => {
                     tracing::error!("Database error during authentication: {}", e);
@@ -121,7 +119,7 @@ where
                         .json(serde_json::json!({
                             "error": "Internal server error"
                         }));
-                    Ok(req.into_response(response))
+                    Ok(req.into_response(response).map_into_left_body())
                 }
             }
         })

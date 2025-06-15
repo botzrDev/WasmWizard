@@ -2,6 +2,6 @@
 pub mod auth;
 pub mod rate_limit;
 
-pub use auth::{AuthMiddleware, AuthContext};
+pub use auth::AuthMiddleware;
 pub use rate_limit::RateLimitMiddleware;
 // pub mod logging;

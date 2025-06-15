@@ -1,7 +1,6 @@
 // src/handlers/health.rs
 use actix_web::{web, HttpResponse, Result};
 use serde_json::json;
-use sqlx::PgPool;
 use tracing::{error, info};
 
 /// Health check endpoint that verifies system components

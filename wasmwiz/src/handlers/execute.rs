@@ -2,7 +2,6 @@
 use actix_web::{web, HttpResponse, Result as ActixResult, HttpRequest, HttpMessage};
 use actix_multipart::Multipart;
 use futures_util::TryStreamExt;
-use std::io::Write;
 use tracing::{info, error, warn};
 use std::time::Instant;
 
@@ -36,7 +35,7 @@ pub async fn execute_wasm(
         error!("Failed to parse multipart data: {}", e);
         ApiError::BadRequest("Failed to parse multipart data".to_string())
     })? {
-        let field_name = field.name().unwrap_or_default();
+        let field_name = field.name();
         
         match field_name {
             "wasm" => {
