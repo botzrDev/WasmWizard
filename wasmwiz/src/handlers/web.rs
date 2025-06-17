@@ -4,6 +4,7 @@ use askama_actix::Template;
 use crate::errors::ApiError;
 use crate::handlers::api_keys;
 use crate::AppState;
+use crate::middleware::generate_csrf_token;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -65,4 +66,15 @@ pub async fn generate_key_form(
     // Use the existing create_api_key function
     let json_req = web::Json(form.into_inner());
     api_keys::create_api_key(app_state, json_req).await
+}
+
+/// Generate CSRF token endpoint
+pub async fn csrf_token(
+    app_state: web::Data<AppState>,
+) -> ActixResult<HttpResponse, ApiError> {
+    let token = generate_csrf_token(&app_state.config.api_salt);
+    
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "csrf_token": token
+    })))
 }

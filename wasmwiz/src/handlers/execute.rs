@@ -10,8 +10,8 @@ use crate::models::usage_log::UsageLog;
 use crate::utils::file_system;
 use crate::errors::ApiError;
 use crate::middleware::auth::AuthContext;
-use wasmer::{Store, Module, Instance, Engine};
-use wasmer_wasix::{WasiEnv, WasiEnvBuilder, runtime::PluggableRuntime};
+use wasmer::{Store, Module, Instance};
+use wasmer_wasix::{WasiEnv, Pipe};
 use std::fs;
 use std::time::Duration;
 use tokio::time::timeout;
@@ -197,9 +197,8 @@ async fn execute_wasm_file(
     // Create instance
     let instance = Instance::new(&mut store, &module, &import_object)?;
 
-    // Set the memory for the WASI environment
-    let memory = instance.exports.get_memory("memory")?;
-    wasi_env.data_mut(&mut store).set_memory(memory.clone());
+    // Initialize WASI environment with the instance
+    wasi_env.initialize(&mut store, instance.clone())?;
 
     // Prepare for timeout execution
     let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
@@ -217,12 +216,14 @@ async fn execute_wasm_file(
         stdout_pipe_clone.read_to_end(&mut stdout_content)?;
         let output = String::from_utf8_lossy(&stdout_content).to_string();
 
-        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(output)
+        Ok::<String, Box<dyn std::error::Error + Send + Sync>>(output)
     })).await;
 
     match run_result {
-        Ok(Ok(output)) => Ok(output),
-        Ok(Err(e)) => Err(e),
+        Ok(join_result) => match join_result {
+            Ok(wasm_result) => wasm_result, // This is already Result<String, Box<dyn Error>>
+            Err(join_error) => Err(format!("Task join error: {}", join_error).into()),
+        },
         Err(_) => Err("WASM execution timed out".into()),
     }
 }

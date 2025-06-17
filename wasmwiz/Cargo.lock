@@ -5286,6 +5286,7 @@ dependencies = [
  "derive_more 0.99.20",
  "dotenvy",
  "futures-util",
+ "hex",
  "rand 0.8.5",
  "serde",
  "serde_json",

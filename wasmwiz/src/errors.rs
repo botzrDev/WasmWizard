@@ -5,7 +5,7 @@ use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use derive_more::{Display, From};
 use sqlx::Error as SqlxError;
 use std::io::Error as IoError;
-use wasmer_wasi::WasiError;
+use wasmer_wasix::WasiError;
 use wasmer::RuntimeError;
 use std::error::Error as StdError;
 use anyhow;

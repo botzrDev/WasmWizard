@@ -15,8 +15,8 @@ use dotenvy::dotenv;
 
 use utils::file_system;
 use handlers::{health, execute, web as web_handlers, api_keys};
-use middleware::{AuthMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware};
-use services::DatabaseService;
+use middleware::{AuthMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware, InputValidationMiddleware};
+use services::{DatabaseService, cleanup};
 use config::Config;
 
 pub struct AppState {
@@ -76,9 +76,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db_service = DatabaseService::new(db_pool.clone());
     info!("Database service initialized.");
 
-    // 7. Start Wasm cleanup task in a background thread
+    // 7. Start background cleanup tasks
     file_system::start_wasm_cleanup_task();
-    info!("Wasm temporary file cleanup task started.");
+    cleanup::start_cleanup_tasks(db_service.clone());
+    info!("Background cleanup tasks started.");
 
     // 8. Set up Actix-web server
     let server_host = config.server_host.clone();
@@ -88,6 +89,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let auth_middleware = AuthMiddleware::new(db_service.clone());
         let rate_limit_middleware = RateLimitMiddleware::new();
         let security_middleware = SecurityHeadersMiddleware::new();
+        let input_validation_middleware = InputValidationMiddleware::new();
         
         App::new()
             .app_data(web::Data::new(AppState { 
@@ -96,6 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 config: config.clone(),
             }))
             .wrap(security_middleware)
+            .wrap(input_validation_middleware)
             // Health check endpoint (no auth required)
             .service(web::resource("/health").get(health::health_check))
             // Web interface routes (no auth required)
@@ -103,6 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(web::resource("/api-keys").get(web_handlers::api_keys))
             .service(web::resource("/upload").post(web_handlers::upload_form))
             .service(web::resource("/generate-key").post(web_handlers::generate_key_form))
+            .service(web::resource("/csrf-token").get(web_handlers::csrf_token))
             // Static file serving (no auth required)
             .service(fs::Files::new("/static", "./static").show_files_listing())
             // Protected API endpoints with auth and rate limiting

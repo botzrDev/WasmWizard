@@ -73,5 +73,8 @@ base64 = "0.22"
 # For generating secure random API keys
 rand = "0.8"
 
+# For hex encoding/decoding
+hex = "0.4"
+
 [dev-dependencies]
 # No specific dev dependencies mentioned for the MVP yet, but would go here if needed for specific testing utilities.
