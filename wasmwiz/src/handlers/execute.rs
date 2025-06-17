@@ -10,8 +10,8 @@ use crate::models::usage_log::UsageLog;
 use crate::utils::file_system;
 use crate::errors::ApiError;
 use crate::middleware::auth::AuthContext;
-use wasmer::{Store, Module};
-use wasmer_wasix::{WasiEnv, Pipe};
+use wasmer::{Store, Module, Instance, Engine};
+use wasmer_wasix::{WasiEnv, WasiEnvBuilder, runtime::PluggableRuntime};
 use std::fs;
 use std::time::Duration;
 use tokio::time::timeout;
@@ -169,47 +169,60 @@ async fn execute_wasm_file(
     tier: &crate::models::subscription_tier::SubscriptionTier,
     _config: &crate::config::Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    use std::io::Write;
+    
     // Read the WASM file
     let wasm_bytes = fs::read(wasm_path)?;
 
-    // Set up the Wasmer store (default engine)
+    // Set up the Wasmer store
     let mut store = Store::default();
     let module = Module::new(&store, &wasm_bytes)?;
 
-    // Set up WASI environment
-    let mut stdout_pipe = Pipe::new();
+    // Set up WASI environment with pipes for I/O
     let mut stdin_pipe = Pipe::new();
-    use std::io::Write;
     stdin_pipe.write_all(input.as_bytes())?;
+    
+    let stdout_pipe = Pipe::new();
+    let stderr_pipe = Pipe::new();
+    
     let mut wasi_env = WasiEnv::builder("wasmwiz")
         .stdin(Box::new(stdin_pipe))
         .stdout(Box::new(stdout_pipe.clone()))
-        .stderr(Box::new(Pipe::new()))
-        .build()?;
+        .stderr(Box::new(stderr_pipe))
+        .finalize(&mut store)?;
 
-    // Prepare for timeout
+    // Get import object for WASI
+    let import_object = wasi_env.import_object(&mut store, &module)?;
+
+    // Create instance
+    let instance = Instance::new(&mut store, &module, &import_object)?;
+
+    // Set the memory for the WASI environment
+    let memory = instance.exports.get_memory("memory")?;
+    wasi_env.data_mut(&mut store).set_memory(memory.clone());
+
+    // Prepare for timeout execution
     let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
-    let mut stdout_pipe_clone = stdout_pipe.clone();
-    let module_clone = module.clone();
-
+    
     let run_result = timeout(exec_timeout, tokio::task::spawn_blocking(move || {
-        let mut store = Store::default();
-        let import_object = wasmer::imports! {};
-        let instance = wasmer::Instance::new(&mut store, &module_clone, &import_object)?;
         // Call the _start function (WASI entrypoint)
-        let start = instance.exports.get_function("_start")?;
-        start.call(&mut store, &[])?;
+        if let Ok(start_func) = instance.exports.get_function("_start") {
+            let _ = start_func.call(&mut store, &[])?;
+        }
+        
+        // Read stdout content
         use std::io::Read;
-        let mut stdout = Vec::new();
-        stdout_pipe_clone.read_to_end(&mut stdout)?;
-        let output = String::from_utf8_lossy(&stdout).to_string();
+        let mut stdout_content = Vec::new();
+        let mut stdout_pipe_clone = stdout_pipe.clone();
+        stdout_pipe_clone.read_to_end(&mut stdout_content)?;
+        let output = String::from_utf8_lossy(&stdout_content).to_string();
+
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(output)
     })).await;
 
     match run_result {
-        Ok(Ok(Ok(output))) => Ok(output),
-        Ok(Ok(Err(e))) => Err(e),
-        Ok(Err(e)) => Err(Box::new(e)),
+        Ok(Ok(output)) => Ok(output),
+        Ok(Err(e)) => Err(e),
         Err(_) => Err("WASM execution timed out".into()),
     }
 }

@@ -15,7 +15,7 @@ actix-multipart = "0.6"
 # Core WebAssembly runtime for execution
 wasmer = "6.0.1" # Updated to latest stable version
 # WASI (WebAssembly System Interface) support for standard I/O
-# Using wasmer-wasix as it appears to be the actively maintained WASI crate for Wasmer v6.x
+# Using wasmer-wasix for Wasmer v6.x (the modern WASI implementation)
 wasmer-wasix = "0.600.1"
 
 # For JSON serialization/deserialization
@@ -53,7 +53,6 @@ dotenvy = "0.15"
 # For structured logging and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] } # Enables filtering logs by environment variables
-wasmer-wasi = "3.1.1"
 
 # For HTML templating (Web UI)
 askama = { version = "0.12", features = ["with-actix-web"] }

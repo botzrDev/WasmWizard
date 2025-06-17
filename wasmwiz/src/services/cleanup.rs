@@ -40,10 +40,10 @@ pub fn start_cleanup_tasks(db_service: DatabaseService) {
 
 /// Clean up inactive API keys (mark as inactive, don't delete)
 pub async fn cleanup_inactive_api_keys(
-    db_service: &DatabaseService,
-    inactive_days: i32,
+    _db_service: &DatabaseService,
+    _inactive_days: i32,
 ) -> Result<u64, sqlx::Error> {
-    let cutoff_date = chrono::Utc::now() - chrono::Duration::days(inactive_days as i64);
+    let _cutoff_date = chrono::Utc::now() - chrono::Duration::days(_inactive_days as i64);
     
     // This would require tracking last_used_at in the api_keys table
     // For now, we'll just return 0 as a placeholder
@@ -54,7 +54,7 @@ pub async fn cleanup_inactive_api_keys(
 /// Health check for the cleanup service
 pub async fn cleanup_health_check(db_service: &DatabaseService) -> bool {
     // Test that we can connect to the database
-    match db_service.get_user_count().await {
+    match db_service.health_check().await {
         Ok(_) => true,
         Err(e) => {
             error!("Cleanup health check failed: {}", e);

@@ -117,11 +117,11 @@ fn validate_request(req: &ServiceRequest) -> Result<(), String> {
 /// Sanitize user input by removing or escaping potentially dangerous characters
 pub fn sanitize_input(input: &str) -> String {
     input
+        .replace('&', "&amp;") // Do this first to avoid double-encoding
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")
         .replace('\'', "&#x27;")
-        .replace('&', "&amp;")
         .replace('\0', "") // Remove null bytes
         .chars()
         .filter(|c| !c.is_control() || *c == '\n' || *c == '\r' || *c == '\t')
