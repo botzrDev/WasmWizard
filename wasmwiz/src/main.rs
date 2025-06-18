@@ -13,7 +13,9 @@ use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use dotenvy::dotenv;
 
 use utils::file_system;
-use services::{DatabaseService, cleanup, establish_connection_pool};
+use services::{DatabaseService, cleanup};
+// use crate::services::establish_connection_pool;
+use services::establish_connection_pool;
 use config::Config;
 use app::create_app;
 
