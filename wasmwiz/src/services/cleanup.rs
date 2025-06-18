@@ -39,6 +39,7 @@ pub fn start_cleanup_tasks(db_service: DatabaseService) {
 }
 
 /// Clean up inactive API keys (mark as inactive, don't delete)
+#[allow(dead_code)]
 pub async fn cleanup_inactive_api_keys(
     _db_service: &DatabaseService,
     _inactive_days: i32,
@@ -52,6 +53,7 @@ pub async fn cleanup_inactive_api_keys(
 }
 
 /// Health check for the cleanup service
+#[allow(dead_code)]
 pub async fn cleanup_health_check(db_service: &DatabaseService) -> bool {
     // Test that we can connect to the database
     match db_service.health_check().await {

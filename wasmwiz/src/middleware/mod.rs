@@ -9,5 +9,5 @@ pub use auth::AuthMiddleware;
 pub use rate_limit::RateLimitMiddleware;
 pub use security::SecurityHeadersMiddleware;
 pub use input_validation::InputValidationMiddleware;
-pub use csrf::{CsrfMiddleware, generate_csrf_token};
+pub use csrf::generate_csrf_token;
 // pub mod logging;

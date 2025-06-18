@@ -115,6 +115,7 @@ fn validate_request(req: &ServiceRequest) -> Result<(), String> {
 }
 
 /// Sanitize user input by removing or escaping potentially dangerous characters
+#[allow(dead_code)]
 pub fn sanitize_input(input: &str) -> String {
     input
         .replace('&', "&amp;") // Do this first to avoid double-encoding
@@ -129,6 +130,7 @@ pub fn sanitize_input(input: &str) -> String {
 }
 
 /// Validate file extension
+#[allow(dead_code)]
 pub fn is_safe_filename(filename: &str) -> bool {
     let allowed_extensions = [".wasm"];
     let filename_lower = filename.to_lowercase();

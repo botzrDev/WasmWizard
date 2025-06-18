@@ -16,6 +16,7 @@ pub struct CsrfMiddleware {
 }
 
 impl CsrfMiddleware {
+    #[allow(dead_code)]
     pub fn new(secret: String) -> Self {
         Self { secret }
     }
