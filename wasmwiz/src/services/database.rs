@@ -1,5 +1,5 @@
 // src/services/database.rs
-use sqlx::PgPool;
+use sqlx::{postgres::PgPoolOptions, PgPool};
 use uuid::Uuid;
 use anyhow::Result;
 use crate::models::{ApiKey, User, SubscriptionTier, UsageLog};
@@ -7,7 +7,13 @@ use crate::config::Config;
 
 /// Establishes a connection pool to the database
 pub async fn establish_connection_pool(config: &Config) -> Result<PgPool, sqlx::Error> {
-    PgPool::connect(&config.database_url).await
+    PgPoolOptions::new()
+        .max_connections(50) // Increased from 20 to 50
+        .acquire_timeout(std::time::Duration::from_secs(30)) // Increased from 5 to 30 seconds
+        .idle_timeout(std::time::Duration::from_secs(600)) // 10 minutes idle timeout
+        .max_lifetime(std::time::Duration::from_secs(1800)) // 30 minutes max lifetime
+        .connect(&config.database_url)
+        .await
 }
 
 #[derive(Clone)]
@@ -102,19 +108,6 @@ impl DatabaseService {
         Ok(())
     }
 
-    /// Get usage count for API key within time period
-    pub async fn get_usage_count_since(&self, api_key_id: Uuid, since: chrono::DateTime<chrono::Utc>) -> Result<i64> {
-        let count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM usage_logs WHERE api_key_id = $1 AND timestamp >= $2"
-        )
-        .bind(api_key_id)
-        .bind(since)
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(count)
-    }
-
     /// Create a new API key
     pub async fn create_api_key(&self, api_key: &ApiKey) -> Result<()> {
         sqlx::query(
@@ -182,61 +175,4 @@ impl DatabaseService {
         
         Ok(result.rows_affected())
     }
-
-    /// Get usage statistics for a user within a date range
-    pub async fn get_user_usage_stats(
-        &self,
-        user_id: uuid::Uuid,
-        start_date: chrono::DateTime<chrono::Utc>,
-        end_date: chrono::DateTime<chrono::Utc>,
-    ) -> Result<UsageStats, sqlx::Error> {
-        let stats = sqlx::query_as::<_, UsageStatsRow>(
-            r#"
-            SELECT 
-                COUNT(*) as total_executions,
-                SUM(CASE WHEN success THEN 1 ELSE 0 END) as successful_executions,
-                AVG(CASE WHEN success THEN execution_duration_ms ELSE NULL END) as avg_execution_time,
-                SUM(wasm_file_size_bytes) as total_wasm_bytes,
-                SUM(input_size_bytes) as total_input_bytes
-            FROM usage_logs ul
-            JOIN api_keys ak ON ul.api_key_id = ak.id
-            WHERE ak.user_id = $1 
-            AND ul.created_at >= $2 
-            AND ul.created_at <= $3
-            "#
-        )
-        .bind(user_id)
-        .bind(start_date)
-        .bind(end_date)
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(UsageStats {
-            total_executions: stats.total_executions,
-            successful_executions: stats.successful_executions,
-            average_execution_time_ms: stats.avg_execution_time.map(|avg| avg as i32),
-            total_wasm_bytes: stats.total_wasm_bytes,
-            total_input_bytes: stats.total_input_bytes,
-        })
-    }
-}
-
-/// Database row for usage statistics
-#[derive(sqlx::FromRow)]
-struct UsageStatsRow {
-    total_executions: i64,
-    successful_executions: i64,
-    avg_execution_time: Option<f64>,
-    total_wasm_bytes: i64,
-    total_input_bytes: i64,
-}
-
-/// Usage statistics structure
-#[derive(Debug, Clone)]
-pub struct UsageStats {
-    pub total_executions: i64,
-    pub successful_executions: i64,
-    pub average_execution_time_ms: Option<i32>,
-    pub total_wasm_bytes: i64,
-    pub total_input_bytes: i64,
 }

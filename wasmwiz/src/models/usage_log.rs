@@ -55,11 +55,6 @@ impl UsageLog {
         self
     }
 
-    pub fn with_memory_peak(mut self, memory_mb: f32) -> Self {
-        self.memory_peak_mb = Some(memory_mb);
-        self
-    }
-
     pub fn with_file_sizes(mut self, wasm_size: i32, input_size: i32) -> Self {
         self.wasm_module_size_bytes = Some(wasm_size);
         self.input_size_bytes = Some(input_size);

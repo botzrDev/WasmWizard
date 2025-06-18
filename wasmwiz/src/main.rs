@@ -8,13 +8,12 @@ mod config;
 mod app;
 
 use actix_web::HttpServer;
-use sqlx::PgPool;
 use tracing::{info, error};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use dotenvy::dotenv;
 
 use utils::file_system;
-use services::{DatabaseService, cleanup};
+use services::{DatabaseService, cleanup, establish_connection_pool};
 use config::Config;
 use app::create_app;
 
@@ -45,9 +44,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Configuration loaded and validated.");
 
     // 4. Database connection pool setup
-    let database_url = config.database_url.clone();
     info!("Attempting to connect to database...");
-    let db_pool = PgPool::connect(&database_url).await
+    let db_pool = establish_connection_pool(&config).await
         .map_err(|e| {
             error!("Failed to connect to database: {:?}", e);
             "Failed to connect to database"

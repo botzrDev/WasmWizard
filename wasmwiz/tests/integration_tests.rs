@@ -28,6 +28,9 @@ async fn setup_test_environment() -> PgPool {
         port
     );
 
+    // Prevent the container from being dropped
+    std::mem::forget(postgres_node);
+
     // Set environment variables for the test application
     unsafe {
         env::set_var("DATABASE_URL", &database_url);
@@ -422,7 +425,7 @@ async fn test_malicious_input_patterns() {
     
     // Test with suspicious query parameters
     let req = test::TestRequest::get()
-        .uri("/health?script=<script>alert('xss')</script>")
+        .uri("/health?script=%3Cscript%3Ealert('xss')%3C/script%3E") // URL-encoded
         .to_request();
     
     let resp = test::call_service(&app, req).await;

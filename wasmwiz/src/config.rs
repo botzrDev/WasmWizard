@@ -7,17 +7,10 @@ pub struct Config {
     pub server_host: String,
     pub server_port: u16,
     pub api_salt: String,
-    pub wasm_temp_dir: String,
     pub max_wasm_size: usize,
     pub max_input_size: usize,
     pub execution_timeout: u64,
     pub memory_limit: usize,
-    pub free_tier_rate_minute: u32,
-    pub free_tier_rate_day: u32,
-    pub basic_tier_rate_minute: u32,
-    pub basic_tier_rate_day: u32,
-    pub pro_tier_rate_minute: u32,
-    pub pro_tier_rate_day: u32,
 }
 
 impl Config {
@@ -33,8 +26,6 @@ impl Config {
                 .map_err(|_| ConfigError::Invalid("SERVER_PORT must be a valid port number"))?,
             api_salt: env::var("API_SALT")
                 .map_err(|_| ConfigError::Missing("API_SALT"))?,
-            wasm_temp_dir: env::var("WASM_TEMP_DIR")
-                .unwrap_or_else(|_| "/tmp/wasm_modules".to_string()),
             max_wasm_size: env::var("MAX_WASM_SIZE")
                 .unwrap_or_else(|_| "10485760".to_string()) // 10MB
                 .parse()
@@ -51,30 +42,6 @@ impl Config {
                 .unwrap_or_else(|_| "134217728".to_string()) // 128MB
                 .parse()
                 .map_err(|_| ConfigError::Invalid("MEMORY_LIMIT must be a valid number"))?,
-            free_tier_rate_minute: env::var("FREE_TIER_RATE_MINUTE")
-                .unwrap_or_else(|_| "10".to_string())
-                .parse()
-                .map_err(|_| ConfigError::Invalid("FREE_TIER_RATE_MINUTE must be a valid number"))?,
-            free_tier_rate_day: env::var("FREE_TIER_RATE_DAY")
-                .unwrap_or_else(|_| "500".to_string())
-                .parse()
-                .map_err(|_| ConfigError::Invalid("FREE_TIER_RATE_DAY must be a valid number"))?,
-            basic_tier_rate_minute: env::var("BASIC_TIER_RATE_MINUTE")
-                .unwrap_or_else(|_| "100".to_string())
-                .parse()
-                .map_err(|_| ConfigError::Invalid("BASIC_TIER_RATE_MINUTE must be a valid number"))?,
-            basic_tier_rate_day: env::var("BASIC_TIER_RATE_DAY")
-                .unwrap_or_else(|_| "10000".to_string())
-                .parse()
-                .map_err(|_| ConfigError::Invalid("BASIC_TIER_RATE_DAY must be a valid number"))?,
-            pro_tier_rate_minute: env::var("PRO_TIER_RATE_MINUTE")
-                .unwrap_or_else(|_| "500".to_string())
-                .parse()
-                .map_err(|_| ConfigError::Invalid("PRO_TIER_RATE_MINUTE must be a valid number"))?,
-            pro_tier_rate_day: env::var("PRO_TIER_RATE_DAY")
-                .unwrap_or_else(|_| "50000".to_string())
-                .parse()
-                .map_err(|_| ConfigError::Invalid("PRO_TIER_RATE_DAY must be a valid number"))?,
         })
     }
     
