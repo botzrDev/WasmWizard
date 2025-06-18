@@ -17,7 +17,7 @@ use crate::middleware::auth::AuthContext;
 
 /// Token bucket for rate limiting
 #[derive(Debug, Clone)]
-struct TokenBucket {
+pub struct TokenBucket {
     tokens: f64,
     capacity: f64,
     refill_rate: f64, // tokens per second
@@ -25,7 +25,7 @@ struct TokenBucket {
 }
 
 impl TokenBucket {
-    fn new(capacity: f64, refill_rate: f64) -> Self {
+    pub fn new(capacity: f64, refill_rate: f64) -> Self {
         Self {
             tokens: capacity,
             capacity,
@@ -34,7 +34,7 @@ impl TokenBucket {
         }
     }
 
-    fn try_consume(&mut self, tokens: f64) -> bool {
+    pub fn try_consume(&mut self, tokens: f64) -> bool {
         self.refill();
         
         if self.tokens >= tokens {

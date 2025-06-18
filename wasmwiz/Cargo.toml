@@ -5,6 +5,10 @@ name = "wasmwiz"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "wasmwiz"
+path = "src/lib.rs"
+
 [dependencies]
 # Web server framework for high performance
 actix-web = "4"
@@ -76,5 +80,13 @@ rand = "0.8"
 # For hex encoding/decoding
 hex = "0.4"
 
+[features]
+# Enable this feature for test-specific configurations or modules
+test = []
+
 [dev-dependencies]
-# No specific dev dependencies mentioned for the MVP yet, but would go here if needed for specific testing utilities.
+actix-web = { version = "4", features = ["macros"] }
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
+testcontainers = "0.12"
+testcontainers-modules = { version = "0.12", features = ["postgres"] }
+wasmwiz = { path = ".", features = ["test"] }

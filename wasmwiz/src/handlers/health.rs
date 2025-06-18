@@ -2,9 +2,10 @@
 use actix_web::{web, HttpResponse, Result};
 use serde_json::json;
 use tracing::{error, info};
+use crate::app::AppState;
 
 /// Health check endpoint that verifies system components
-pub async fn health_check(pool: web::Data<crate::AppState>) -> Result<HttpResponse> {
+pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
     info!("Health check requested");
     
     let mut status = "healthy";

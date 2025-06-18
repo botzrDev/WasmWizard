@@ -5,25 +5,18 @@ mod handlers;
 mod middleware;
 mod services;
 mod config;
+mod app;
 
-use actix_web::{web, App, HttpServer};
-use actix_files as fs;
+use actix_web::HttpServer;
 use sqlx::PgPool;
 use tracing::{info, error};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use dotenvy::dotenv;
 
 use utils::file_system;
-use handlers::{health, execute, web as web_handlers, api_keys};
-use middleware::{AuthMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware, InputValidationMiddleware};
 use services::{DatabaseService, cleanup};
 use config::Config;
-
-pub struct AppState {
-    pub db_pool: PgPool,
-    pub db_service: DatabaseService,
-    pub config: Config,
-}
+use app::create_app;
 
 #[actix_web::main] // Marks the main function as the Actix-web entry point
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -72,13 +65,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })?;
     info!("Database migrations complete.");
 
-    // 6. Create database service
-    let db_service = DatabaseService::new(db_pool.clone());
-    info!("Database service initialized.");
+    // 6. Create database service (no longer needed here, moved to create_app)
+    // let db_service = DatabaseService::new(db_pool.clone());
+    // info!("Database service initialized.");
 
     // 7. Start background cleanup tasks
     file_system::start_wasm_cleanup_task();
-    cleanup::start_cleanup_tasks(db_service.clone());
+    // Pass db_service to cleanup tasks if needed, or refactor cleanup to take db_pool
+    // For now, assuming cleanup can work with just db_pool or is self-contained
+    cleanup::start_cleanup_tasks(DatabaseService::new(db_pool.clone())); // Re-initialize for cleanup if needed
     info!("Background cleanup tasks started.");
 
     // 8. Set up Actix-web server
@@ -86,43 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server_port = config.server_port;
     info!("Starting Actix-web server on {}:{}", server_host, server_port);
     HttpServer::new(move || {
-        let auth_middleware = AuthMiddleware::new(db_service.clone());
-        let rate_limit_middleware = RateLimitMiddleware::new();
-        let security_middleware = SecurityHeadersMiddleware::new();
-        let input_validation_middleware = InputValidationMiddleware::new();
-        
-        App::new()
-            .app_data(web::Data::new(AppState { 
-                db_pool: db_pool.clone(),
-                db_service: db_service.clone(),
-                config: config.clone(),
-            }))
-            .wrap(security_middleware)
-            .wrap(input_validation_middleware)
-            // Health check endpoint (no auth required)
-            .service(web::resource("/health").get(health::health_check))
-            // Web interface routes (no auth required)
-            .service(web::resource("/").get(web_handlers::index))
-            .service(web::resource("/api-keys").get(web_handlers::api_keys))
-            .service(web::resource("/upload").post(web_handlers::upload_form))
-            .service(web::resource("/generate-key").post(web_handlers::generate_key_form))
-            .service(web::resource("/csrf-token").get(web_handlers::csrf_token))
-            // Static file serving (no auth required)
-            .service(fs::Files::new("/static", "./static").show_files_listing())
-            // Protected API endpoints with auth and rate limiting
-            .service(
-                web::scope("/api")
-                    .wrap(rate_limit_middleware)
-                    .wrap(auth_middleware)
-                    .service(web::resource("/execute").post(execute::execute_wasm))
-            )
-            // API key management endpoints (no auth required for now - would need admin auth in production)
-            .service(
-                web::scope("/admin")
-                    .service(web::resource("/api-keys").post(api_keys::create_api_key))
-                    .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
-                    .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key))
-            )
+        create_app(db_pool.clone(), config.clone())
     })
     .bind((server_host.as_str(), server_port))?
     .run()

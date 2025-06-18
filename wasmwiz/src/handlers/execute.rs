@@ -15,11 +15,12 @@ use wasmer_wasix::{WasiEnv, Pipe};
 use std::fs;
 use std::time::Duration;
 use tokio::time::timeout;
+use crate::app::AppState;
 
 /// Execute a WebAssembly module with provided input
 pub async fn execute_wasm(
     req: HttpRequest,
-    app_state: web::Data<crate::AppState>,
+    app_state: web::Data<AppState>,
     mut payload: Multipart,
 ) -> ActixResult<HttpResponse, ApiError> {
     let start_time = Instant::now();

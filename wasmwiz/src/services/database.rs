@@ -3,6 +3,12 @@ use sqlx::PgPool;
 use uuid::Uuid;
 use anyhow::Result;
 use crate::models::{ApiKey, User, SubscriptionTier, UsageLog};
+use crate::config::Config;
+
+/// Establishes a connection pool to the database
+pub async fn establish_connection_pool(config: &Config) -> Result<PgPool, sqlx::Error> {
+    PgPool::connect(&config.database_url).await
+}
 
 #[derive(Clone)]
 pub struct DatabaseService {

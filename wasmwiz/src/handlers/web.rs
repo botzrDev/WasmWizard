@@ -3,7 +3,7 @@ use actix_web::{web, HttpResponse, Result as ActixResult};
 use askama_actix::Template;
 use crate::errors::ApiError;
 use crate::handlers::api_keys;
-use crate::AppState;
+use crate::app::AppState;
 use crate::middleware::generate_csrf_token;
 
 #[derive(Template)]

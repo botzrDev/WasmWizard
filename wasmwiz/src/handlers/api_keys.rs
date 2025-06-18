@@ -10,7 +10,7 @@ use tracing::{info, error};
 use crate::{
     models::{ApiKey, User},
     errors::ApiError,
-    AppState,
+    app::AppState,
 };
 
 #[derive(Deserialize)]

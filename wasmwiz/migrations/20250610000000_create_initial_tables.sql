@@ -2,9 +2,12 @@
 
 -- UP migration
 
+-- Enable UUID extension for PostgreSQL < 13
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Table for user accounts (minimal for MVP, will be expanded)
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -12,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Table for subscription tiers
 CREATE TABLE IF NOT EXISTS subscription_tiers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL UNIQUE,
     max_executions_per_minute INTEGER NOT NULL,
     max_executions_per_day INTEGER NOT NULL,
@@ -33,7 +36,7 @@ INSERT INTO subscription_tiers (name, max_executions_per_minute, max_executions_
 
 -- Table for API keys
 CREATE TABLE IF NOT EXISTS api_keys (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     key_hash TEXT NOT NULL UNIQUE, -- SHA-256 hash of the actual API key
     user_id UUID NOT NULL REFERENCES users(id),
     tier_id UUID NOT NULL REFERENCES subscription_tiers(id),
@@ -47,7 +50,7 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys (key_hash);
 
 -- Table for usage logs
 CREATE TABLE IF NOT EXISTS usage_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     api_key_id UUID NOT NULL REFERENCES api_keys(id),
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     execution_duration_ms INTEGER, -- Actual time taken for Wasm execution.
