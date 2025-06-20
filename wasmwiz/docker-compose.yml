@@ -18,10 +18,23 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   wasmwiz:
     build: .
     environment:
       DATABASE_URL: postgresql://wasmwiz:wasmwiz_password@postgres:5432/wasmwiz
+      REDIS_URL: redis://redis:6379
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 8080
       RUST_LOG: info,wasmwiz=debug
@@ -36,6 +49,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - wasm_temp:/tmp/wasm_modules
     restart: unless-stopped
@@ -48,4 +63,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   wasm_temp:

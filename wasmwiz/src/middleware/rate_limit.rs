@@ -1,5 +1,7 @@
 // src/middleware/rate_limit.rs
 use crate::middleware::auth::AuthContext;
+use crate::middleware::redis_rate_limit::RedisRateLimiter;
+use crate::services::RedisService;
 use actix_web::{
     Error, HttpMessage, HttpResponse, Result,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
@@ -99,12 +101,25 @@ impl RateLimit {
 /// Rate limiting middleware factory
 pub struct RateLimitMiddleware {
     state: RateLimiterState,
+    redis_limiter: Option<RedisRateLimiter>,
+    use_redis: bool,
 }
 
 impl RateLimitMiddleware {
     pub fn new() -> Self {
         Self {
             state: Arc::new(Mutex::new(HashMap::new())),
+            redis_limiter: None,
+            use_redis: false,
+        }
+    }
+    
+    /// Create a new rate limiter with Redis support
+    pub fn with_redis(redis: RedisService) -> Self {
+        Self {
+            state: Arc::new(Mutex::new(HashMap::new())),
+            redis_limiter: Some(RedisRateLimiter::new(redis)),
+            use_redis: true,
         }
     }
 }
@@ -131,6 +146,8 @@ where
         ready(Ok(RateLimitMiddlewareService {
             service: Rc::new(service),
             state: self.state.clone(),
+            redis_limiter: self.redis_limiter.clone(),
+            use_redis: self.use_redis,
         }))
     }
 }
@@ -138,6 +155,8 @@ where
 pub struct RateLimitMiddlewareService<S> {
     service: Rc<S>,
     state: RateLimiterState,
+    redis_limiter: Option<RedisRateLimiter>,
+    use_redis: bool,
 }
 
 impl<S, B> Service<ServiceRequest> for RateLimitMiddlewareService<S>
@@ -157,6 +176,8 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let service = self.service.clone();
         let state = self.state.clone();
+        let redis_limiter = self.redis_limiter.clone();
+        let use_redis = self.use_redis;
 
         Box::pin(async move {
             // Extract AuthContext before any early return to avoid borrow checker issues
@@ -173,35 +194,36 @@ where
             let api_key_id = auth_context.api_key.id;
             let rate_limit = RateLimit::from_tier_name(&auth_context.tier.name);
 
-            // Check rate limits
-            let (allowed, retry_after) = {
-                let mut state_guard = state.lock().unwrap();
-                let buckets = state_guard.entry(api_key_id).or_insert_with(|| {
-                    (
-                        TokenBucket::new(
-                            rate_limit.requests_per_minute as f64,
-                            rate_limit.requests_per_minute as f64 / 60.0,
-                        ),
-                        TokenBucket::new(
-                            rate_limit.requests_per_day as f64,
-                            rate_limit.requests_per_day as f64 / 86400.0,
-                        ),
-                    )
-                });
-
-                let minute_allowed = buckets.0.try_consume(1.0);
-                let day_allowed = buckets.1.try_consume(1.0);
-
-                let allowed = minute_allowed && day_allowed;
-                let retry_after = if !minute_allowed {
-                    buckets.0.get_retry_after()
-                } else if !day_allowed {
-                    buckets.1.get_retry_after()
-                } else {
-                    0
-                };
-
-                (allowed, retry_after)
+            // Check rate limits - using Redis if enabled, otherwise fallback to in-memory
+            let (allowed, retry_after, remaining_minute, remaining_day) = if use_redis && redis_limiter.is_some() {
+                let limiter = redis_limiter.unwrap();
+                match limiter.check_rate_limit(api_key_id, &rate_limit).await {
+                    Ok((allowed, retry_after)) => {
+                        // Get remaining counts
+                        let (rem_min, rem_day) = match limiter.get_remaining_requests(api_key_id, &rate_limit).await {
+                            Ok((min, day)) => (min, day),
+                            Err(e) => {
+                                tracing::error!("Failed to get remaining requests from Redis: {}", e);
+                                (0, 0) // Default to 0 on error
+                            }
+                        };
+                        (allowed, retry_after, rem_min, rem_day)
+                    },
+                    Err(e) => {
+                        tracing::error!("Redis rate limiter error: {}", e);
+                        // Fallback to in-memory on Redis error
+                        let (allowed, retry_after, rem_min, rem_day) = check_in_memory_rate_limit(
+                            &state, api_key_id, &rate_limit
+                        );
+                        (allowed, retry_after, rem_min, rem_day)
+                    }
+                }
+            } else {
+                // Use in-memory rate limiting
+                let (allowed, retry_after, rem_min, rem_day) = check_in_memory_rate_limit(
+                    &state, api_key_id, &rate_limit
+                );
+                (allowed, retry_after, rem_min, rem_day)
             };
 
             if !allowed {
@@ -233,17 +255,7 @@ where
                 HeaderName::from_static("x-ratelimit-limit-day"),
                 HeaderValue::from_str(&rate_limit.requests_per_day.to_string()).unwrap(),
             );
-
-            // Get remaining requests from buckets
-            let (remaining_minute, remaining_day) = {
-                let state_guard = state.lock().unwrap();
-                if let Some(buckets) = state_guard.get(&api_key_id) {
-                    (buckets.0.tokens as u32, buckets.1.tokens as u32)
-                } else {
-                    (rate_limit.requests_per_minute, rate_limit.requests_per_day)
-                }
-            };
-
+            
             headers.insert(
                 HeaderName::from_static("x-ratelimit-remaining-minute"),
                 HeaderValue::from_str(&remaining_minute.to_string()).unwrap(),
@@ -256,6 +268,45 @@ where
             Ok(response)
         })
     }
+}
+
+/// Helper function for in-memory rate limiting
+fn check_in_memory_rate_limit(
+    state: &RateLimiterState,
+    api_key_id: Uuid,
+    rate_limit: &RateLimit,
+) -> (bool, u64, u32, u32) {
+    let mut state_guard = state.lock().unwrap();
+    let buckets = state_guard.entry(api_key_id).or_insert_with(|| {
+        (
+            TokenBucket::new(
+                rate_limit.requests_per_minute as f64,
+                rate_limit.requests_per_minute as f64 / 60.0,
+            ),
+            TokenBucket::new(
+                rate_limit.requests_per_day as f64,
+                rate_limit.requests_per_day as f64 / 86400.0,
+            ),
+        )
+    });
+
+    let minute_allowed = buckets.0.try_consume(1.0);
+    let day_allowed = buckets.1.try_consume(1.0);
+
+    let allowed = minute_allowed && day_allowed;
+    let retry_after = if !minute_allowed {
+        buckets.0.get_retry_after()
+    } else if !day_allowed {
+        buckets.1.get_retry_after()
+    } else {
+        0
+    };
+
+    // Calculate remaining
+    let remaining_minute = buckets.0.tokens as u32;
+    let remaining_day = buckets.1.tokens as u32;
+
+    (allowed, retry_after, remaining_minute, remaining_day)
 }
 
 #[cfg(test)]

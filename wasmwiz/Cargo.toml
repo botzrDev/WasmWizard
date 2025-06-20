@@ -40,6 +40,10 @@ tokio = { version = "1.38", features = ["full"] } # "full" is convenient for dev
 # Updated to 0.8.6+ to fix RUSTSEC-2024-0363 binary protocol vulnerability
 sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
 
+# For Redis-based distributed rate limiting
+redis = { version = "0.24", features = ["tokio-comp", "tokio-native-tls"] }
+async-trait = "0.1"
+
 # For hashing API keys (SHA-256)
 sha2 = "0.10"
 

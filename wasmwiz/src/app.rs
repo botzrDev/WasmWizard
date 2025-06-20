@@ -4,7 +4,7 @@ use crate::handlers::{api_keys, execute, health, web as web_handlers};
 use crate::middleware::{
     AuthMiddleware, InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware,
 };
-use crate::services::DatabaseService;
+use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{App, web};
 use sqlx::PgPool;
@@ -14,6 +14,7 @@ pub struct AppState {
     pub db_pool: PgPool,
     pub db_service: DatabaseService,
     pub config: Config,
+    pub redis_service: Option<RedisService>,
 }
 
 pub fn create_app(
@@ -30,7 +31,28 @@ pub fn create_app(
 > {
     let db_service = DatabaseService::new(db_pool.clone());
     let auth_middleware = AuthMiddleware::new(db_service.clone());
-    let rate_limit_middleware = RateLimitMiddleware::new();
+    
+    // Initialize Redis service if URL is available
+    let redis_service = match RedisService::new(&config.redis_url) {
+        Ok(service) => {
+            tracing::info!("Redis service initialized successfully");
+            Some(service)
+        },
+        Err(e) => {
+            tracing::warn!("Failed to initialize Redis service, falling back to in-memory rate limiting: {}", e);
+            None
+        }
+    };
+    
+    // Create rate limit middleware with Redis if available
+    let rate_limit_middleware = if let Some(redis) = redis_service.clone() {
+        tracing::info!("Using Redis-based rate limiting");
+        RateLimitMiddleware::with_redis(redis)
+    } else {
+        tracing::warn!("Using in-memory rate limiting");
+        RateLimitMiddleware::new()
+    };
+    
     let security_middleware = SecurityHeadersMiddleware::new();
     let input_validation_middleware = InputValidationMiddleware::new();
 
@@ -39,6 +61,7 @@ pub fn create_app(
             db_pool: db_pool.clone(),
             db_service: db_service.clone(),
             config: config.clone(),
+            redis_service: redis_service.clone(),
         }))
         .wrap(security_middleware)
         .wrap(input_validation_middleware)
