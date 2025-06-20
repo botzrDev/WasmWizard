@@ -14,6 +14,7 @@ pub struct AppState {
     pub db_pool: PgPool,
     pub db_service: DatabaseService,
     pub config: Config,
+    #[allow(dead_code)] // Reserved for future Redis integration
     pub redis_service: Option<RedisService>,
 }
 

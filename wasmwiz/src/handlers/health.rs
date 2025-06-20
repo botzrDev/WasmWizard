@@ -1,13 +1,14 @@
 // src/handlers/health.rs
 use crate::app::AppState;
+use crate::log_info;
 use actix_web::{HttpResponse, Result, web};
 use serde_json::json;
 use sysinfo::System;
-use tracing::{error, info};
+use tracing::error;
 
 /// Health check endpoint that verifies system components
 pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
-    info!("Health check requested");
+    log_info!("Health check requested");
 
     let mut status = "healthy";
     let mut checks = serde_json::Map::new();

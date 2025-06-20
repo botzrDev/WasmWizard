@@ -21,6 +21,7 @@ impl RedisService {
     }
 
     /// Set a key with expiration in seconds
+    #[allow(dead_code)] // Reserved for distributed rate limiting
     pub async fn set_ex(&self, key: &str, value: &str, expiry_secs: usize) -> Result<()> {
         let mut conn = self.get_connection().await?;
         let _: () = conn.set_ex(key, value, expiry_secs as u64).await?;
@@ -35,6 +36,7 @@ impl RedisService {
     }
 
     /// Increment a key and return the new value
+    #[allow(dead_code)] // Reserved for distributed rate limiting
     pub async fn incr(&self, key: &str) -> Result<i64> {
         let mut conn = self.get_connection().await?;
         let value: i64 = conn.incr(key, 1).await?;
@@ -42,6 +44,7 @@ impl RedisService {
     }
 
     /// Set expiration on a key
+    #[allow(dead_code)] // Reserved for distributed rate limiting
     pub async fn expire(&self, key: &str, seconds: usize) -> Result<bool> {
         let mut conn = self.get_connection().await?;
         let result: bool = conn.expire(key, seconds as i64).await?;

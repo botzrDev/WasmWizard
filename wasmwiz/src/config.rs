@@ -1,7 +1,8 @@
 // src/config.rs
 use std::env;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
     pub database_url: String,
     pub redis_url: String,
@@ -12,16 +13,38 @@ pub struct Config {
     pub max_input_size: usize,
     pub execution_timeout: u64,
     pub memory_limit: usize,
+    pub log_level: String,
+    pub environment: Environment,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub enum Environment {
+    Development,
+    Staging,
+    Production,
 }
 
 impl Config {
     pub fn from_env() -> Result<Self, ConfigError> {
+        let environment = match env::var("ENVIRONMENT").as_deref() {
+            Ok("production") => Environment::Production,
+            Ok("staging") => Environment::Staging,
+            _ => Environment::Development,
+        };
+
+        // Production-specific defaults
+        let (default_host, default_log_level) = match environment {
+            Environment::Production => ("0.0.0.0", "info"),
+            Environment::Staging => ("0.0.0.0", "debug"), 
+            Environment::Development => ("127.0.0.1", "debug"),
+        };
+
         Ok(Config {
             database_url: env::var("DATABASE_URL")
                 .map_err(|_| ConfigError::Missing("DATABASE_URL"))?,
             redis_url: env::var("REDIS_URL")
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
-            server_host: env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
+            server_host: env::var("SERVER_HOST").unwrap_or_else(|_| default_host.to_string()),
             server_port: env::var("SERVER_PORT")
                 .unwrap_or_else(|_| "8080".to_string())
                 .parse()
@@ -43,7 +66,19 @@ impl Config {
                 .unwrap_or_else(|_| "134217728".to_string()) // 128MB
                 .parse()
                 .map_err(|_| ConfigError::Invalid("MEMORY_LIMIT must be a valid number"))?,
+            log_level: env::var("LOG_LEVEL")
+                .unwrap_or_else(|_| default_log_level.to_string()),
+            environment,
         })
+    }
+
+    pub fn is_production(&self) -> bool {
+        matches!(self.environment, Environment::Production)
+    }
+
+    #[allow(dead_code)] // Utility method for future use
+    pub fn is_development(&self) -> bool {
+        matches!(self.environment, Environment::Development)
     }
 
     pub fn validate(&self) -> Result<(), ConfigError> {

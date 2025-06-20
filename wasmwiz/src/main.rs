@@ -2,6 +2,7 @@ mod app;
 mod config;
 mod errors;
 mod handlers;
+mod logging;
 mod middleware;
 mod models;
 mod services;
@@ -10,38 +11,42 @@ mod utils;
 use actix_web::HttpServer;
 use dotenvy::dotenv;
 use tracing::{error, info};
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 use services::{DatabaseService, cleanup};
 use utils::file_system;
-// use crate::services::establish_connection_pool;
 use app::create_app;
 use config::Config;
+use logging::init_logging;
 use services::establish_connection_pool;
 
 #[actix_web::main] // Marks the main function as the Actix-web entry point
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Initialize logging
-    // Filters logs based on RUST_LOG environment variable (e.g., RUST_LOG=info,wasmwiz=debug)
-    FmtSubscriber::builder()
-        .with_env_filter(EnvFilter::from_default_env())
-        .init();
-    info!("Logger initialized.");
+    // 1. Load environment variables from .env file (for local development)
+    if cfg!(debug_assertions) {
+        dotenv().ok(); // Only load .env in development builds
+    }
 
-    // 2. Load environment variables from .env file (for local development)
-    dotenv().ok(); // Doesn't fail if .env is not found
-    info!(".env file loaded (if present).");
-
-    // 3. Load and validate configuration
+    // 2. Load and validate configuration
     let config = Config::from_env().map_err(|e| {
-        error!("Failed to load configuration: {:?}", e);
+        eprintln!("Failed to load configuration: {:?}", e);
         "Failed to load configuration"
     })?;
     config.validate().map_err(|e| {
-        error!("Configuration validation failed: {:?}", e);
+        eprintln!("Configuration validation failed: {:?}", e);
         "Configuration validation failed"
     })?;
-    info!("Configuration loaded and validated.");
+
+    // 3. Initialize logging based on environment
+    init_logging(&config).map_err(|e| {
+        eprintln!("Failed to initialize logging: {:?}", e);
+        "Failed to initialize logging"
+    })?;
+    
+    info!(
+        environment = ?config.environment,
+        version = env!("CARGO_PKG_VERSION"),
+        "WasmWiz starting up"
+    );
 
     // 4. Database connection pool setup
     info!("Attempting to connect to database...");
@@ -49,39 +54,55 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         error!("Failed to connect to database: {:?}", e);
         "Failed to connect to database"
     })?;
-    info!("Database connection pool established.");
+    info!("Database connection pool established");
 
-    // 5. Run database migrations (optional for prod, but good for dev/CI)
-    info!("Running database migrations...");
-    sqlx::migrate!("./migrations") // Path to your migrations directory
-        .run(&db_pool)
-        .await
-        .map_err(|e| {
-            error!("Failed to run database migrations: {:?}", e);
-            "Failed to run database migrations"
-        })?;
-    info!("Database migrations complete.");
+    // 5. Run database migrations (essential for production)
+    if !config.is_production() {
+        info!("Running database migrations...");
+        sqlx::migrate!("./migrations") // Path to your migrations directory
+            .run(&db_pool)
+            .await
+            .map_err(|e| {
+                error!("Failed to run database migrations: {:?}", e);
+                "Failed to run database migrations"
+            })?;
+        info!("Database migrations complete");
+    } else {
+        info!("Production mode: Skipping automatic migrations");
+    }
 
-    // 6. Create database service (no longer needed here, moved to create_app)
-    // let db_service = DatabaseService::new(db_pool.clone());
-    // info!("Database service initialized.");
-
-    // 7. Start background cleanup tasks
+    // 6. Start background cleanup tasks
     file_system::start_wasm_cleanup_task();
-    // Pass db_service to cleanup tasks if needed, or refactor cleanup to take db_pool
-    // For now, assuming cleanup can work with just db_pool or is self-contained
-    cleanup::start_cleanup_tasks(DatabaseService::new(db_pool.clone())); // Re-initialize for cleanup if needed
-    info!("Background cleanup tasks started.");
+    cleanup::start_cleanup_tasks(DatabaseService::new(db_pool.clone()));
+    info!("Background cleanup tasks started");
 
-    // 8. Set up Actix-web server
+    // 7. Set up Actix-web server with production optimizations
     let server_host = config.server_host.clone();
     let server_port = config.server_port;
-    info!("Starting Actix-web server on {}:{}", server_host, server_port);
-    HttpServer::new(move || create_app(db_pool.clone(), config.clone()))
-        .bind((server_host.as_str(), server_port))?
-        .run()
-        .await?;
+    let is_production = config.is_production();
+    
+    info!(
+        host = %server_host,
+        port = %server_port,
+        "Starting Actix-web server"
+    );
 
-    info!("Server shut down gracefully.");
+    let server = HttpServer::new(move || create_app(db_pool.clone(), config.clone()))
+        .bind((server_host.as_str(), server_port))?;
+
+    // Production server settings
+    let server = if is_production {
+        server
+            .workers(num_cpus::get()) // Use all available CPU cores
+            .keep_alive(std::time::Duration::from_secs(75)) // Keep connections alive
+            .client_request_timeout(std::time::Duration::from_secs(30))
+            .client_disconnect_timeout(std::time::Duration::from_secs(5))
+    } else {
+        server.workers(1) // Single worker for development
+    };
+
+    server.run().await?;
+
+    info!("Server shut down gracefully");
     Ok(())
 }

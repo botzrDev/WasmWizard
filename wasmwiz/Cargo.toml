@@ -61,14 +61,14 @@ dotenvy = "0.15"
 
 # For structured logging and tracing
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] } # Enables filtering logs by environment variables
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] } # Enables filtering logs by environment variables and JSON output
 
 # For HTML templating (Web UI)
 askama = { version = "0.12", features = ["with-actix-web"] }
 askama_actix = "0.14"
 
 # For error handling with derive macros
-thiserror = "1.0"
+thiserror = "2.0.12"
 
 # For async streaming utilities
 futures-util = "0.3"
@@ -76,7 +76,7 @@ futures-util = "0.3"
 # For serving static files
 actix-files = "0.6"
 
-# For base64 encoding/decoding
+# For base64 encoding/decoding  
 base64 = "0.22"
 
 # For generating secure random API keys
@@ -102,9 +102,28 @@ sysinfo = "0.30"
 # For static initialization of Prometheus metrics
 once_cell = "1.19"
 
+# For CPU detection in production
+num_cpus = "1.16"
+
 [features]
 # Enable this feature for test-specific configurations or modules
 test = []
+
+# Production optimizations
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+# Force consistent dependency versions across workspace
+# Note: Using direct dependency specification instead of patches
+# to avoid crates.io patch conflicts
 
 [dev-dependencies]
 actix-web = { version = "4", features = ["macros"] }
