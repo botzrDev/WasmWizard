@@ -182,21 +182,36 @@ async fn execute_wasm_file(
     // Set up WASI environment with pipes for I/O
     let mut stdin_pipe = Pipe::new();
     stdin_pipe.write_all(input.as_bytes())?;
-    
     let stdout_pipe = Pipe::new();
     let stderr_pipe = Pipe::new();
-    
+
+    use tracing::debug;
+    debug!("WASM module imports: {:?}", module.imports().collect::<Vec<_>>());
+    debug!("WASM module exports: {:?}", module.exports().collect::<Vec<_>>());
+
     let mut wasi_env = WasiEnv::builder("wasmwiz")
         .stdin(Box::new(stdin_pipe))
         .stdout(Box::new(stdout_pipe.clone()))
         .stderr(Box::new(stderr_pipe))
         .finalize(&mut store)?;
 
-    // Get import object for WASI
-    let import_object = wasi_env.import_object(&mut store, &module)?;
+    // Get import object for WASI, with error handling for version issues
+    let import_object = match wasi_env.import_object(&mut store, &module) {
+        Ok(obj) => obj,
+        Err(e) => {
+            debug!("WASI import_object failed: {}. WASI version could not be determined or is unsupported.", e);
+            return Err(format!("WASI version could not be determined or is unsupported: {}", e).into());
+        }
+    };
 
-    // Create instance
-    let instance = Instance::new(&mut store, &module, &import_object)?;
+    // Create instance with improved error handling
+    let instance = match Instance::new(&mut store, &module, &import_object) {
+        Ok(instance) => instance,
+        Err(err) => {
+            debug!("Instance creation failed: {}", err);
+            return Err(format!("WASM instance creation failed: {}", err).into());
+        }
+    };
 
     // Initialize WASI environment with the instance
     wasi_env.initialize(&mut store, instance.clone())?;

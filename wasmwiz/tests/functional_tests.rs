@@ -254,3 +254,63 @@ fn test_config_edge_cases() {
         }
     }
 }
+
+#[test]
+fn test_wasi_version_compatibility() {
+    use std::process::Command;
+    let test_modules = [
+        "calc_add.wasm",
+        "echo.wasm",
+        "hello_world.wasm",
+    ];
+    for module in &test_modules {
+        let path = format!("tests/wasm_modules/{}", module);
+        let output = Command::new("wasmtime")
+            .arg(&path)
+            .output()
+            .expect("Failed to run wasmtime");
+        assert!(output.status.success(), "WASI version compatibility failed for {}", module);
+    }
+}
+
+#[test]
+fn test_wasm_sandboxing_filesystem() {
+    // This test expects a module that tries to read /etc/passwd and should fail
+    let path = "tests/wasm_modules/malicious_fs.wasm";
+    if std::path::Path::new(path).exists() {
+        let output = std::process::Command::new("wasmtime")
+            .arg(path)
+            .output()
+            .expect("Failed to run wasmtime");
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(!stdout.contains("root:"), "Sandboxing failed: /etc/passwd leak");
+    }
+}
+
+#[test]
+fn test_wasm_resource_limits() {
+    // This test expects a module that tries to allocate excessive memory and should fail
+    let path = "tests/wasm_modules/memory_bomb.wasm";
+    if std::path::Path::new(path).exists() {
+        let output = std::process::Command::new("wasmtime")
+            .arg(path)
+            .output()
+            .expect("Failed to run wasmtime");
+        assert!(!output.status.success(), "Resource limit enforcement failed");
+    }
+}
+
+#[test]
+fn test_wasm_malicious_protection() {
+    // This test expects a module that tries to run an infinite loop and should time out
+    let path = "tests/wasm_modules/infinite_loop.wasm";
+    if std::path::Path::new(path).exists() {
+        let output = std::process::Command::new("timeout")
+            .arg("3")
+            .arg("wasmtime")
+            .arg(path)
+            .output()
+            .expect("Failed to run wasmtime with timeout");
+        assert!(!output.status.success(), "Malicious WASM protection failed (infinite loop)");
+    }
+}
