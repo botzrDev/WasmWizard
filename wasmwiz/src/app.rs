@@ -39,6 +39,11 @@ pub fn create_app(db_pool: PgPool, config: Config) -> App<
         .wrap(input_validation_middleware)
         // Health check endpoint (no auth required)
         .service(web::resource("/health").get(health::health_check))
+        // Health check endpoints (Kubernetes probes)
+        .service(web::resource("/healthz").get(health::liveness_probe))
+        .service(web::resource("/readyz").get(health::readiness_probe))
+        // Prometheus metrics endpoint
+        .service(web::resource("/metrics").get(health::prometheus_metrics))
         // Web interface routes (no auth required)
         .service(web::resource("/").get(web_handlers::index))
         .service(web::resource("/api-keys").get(web_handlers::api_keys))

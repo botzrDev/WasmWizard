@@ -3,6 +3,7 @@ use actix_web::{web, HttpResponse, Result};
 use serde_json::json;
 use tracing::{error, info};
 use crate::app::AppState;
+use sysinfo::System;
 
 /// Health check endpoint that verifies system components
 pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
@@ -36,6 +37,15 @@ pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
         }
     }
     
+    // Resource utilization
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    let pid = sysinfo::get_current_pid().unwrap();
+    if let Some(proc) = sys.process(pid) {
+        checks.insert("memory_mb".to_string(), json!(proc.memory() / 1024));
+        checks.insert("cpu_usage".to_string(), json!(proc.cpu_usage()));
+    }
+    
     let response = json!({
         "status": status,
         "timestamp": chrono::Utc::now(),
@@ -49,4 +59,57 @@ pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
     } else {
         Ok(HttpResponse::ServiceUnavailable().json(response))
     }
+}
+
+/// Liveness probe
+pub async fn liveness_probe() -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok().json(json!({"status": "alive"})))
+}
+
+/// Readiness probe with dependency and resource checks
+pub async fn readiness_probe(pool: web::Data<AppState>) -> Result<HttpResponse> {
+    let mut status = "ready";
+    let mut checks = serde_json::Map::new();
+
+    // Database check
+    match sqlx::query("SELECT 1").fetch_one(&pool.db_pool).await {
+        Ok(_) => {
+            checks.insert("database".to_string(), json!({"status": "healthy"}));
+        }
+        Err(e) => {
+            checks.insert("database".to_string(), json!({"status": "unhealthy", "error": e.to_string()}));
+            status = "not_ready";
+        }
+    }
+
+    // Redis check (if used)
+    // checks.insert("redis".to_string(), json!({"status": "healthy"}));
+
+    // Resource utilization
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    let pid = sysinfo::get_current_pid().unwrap();
+    if let Some(proc) = sys.process(pid) {
+        checks.insert("memory_mb".to_string(), json!(proc.memory() / 1024));
+        checks.insert("cpu_usage".to_string(), json!(proc.cpu_usage()));
+    }
+
+    Ok(HttpResponse::Ok().json(json!({
+        "status": status,
+        "checks": checks
+    })))
+}
+
+/// Prometheus metrics endpoint
+pub async fn prometheus_metrics() -> Result<HttpResponse> {
+    use prometheus::{Encoder, TextEncoder, gather};
+    
+    let encoder = TextEncoder::new();
+    let metric_families = gather();
+    let mut buffer = Vec::new();
+    encoder.encode(&metric_families, &mut buffer).unwrap();
+    
+    Ok(HttpResponse::Ok()
+        .content_type("text/plain; version=0.0.4; charset=utf-8")
+        .body(buffer))
 }

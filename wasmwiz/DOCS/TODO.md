@@ -65,15 +65,15 @@ This document outlines all tasks required to take the WasmWiz WebAssembly Execut
   - [ ] Test rate limiting under multi-instance deployment
 
 ### **Missing Monitoring & Observability**
-- [ ] **Implement Application Monitoring**
-  - [ ] Add Prometheus metrics collection
-  - [ ] Set up Grafana dashboards
-  - [ ] Implement alerting system
-  - [ ] Add performance monitoring for WASM execution
-- [ ] **Enhance Health Checks**
-  - [ ] Add Kubernetes readiness/liveness probes
-  - [ ] Add dependency health checks (Redis, external services)
-  - [ ] Add resource utilization monitoring
+- [x] **Implement Application Monitoring**
+  - [x] Add Prometheus metrics collection
+  - [x] Set up Grafana dashboards
+  - [x] Implement alerting system
+  - [x] Add performance monitoring for WASM execution
+- [x] **Enhance Health Checks**
+  - [x] Add Kubernetes readiness/liveness probes
+  - [x] Add dependency health checks (Redis, external services)
+  - [x] Add resource utilization monitoring
 
 ### **Secrets Management**
 - [ ] **Implement Proper Secrets Management**

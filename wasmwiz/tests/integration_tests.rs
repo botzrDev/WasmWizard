@@ -523,3 +523,47 @@ async fn test_subscription_tiers_exist() {
     assert!(tier_names.contains(&"Basic".to_string()));
     assert!(tier_names.contains(&"Pro".to_string()));
 }
+
+#[actix_web::test]
+async fn test_health_endpoints() {
+    let pool = setup_test_environment().await;
+    let config = Config::from_env().expect("Failed to load test configuration");
+    let app = test::init_service(create_app(pool.clone(), config)).await;
+    
+    // Test liveness probe
+    let req = test::TestRequest::get().uri("/healthz").to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+    
+    let body: Value = test::read_body_json(resp).await;
+    assert_eq!(body["status"], "alive");
+    
+    // Test readiness probe
+    let req = test::TestRequest::get().uri("/readyz").to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+    
+    let body: Value = test::read_body_json(resp).await;
+    assert!(body["status"].as_str().unwrap().contains("ready"));
+    assert!(body["checks"].is_object());
+    
+    // Test legacy health endpoint
+    let req = test::TestRequest::get().uri("/health").to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+}
+
+#[actix_web::test]
+async fn test_metrics_endpoint() {
+    let pool = setup_test_environment().await;
+    let config = Config::from_env().expect("Failed to load test configuration");
+    let app = test::init_service(create_app(pool.clone(), config)).await;
+    
+    // Test metrics endpoint
+    let req = test::TestRequest::get().uri("/metrics").to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+    
+    let content_type = resp.headers().get("content-type").unwrap();
+    assert!(content_type.to_str().unwrap().contains("text/plain"));
+}

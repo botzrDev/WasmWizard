@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wasmwiz
+  labels:
+    app: wasmwiz
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wasmwiz
+  template:
+    metadata:
+      labels:
+        app: wasmwiz
+    spec:
+      containers:
+      - name: wasmwiz
+        image: wasmwiz:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: wasmwiz-secrets
+              key: database-url
+        - name: API_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wasmwiz-secrets
+              key: api-salt
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # Liveness probe - checks if the container is alive
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        # Readiness probe - checks if the container is ready to serve traffic
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        # Startup probe - used during container startup
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wasmwiz-service
+  labels:
+    app: wasmwiz
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: wasmwiz
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: wasmwiz-monitor
+  labels:
+    app: wasmwiz
+spec:
+  selector:
+    matchLabels:
+      app: wasmwiz
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
