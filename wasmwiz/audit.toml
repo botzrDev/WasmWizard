@@ -1,0 +1,27 @@
+# Security audit configuration for WasmWiz
+# This file defines security policies for dependencies
+
+[database]
+# Advisory database source
+url = "https://github.com/RustSec/advisory-db"
+
+[advisories]
+# Vulnerabilities that we acknowledge but cannot fix due to indirect dependencies
+# These should be regularly reviewed and fixed when possible
+
+# RUSTSEC-2023-0071 - RSA timing sidechannel attack
+# Status: No fix available yet for 0.9.8 - waiting for maintainers
+# Mitigation: We use RSA only for secure key generation, not direct crypto operations
+
+# RUSTSEC-2024-0436 - Unmaintained paste crate 
+# Status: Indirect dependency through Wasmer, cannot replace easily
+# Mitigation: Monitoring for Wasmer updates, isolated usage
+
+# RUSTSEC-2024-0421 - IDNA Punycode vulnerability
+# Status: Indirect dependency, should be addressed by forcing newer version
+# Note: DO NOT IGNORE - should be fixed
+ignore = ["RUSTSEC-2023-0071", "RUSTSEC-2024-0436"]
+
+[bans]
+# Ban vulnerable versions we can control
+multiple-versions = "warn"

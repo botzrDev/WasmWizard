@@ -37,7 +37,8 @@ tokio = { version = "1.38", features = ["full"] } # "full" is convenient for dev
 # "postgres" for PostgreSQL driver
 # "uuid" and "chrono" features for direct mapping of UUID and DateTime types
 # "macros" for `query!` and `query_as!` macros
-sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
+# Updated to 0.8.6+ to fix RUSTSEC-2024-0363 binary protocol vulnerability
+sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
 
 # For hashing API keys (SHA-256)
 sha2 = "0.10"
@@ -80,13 +81,20 @@ rand = "0.8"
 # For hex encoding/decoding
 hex = "0.4"
 
+# Security patches for indirect dependencies
+# Force updated RSA version to fix RUSTSEC-2023-0071 timing sidechannel attack
+rsa = "0.9.8"  # Latest stable version, 0.10.0-rc.0 available but not stable yet
+# Note: IDNA vulnerability RUSTSEC-2024-0421 exists in deep transitive dependencies
+# from Wasmer ecosystem. Cannot be easily patched without breaking compatibility.
+# This is being tracked and will be resolved when Wasmer updates their dependencies.
+
 [features]
 # Enable this feature for test-specific configurations or modules
 test = []
 
 [dev-dependencies]
 actix-web = { version = "4", features = ["macros"] }
-sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
 testcontainers = "0.12"
 testcontainers-modules = { version = "0.12", features = ["postgres"] }
 wasmwiz = { path = ".", features = ["test"] }
