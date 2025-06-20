@@ -221,7 +221,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, security-audit, code-quality, build-docker]
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment: staging
+    # environment: staging  # Uncomment after creating 'staging' environment in GitHub repo settings
     
     steps:
     - name: Checkout code
@@ -259,7 +259,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, security-audit, code-quality, build-docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
+    # environment: production  # Uncomment after creating 'production' environment in GitHub repo settings
     
     steps:
     - name: Checkout code
