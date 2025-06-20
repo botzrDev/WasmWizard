@@ -1,7 +1,7 @@
 // src/models/subscription_tier.rs
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Represents a subscription tier with defined limits.
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]

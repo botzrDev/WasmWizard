@@ -1,16 +1,16 @@
 // src/handlers/api_keys.rs
-use actix_web::{web, HttpResponse, Result as ActixResult};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use actix_web::{HttpResponse, Result as ActixResult, web};
 use chrono::Utc;
 use rand::{Rng, distributions::Alphanumeric};
-use sha2::{Sha256, Digest};
-use tracing::{info, error};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use tracing::{error, info};
+use uuid::Uuid;
 
 use crate::{
-    models::{ApiKey, User},
-    errors::ApiError,
     app::AppState,
+    errors::ApiError,
+    models::{ApiKey, User},
 };
 
 #[derive(Deserialize)]
@@ -41,17 +41,17 @@ pub async fn create_api_key(
     req: web::Json<CreateApiKeyRequest>,
 ) -> ActixResult<HttpResponse, ApiError> {
     info!("Creating API key for user: {}", req.user_email);
-    
+
     // Generate a secure random API key
     let api_key = generate_api_key();
     let key_hash = hash_api_key(&api_key);
-    
+
     // Find or create user
     let user = find_or_create_user(&app_state, &req.user_email).await?;
-    
+
     // Find subscription tier
     let tier = find_tier_by_name(&app_state, &req.tier_name).await?;
-    
+
     // Create API key record
     let api_key_record = ApiKey {
         id: Uuid::new_v4(),
@@ -62,16 +62,19 @@ pub async fn create_api_key(
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
-    
+
     // Save to database
-    app_state.db_service.create_api_key(&api_key_record).await
+    app_state
+        .db_service
+        .create_api_key(&api_key_record)
+        .await
         .map_err(|e| {
             error!("Failed to create API key: {}", e);
             ApiError::InternalError(anyhow::anyhow!("Failed to create API key"))
         })?;
-    
+
     info!("API key created successfully for user: {}", req.user_email);
-    
+
     Ok(HttpResponse::Created().json(CreateApiKeyResponse {
         api_key,
         api_key_id: api_key_record.id,
@@ -86,23 +89,31 @@ pub async fn list_api_keys(
 ) -> ActixResult<HttpResponse, ApiError> {
     let user_email = path.into_inner();
     info!("Listing API keys for user: {}", user_email);
-    
+
     // Find user by email
-    let user = find_user_by_email(&app_state, &user_email).await?
+    let user = find_user_by_email(&app_state, &user_email)
+        .await?
         .ok_or_else(|| ApiError::NotFound("User not found".to_string()))?;
-    
+
     // Get user's API keys
-    let api_keys = app_state.db_service.get_user_api_keys(user.id).await
+    let api_keys = app_state
+        .db_service
+        .get_user_api_keys(user.id)
+        .await
         .map_err(|e| {
             error!("Failed to fetch user API keys: {}", e);
             ApiError::InternalError(anyhow::anyhow!("Failed to fetch API keys"))
         })?;
-    
+
     // Convert to response format
     let mut api_key_infos = Vec::new();
     for api_key in api_keys {
         // Get tier information
-        if let Ok(Some(tier)) = app_state.db_service.find_subscription_tier_by_id(api_key.tier_id).await {
+        if let Ok(Some(tier)) = app_state
+            .db_service
+            .find_subscription_tier_by_id(api_key.tier_id)
+            .await
+        {
             api_key_infos.push(ApiKeyInfo {
                 id: api_key.id,
                 key_hash: format!("{}...", &api_key.key_hash[..8]), // Show only first 8 chars
@@ -112,7 +123,7 @@ pub async fn list_api_keys(
             });
         }
     }
-    
+
     Ok(HttpResponse::Ok().json(api_key_infos))
 }
 
@@ -123,13 +134,16 @@ pub async fn deactivate_api_key(
 ) -> ActixResult<HttpResponse, ApiError> {
     let api_key_id = path.into_inner();
     info!("Deactivating API key: {}", api_key_id);
-    
-    app_state.db_service.deactivate_api_key(api_key_id).await
+
+    app_state
+        .db_service
+        .deactivate_api_key(api_key_id)
+        .await
         .map_err(|e| {
             error!("Failed to deactivate API key: {}", e);
             ApiError::InternalError(anyhow::anyhow!("Failed to deactivate API key"))
         })?;
-    
+
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "message": "API key deactivated successfully"
     })))
@@ -143,7 +157,7 @@ fn generate_api_key() -> String {
         .take(32)
         .map(char::from)
         .collect();
-    
+
     format!("ww_{}", key) // Prefix with "ww_" for WasmWiz
 }
 
@@ -161,7 +175,7 @@ async fn find_or_create_user(
     if let Ok(Some(user)) = find_user_by_email(app_state, email).await {
         return Ok(user);
     }
-    
+
     // Create new user
     let new_user = User {
         id: Uuid::new_v4(),
@@ -169,22 +183,20 @@ async fn find_or_create_user(
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
-    
+
     // Save to database
-    sqlx::query(
-        "INSERT INTO users (id, email, created_at, updated_at) VALUES ($1, $2, $3, $4)"
-    )
-    .bind(new_user.id)
-    .bind(&new_user.email)
-    .bind(new_user.created_at)
-    .bind(new_user.updated_at)
-    .execute(&app_state.db_pool)
-    .await
-    .map_err(|e| {
-        error!("Failed to create user: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Failed to create user"))
-    })?;
-    
+    sqlx::query("INSERT INTO users (id, email, created_at, updated_at) VALUES ($1, $2, $3, $4)")
+        .bind(new_user.id)
+        .bind(&new_user.email)
+        .bind(new_user.created_at)
+        .bind(new_user.updated_at)
+        .execute(&app_state.db_pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to create user: {}", e);
+            ApiError::InternalError(anyhow::anyhow!("Failed to create user"))
+        })?;
+
     Ok(new_user)
 }
 
@@ -192,17 +204,15 @@ async fn find_user_by_email(
     app_state: &web::Data<AppState>,
     email: &str,
 ) -> Result<Option<User>, ApiError> {
-    let user = sqlx::query_as::<_, User>(
-        "SELECT * FROM users WHERE email = $1"
-    )
-    .bind(email)
-    .fetch_optional(&app_state.db_pool)
-    .await
-    .map_err(|e| {
-        error!("Failed to find user by email: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Database error"))
-    })?;
-    
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
+        .bind(email)
+        .fetch_optional(&app_state.db_pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to find user by email: {}", e);
+            ApiError::InternalError(anyhow::anyhow!("Database error"))
+        })?;
+
     Ok(user)
 }
 
@@ -211,7 +221,7 @@ async fn find_tier_by_name(
     tier_name: &str,
 ) -> Result<crate::models::SubscriptionTier, ApiError> {
     let tier = sqlx::query_as::<_, crate::models::SubscriptionTier>(
-        "SELECT * FROM subscription_tiers WHERE name = $1"
+        "SELECT * FROM subscription_tiers WHERE name = $1",
     )
     .bind(tier_name)
     .fetch_optional(&app_state.db_pool)
@@ -221,6 +231,6 @@ async fn find_tier_by_name(
         ApiError::InternalError(anyhow::anyhow!("Database error"))
     })?
     .ok_or_else(|| ApiError::BadRequest(format!("Invalid tier name: {}", tier_name)))?;
-    
+
     Ok(tier)
 }

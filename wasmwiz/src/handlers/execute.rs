@@ -1,21 +1,21 @@
 // src/handlers/execute.rs
-use actix_web::{web, HttpResponse, Result as ActixResult, HttpRequest, HttpMessage};
 use actix_multipart::Multipart;
+use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, web};
 use futures_util::TryStreamExt;
-use tracing::{info, error, warn};
 use std::time::Instant;
+use tracing::{error, info, warn};
 
+use crate::app::AppState;
+use crate::errors::ApiError;
+use crate::middleware::auth::AuthContext;
 use crate::models::api_payloads::ExecuteResponse;
 use crate::models::usage_log::UsageLog;
 use crate::utils::file_system;
-use crate::errors::ApiError;
-use crate::middleware::auth::AuthContext;
-use wasmer::{Store, Module, Instance};
-use wasmer_wasix::{WasiEnv, Pipe};
 use std::fs;
 use std::time::Duration;
 use tokio::time::timeout;
-use crate::app::AppState;
+use wasmer::{Instance, Module, Store};
+use wasmer_wasix::{Pipe, WasiEnv};
 
 /// Execute a WebAssembly module with provided input
 pub async fn execute_wasm(
@@ -24,81 +24,89 @@ pub async fn execute_wasm(
     mut payload: Multipart,
 ) -> ActixResult<HttpResponse, ApiError> {
     let start_time = Instant::now();
-    
+
     // Get authentication context
-    let auth_context = req.extensions().get::<AuthContext>().cloned()
+    let auth_context = req
+        .extensions()
+        .get::<AuthContext>()
+        .cloned()
         .ok_or_else(|| ApiError::Unauthorized("Authentication required".to_string()))?;
-    
+
     info!("WASM execution request received for user: {}", auth_context.user.email);
-    
+
     let mut wasm_data: Option<Vec<u8>> = None;
     let mut input_data: Option<String> = None;
     let mut wasm_size = 0;
     let mut input_size = 0;
-    
+
     // Parse multipart form data
     while let Some(field) = payload.try_next().await.map_err(|e| {
         error!("Failed to parse multipart data: {}", e);
         ApiError::BadRequest("Failed to parse multipart data".to_string())
     })? {
         let field_name = field.name();
-        
+
         match field_name {
             "wasm" => {
                 let data = collect_field_data(field, app_state.config.max_wasm_size).await?;
-                
+
                 // Validate WASM magic bytes
                 if !is_valid_wasm(&data) {
                     return Err(ApiError::BadRequest("Invalid WASM file format".to_string()));
                 }
-                
+
                 wasm_size = data.len();
                 wasm_data = Some(data);
             }
             "input" => {
                 let data = collect_field_data(field, app_state.config.max_input_size).await?;
                 input_size = data.len();
-                input_data = Some(String::from_utf8(data).map_err(|_| {
-                    ApiError::BadRequest("Input must be valid UTF-8".to_string())
-                })?);
+                input_data =
+                    Some(String::from_utf8(data).map_err(|_| {
+                        ApiError::BadRequest("Input must be valid UTF-8".to_string())
+                    })?);
             }
             _ => {
                 warn!("Unknown field in multipart data: {}", field_name);
             }
         }
     }
-    
+
     // Validate required fields
-    let wasm_data = wasm_data.ok_or_else(|| {
-        ApiError::BadRequest("Missing 'wasm' field in form data".to_string())
-    })?;
-    
+    let wasm_data = wasm_data
+        .ok_or_else(|| ApiError::BadRequest("Missing 'wasm' field in form data".to_string()))?;
+
     let input_data = input_data.unwrap_or_default();
-    
+
     // Save WASM to temporary file
-    let temp_path = file_system::create_unique_wasm_file_path().await.map_err(|e| {
-        error!("Failed to create temp file path: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Failed to create temporary file"))
-    })?;
-    
-    tokio::fs::write(&temp_path, &wasm_data).await.map_err(|e| {
-        error!("Failed to write WASM to temp file: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Failed to save WASM file"))
-    })?;
-    
+    let temp_path = file_system::create_unique_wasm_file_path()
+        .await
+        .map_err(|e| {
+            error!("Failed to create temp file path: {}", e);
+            ApiError::InternalError(anyhow::anyhow!("Failed to create temporary file"))
+        })?;
+
+    tokio::fs::write(&temp_path, &wasm_data)
+        .await
+        .map_err(|e| {
+            error!("Failed to write WASM to temp file: {}", e);
+            ApiError::InternalError(anyhow::anyhow!("Failed to save WASM file"))
+        })?;
+
     info!("WASM file saved to: {:?}", temp_path);
-    
+
     // Execute WASM
-    let result = execute_wasm_file(&temp_path, &input_data, &auth_context.tier, &app_state.config).await;
-    
+    let result =
+        execute_wasm_file(&temp_path, &input_data, &auth_context.tier, &app_state.config).await;
+
     // Calculate execution time
     let execution_time_ms = start_time.elapsed().as_millis() as i32;
-    
+
     // Clean up temp file
     if let Err(e) = tokio::fs::remove_file(&temp_path).await {
         warn!("Failed to clean up temp file {:?}: {}", temp_path, e);
     }
-    
+
     // Create usage log and response
     let (response, usage_log) = match result {
         Ok(output) => {
@@ -106,12 +114,12 @@ pub async fn execute_wasm(
             let usage_log = UsageLog::success(auth_context.api_key.id)
                 .with_execution_duration(execution_time_ms)
                 .with_file_sizes(wasm_size as i32, input_size as i32);
-            
+
             let response = HttpResponse::Ok().json(ExecuteResponse {
                 output: Some(output),
                 error: None,
             });
-            
+
             (response, usage_log)
         }
         Err(e) => {
@@ -119,21 +127,21 @@ pub async fn execute_wasm(
             let usage_log = UsageLog::error(auth_context.api_key.id, e.to_string())
                 .with_execution_duration(execution_time_ms)
                 .with_file_sizes(wasm_size as i32, input_size as i32);
-            
+
             let response = HttpResponse::UnprocessableEntity().json(ExecuteResponse {
                 output: None,
                 error: Some(format!("Execution failed: {}", e)),
             });
-            
+
             (response, usage_log)
         }
     };
-    
+
     // Log usage (don't fail the request if logging fails)
     if let Err(e) = app_state.db_service.create_usage_log(&usage_log).await {
         error!("Failed to log usage: {}", e);
     }
-    
+
     Ok(response)
 }
 
@@ -142,7 +150,7 @@ async fn collect_field_data(
     max_size: usize,
 ) -> Result<Vec<u8>, ApiError> {
     let mut data = Vec::new();
-    
+
     while let Some(chunk) = field.try_next().await.map_err(|e| {
         error!("Failed to read field data: {}", e);
         ApiError::BadRequest("Failed to read field data".to_string())
@@ -155,13 +163,13 @@ async fn collect_field_data(
         }
         data.extend_from_slice(&chunk);
     }
-    
+
     Ok(data)
 }
 
 fn is_valid_wasm(data: &[u8]) -> bool {
     // Check for WASM magic bytes: 0x00 0x61 0x73 0x6D
-    data.len() >= 4 && &data[0..4] == &[0x00, 0x61, 0x73, 0x6D]
+    data.len() >= 4 && data[0..4] == [0x00, 0x61, 0x73, 0x6D]
 }
 
 async fn execute_wasm_file(
@@ -171,7 +179,7 @@ async fn execute_wasm_file(
     _config: &crate::config::Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     use std::io::Write;
-    
+
     // Read the WASM file
     let wasm_bytes = fs::read(wasm_path)?;
 
@@ -199,8 +207,13 @@ async fn execute_wasm_file(
     let import_object = match wasi_env.import_object(&mut store, &module) {
         Ok(obj) => obj,
         Err(e) => {
-            debug!("WASI import_object failed: {}. WASI version could not be determined or is unsupported.", e);
-            return Err(format!("WASI version could not be determined or is unsupported: {}", e).into());
+            debug!(
+                "WASI import_object failed: {}. WASI version could not be determined or is unsupported.",
+                e
+            );
+            return Err(
+                format!("WASI version could not be determined or is unsupported: {}", e).into()
+            );
         }
     };
 
@@ -218,22 +231,26 @@ async fn execute_wasm_file(
 
     // Prepare for timeout execution
     let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
-    
-    let run_result = timeout(exec_timeout, tokio::task::spawn_blocking(move || {
-        // Call the _start function (WASI entrypoint)
-        if let Ok(start_func) = instance.exports.get_function("_start") {
-            let _ = start_func.call(&mut store, &[])?;
-        }
-        
-        // Read stdout content
-        use std::io::Read;
-        let mut stdout_content = Vec::new();
-        let mut stdout_pipe_clone = stdout_pipe.clone();
-        stdout_pipe_clone.read_to_end(&mut stdout_content)?;
-        let output = String::from_utf8_lossy(&stdout_content).to_string();
 
-        Ok::<String, Box<dyn std::error::Error + Send + Sync>>(output)
-    })).await;
+    let run_result = timeout(
+        exec_timeout,
+        tokio::task::spawn_blocking(move || {
+            // Call the _start function (WASI entrypoint)
+            if let Ok(start_func) = instance.exports.get_function("_start") {
+                let _ = start_func.call(&mut store, &[])?;
+            }
+
+            // Read stdout content
+            use std::io::Read;
+            let mut stdout_content = Vec::new();
+            let mut stdout_pipe_clone = stdout_pipe.clone();
+            stdout_pipe_clone.read_to_end(&mut stdout_content)?;
+            let output = String::from_utf8_lossy(&stdout_content).to_string();
+
+            Ok::<String, Box<dyn std::error::Error + Send + Sync>>(output)
+        }),
+    )
+    .await;
 
     match run_result {
         Ok(join_result) => match join_result {

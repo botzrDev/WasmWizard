@@ -1,11 +1,11 @@
 // src/utils/file_system.rs
 // Utilities for handling temporary files.
 
+use chrono::{DateTime, Duration, Utc};
 use std::path::PathBuf;
 use tokio::fs;
-use uuid::Uuid;
-use chrono::{Utc, Duration, DateTime};
-use tracing::{info, error}; // Using tracing for logging
+use tracing::{error, info};
+use uuid::Uuid; // Using tracing for logging
 
 #[allow(dead_code)]
 /// Gets the base directory for temporary Wasm modules.
@@ -62,7 +62,11 @@ pub fn start_wasm_cleanup_task() {
                             let modified_time_utc: DateTime<Utc> = modified_time.into();
                             if modified_time_utc < cutoff {
                                 if let Err(e) = fs::remove_file(&path).await {
-                                    error!("Failed to remove old Wasm module {}: {}", path.display(), e);
+                                    error!(
+                                        "Failed to remove old Wasm module {}: {}",
+                                        path.display(),
+                                        e
+                                    );
                                 } else {
                                     info!("Cleaned up old Wasm module: {}", path.display());
                                 }

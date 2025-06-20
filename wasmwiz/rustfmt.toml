@@ -16,9 +16,9 @@ imports_granularity = "Crate" # Or "Module" for more separation
 group_imports = "StdExternalCrate" # Groups standard library, then external, then crate-local
 
 # Whether to put braces on the same line as `if`, `while`, `for`, `match`, etc.
-# `Always` means braces on the same line as the keyword.
-# `Prefer` means it tries to, but will break if needed for line length.
-brace_style = "Always"
+# `SameLineWhere` means braces on the same line as the keyword.
+# `AlwaysNextLine` means braces always on the next line.
+brace_style = "SameLineWhere"
 
 # Use trailing commas in multi-line expressions.
 # Improves diffs and makes reordering easier.
@@ -32,13 +32,12 @@ wrap_comments = true
 
 # Use `->` on the same line as the function signature.
 fn_call_width = 80 # Maximum width before arguments are wrapped.
-fn_args_density = "Compressed" # How arguments are packed (e.g., `Compressed`, `Tall`).
 
 # Align struct fields, match arms, etc.
 binop_separator = "Back" # Place binary operators (`+`, `=`, `&&`) at the end of the line.
 
 # How to format where clauses.
-where_clause_layout = "Horizontal" # Or "Vertical" for more strict line breaks.
+where_single_line = true
 
 # Denotes if `pub(crate)` is preferred over `pub(in crate)`.
 # This is mainly about how `rustfmt` writes things if `pub(crate)` is an option.

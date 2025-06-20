@@ -1,14 +1,13 @@
 // src/errors.rs
 // Defines custom error types for the application.
 
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use derive_more::{Display, From};
 use sqlx::Error as SqlxError;
-use std::io::Error as IoError;
-use wasmer_wasix::WasiError;
-use wasmer::RuntimeError;
 use std::error::Error as StdError;
-use anyhow;
+use std::io::Error as IoError;
+use wasmer::RuntimeError;
+use wasmer_wasix::WasiError;
 
 #[allow(dead_code)]
 #[derive(Debug, Display, From)]
@@ -83,14 +82,14 @@ impl ResponseError for ApiError {
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
             ApiError::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
-            ApiError::UnprocessableEntity(_) |
-            ApiError::WasmLoadError(_) |
-            ApiError::WasmRuntimeError(_) |
-            ApiError::WasmTimeLimitExceeded |
-            ApiError::WasmMemoryLimitExceeded => StatusCode::UNPROCESSABLE_ENTITY,
-            ApiError::InternalError(_) |
-            ApiError::DbError(_) |
-            ApiError::FileIoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::UnprocessableEntity(_)
+            | ApiError::WasmLoadError(_)
+            | ApiError::WasmRuntimeError(_)
+            | ApiError::WasmTimeLimitExceeded
+            | ApiError::WasmMemoryLimitExceeded => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::InternalError(_) | ApiError::DbError(_) | ApiError::FileIoError(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
         }
     }
 }

@@ -1,14 +1,20 @@
 // src/middleware/input_validation.rs
-use std::future::{Ready, ready};
 use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    http::header,
     Error,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+    http::header,
 };
 use futures_util::future::LocalBoxFuture;
+use std::future::{Ready, ready};
 use tracing::warn;
 
 pub struct InputValidationMiddleware;
+
+impl Default for InputValidationMiddleware {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl InputValidationMiddleware {
     pub fn new() -> Self {
@@ -81,10 +87,18 @@ fn validate_request(req: &ServiceRequest) -> Result<(), String> {
     if let Some(user_agent) = req.headers().get(header::USER_AGENT) {
         if let Ok(ua_str) = user_agent.to_str() {
             let suspicious_patterns = [
-                "sqlmap", "nikto", "nmap", "masscan", "zap", "burp",
-                "wget", "curl", "python-requests", "go-http-client"
+                "sqlmap",
+                "nikto",
+                "nmap",
+                "masscan",
+                "zap",
+                "burp",
+                "wget",
+                "curl",
+                "python-requests",
+                "go-http-client",
             ];
-            
+
             let ua_lower = ua_str.to_lowercase();
             for pattern in &suspicious_patterns {
                 if ua_lower.contains(pattern) {
@@ -98,11 +112,24 @@ fn validate_request(req: &ServiceRequest) -> Result<(), String> {
     let query = req.query_string();
     if !query.is_empty() {
         let malicious_patterns = [
-            "script", "javascript:", "vbscript:", "onload=", "onerror=",
-            "../", "..\\", "/etc/passwd", "cmd.exe", "powershell",
-            "SELECT", "INSERT", "DELETE", "UPDATE", "DROP", "UNION"
+            "script",
+            "javascript:",
+            "vbscript:",
+            "onload=",
+            "onerror=",
+            "../",
+            "..\\",
+            "/etc/passwd",
+            "cmd.exe",
+            "powershell",
+            "SELECT",
+            "INSERT",
+            "DELETE",
+            "UPDATE",
+            "DROP",
+            "UNION",
         ];
-        
+
         let query_lower = query.to_lowercase();
         for pattern in &malicious_patterns {
             if query_lower.contains(&pattern.to_lowercase()) {
@@ -134,19 +161,21 @@ pub fn sanitize_input(input: &str) -> String {
 pub fn is_safe_filename(filename: &str) -> bool {
     let allowed_extensions = [".wasm"];
     let filename_lower = filename.to_lowercase();
-    
+
     // Check for directory traversal
     if filename.contains("..") || filename.contains('/') || filename.contains('\\') {
         return false;
     }
-    
+
     // Check for null bytes
     if filename.contains('\0') {
         return false;
     }
-    
+
     // Check extension
-    allowed_extensions.iter().any(|ext| filename_lower.ends_with(ext))
+    allowed_extensions
+        .iter()
+        .any(|ext| filename_lower.ends_with(ext))
 }
 
 #[cfg(test)]
@@ -155,7 +184,10 @@ mod tests {
 
     #[test]
     fn test_sanitize_input() {
-        assert_eq!(sanitize_input("<script>alert('xss')</script>"), "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;");
+        assert_eq!(
+            sanitize_input("<script>alert('xss')</script>"),
+            "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
+        );
         assert_eq!(sanitize_input("normal text"), "normal text");
         assert_eq!(sanitize_input("text with \0 null byte"), "text with  null byte");
     }

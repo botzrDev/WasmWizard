@@ -1,7 +1,7 @@
 // src/utils/auth.rs
 // Contains utility functions related to authentication and API keys.
 
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 #[allow(dead_code)]

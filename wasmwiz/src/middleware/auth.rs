@@ -1,18 +1,18 @@
 // src/middleware/auth.rs
-use actix_web::{
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpResponse, Result, HttpMessage,
-    http::header::{HeaderValue, AUTHORIZATION},
+use crate::{
+    models::{ApiKey, SubscriptionTier, User},
+    services::DatabaseService,
 };
-use futures_util::future::{ready, Ready, LocalBoxFuture};
+use actix_web::{
+    Error, HttpMessage, HttpResponse, Result,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    http::header::{AUTHORIZATION, HeaderValue},
+};
+use futures_util::future::{LocalBoxFuture, Ready, ready};
+use sha2::{Digest, Sha256};
 use std::{
     rc::Rc,
     task::{Context, Poll},
-};
-use sha2::{Sha256, Digest};
-use crate::{
-    services::DatabaseService,
-    models::{ApiKey, User, SubscriptionTier},
 };
 
 /// Authentication context that gets added to request extensions
@@ -80,7 +80,7 @@ where
         Box::pin(async move {
             // Extract Authorization header
             let auth_header = req.headers().get(AUTHORIZATION);
-            
+
             let api_key = match extract_api_key(auth_header) {
                 Some(key) => key,
                 None => {
@@ -107,18 +107,16 @@ where
                     service.call(req).await.map(|res| res.map_into_right_body())
                 }
                 Ok(None) => {
-                    let response = HttpResponse::Unauthorized()
-                        .json(serde_json::json!({
-                            "error": "Invalid API key"
-                        }));
+                    let response = HttpResponse::Unauthorized().json(serde_json::json!({
+                        "error": "Invalid API key"
+                    }));
                     Ok(req.into_response(response).map_into_left_body())
                 }
                 Err(e) => {
                     tracing::error!("Database error during authentication: {}", e);
-                    let response = HttpResponse::InternalServerError()
-                        .json(serde_json::json!({
-                            "error": "Internal server error"
-                        }));
+                    let response = HttpResponse::InternalServerError().json(serde_json::json!({
+                        "error": "Internal server error"
+                    }));
                     Ok(req.into_response(response).map_into_left_body())
                 }
             }
@@ -130,16 +128,16 @@ where
 fn extract_api_key(auth_header: Option<&HeaderValue>) -> Option<String> {
     let auth_header = auth_header?;
     let auth_str = auth_header.to_str().ok()?;
-    
+
     if !auth_str.starts_with("Bearer ") {
         return None;
     }
-    
+
     let token = auth_str.strip_prefix("Bearer ")?.trim();
     if token.is_empty() {
         return None;
     }
-    
+
     Some(token.to_string())
 }
 
@@ -157,19 +155,19 @@ mod tests {
     #[test]
     fn test_extract_api_key() {
         use actix_web::http::header::HeaderValue;
-        
+
         // Valid Bearer token
         let header = HeaderValue::from_static("Bearer test_api_key_123");
         assert_eq!(extract_api_key(Some(&header)), Some("test_api_key_123".to_string()));
-        
+
         // Invalid format
         let header = HeaderValue::from_static("Basic test_api_key_123");
         assert_eq!(extract_api_key(Some(&header)), None);
-        
+
         // Empty Bearer
         let header = HeaderValue::from_static("Bearer ");
         assert_eq!(extract_api_key(Some(&header)), None);
-        
+
         // No header
         assert_eq!(extract_api_key(None), None);
     }
@@ -179,14 +177,14 @@ mod tests {
         let key = "test_key_123";
         let hash1 = hash_api_key(key);
         let hash2 = hash_api_key(key);
-        
+
         // Same input should produce same hash
         assert_eq!(hash1, hash2);
-        
+
         // Different input should produce different hash
         let hash3 = hash_api_key("different_key");
         assert_ne!(hash1, hash3);
-        
+
         // Hash should be 64 characters (256 bits / 4 bits per hex char)
         assert_eq!(hash1.len(), 64);
     }

@@ -1,23 +1,23 @@
-mod models;
-mod utils;
+mod app;
+mod config;
 mod errors;
 mod handlers;
 mod middleware;
+mod models;
 mod services;
-mod config;
-mod app;
+mod utils;
 
 use actix_web::HttpServer;
-use tracing::{info, error};
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use dotenvy::dotenv;
+use tracing::{error, info};
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
-use utils::file_system;
 use services::{DatabaseService, cleanup};
+use utils::file_system;
 // use crate::services::establish_connection_pool;
-use services::establish_connection_pool;
-use config::Config;
 use app::create_app;
+use config::Config;
+use services::establish_connection_pool;
 
 #[actix_web::main] // Marks the main function as the Actix-web entry point
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,25 +33,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!(".env file loaded (if present).");
 
     // 3. Load and validate configuration
-    let config = Config::from_env()
-        .map_err(|e| {
-            error!("Failed to load configuration: {:?}", e);
-            "Failed to load configuration"
-        })?;
-    config.validate()
-        .map_err(|e| {
-            error!("Configuration validation failed: {:?}", e);
-            "Configuration validation failed"
-        })?;
+    let config = Config::from_env().map_err(|e| {
+        error!("Failed to load configuration: {:?}", e);
+        "Failed to load configuration"
+    })?;
+    config.validate().map_err(|e| {
+        error!("Configuration validation failed: {:?}", e);
+        "Configuration validation failed"
+    })?;
     info!("Configuration loaded and validated.");
 
     // 4. Database connection pool setup
     info!("Attempting to connect to database...");
-    let db_pool = establish_connection_pool(&config).await
-        .map_err(|e| {
-            error!("Failed to connect to database: {:?}", e);
-            "Failed to connect to database"
-        })?;
+    let db_pool = establish_connection_pool(&config).await.map_err(|e| {
+        error!("Failed to connect to database: {:?}", e);
+        "Failed to connect to database"
+    })?;
     info!("Database connection pool established.");
 
     // 5. Run database migrations (optional for prod, but good for dev/CI)
@@ -80,12 +77,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server_host = config.server_host.clone();
     let server_port = config.server_port;
     info!("Starting Actix-web server on {}:{}", server_host, server_port);
-    HttpServer::new(move || {
-        create_app(db_pool.clone(), config.clone())
-    })
-    .bind((server_host.as_str(), server_port))?
-    .run()
-    .await?;
+    HttpServer::new(move || create_app(db_pool.clone(), config.clone()))
+        .bind((server_host.as_str(), server_port))?
+        .run()
+        .await?;
 
     info!("Server shut down gracefully.");
     Ok(())

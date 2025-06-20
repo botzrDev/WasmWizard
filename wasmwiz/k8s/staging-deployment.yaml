@@ -1,0 +1,206 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wasmwiz-staging
+  namespace: wasmwiz-staging
+  labels:
+    app: wasmwiz
+    environment: staging
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    app.kubernetes.io/managed-by: "github-actions"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  selector:
+    matchLabels:
+      app: wasmwiz
+      environment: staging
+  template:
+    metadata:
+      labels:
+        app: wasmwiz
+        environment: staging
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+      - name: wasmwiz
+        image: wasmwiz:staging-latest # Will be replaced by CI/CD
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "staging"
+        - name: LOG_LEVEL
+          value: "debug"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: wasmwiz-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: wasmwiz-secrets
+              key: redis-url
+        - name: API_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wasmwiz-secrets
+              key: api-salt
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: wasmwiz-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: temp-wasm
+          mountPath: /app/temp_wasm_src
+        - name: temp-test
+          mountPath: /app/temp_wasm_test
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: temp-wasm
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: temp-test
+        emptyDir:
+          sizeLimit: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wasmwiz-staging-service
+  namespace: wasmwiz-staging
+  labels:
+    app: wasmwiz
+    environment: staging
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: wasmwiz
+    environment: staging
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+    name: http
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wasmwiz-staging-ingress
+  namespace: wasmwiz-staging
+  labels:
+    app: wasmwiz
+    environment: staging
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - api-staging.wasmwiz.com
+    secretName: wasmwiz-staging-tls
+  rules:
+  - host: api-staging.wasmwiz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wasmwiz-staging-service
+            port:
+              number: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wasmwiz-staging-hpa
+  namespace: wasmwiz-staging
+  labels:
+    app: wasmwiz
+    environment: staging
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wasmwiz-staging
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

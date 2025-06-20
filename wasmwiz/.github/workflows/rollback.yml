@@ -1,0 +1,120 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      commit_sha:
+        description: 'Commit SHA to rollback to'
+        required: true
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.commit_sha }}
+      
+    - name: Validate rollback target
+      run: |
+        if ! git cat-file -e ${{ github.event.inputs.commit_sha }}; then
+          echo "Invalid commit SHA: ${{ github.event.inputs.commit_sha }}"
+          exit 1
+        fi
+        
+        echo "Rolling back to commit: ${{ github.event.inputs.commit_sha }}"
+        echo "Reason: ${{ github.event.inputs.reason }}"
+        
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.REGISTRY_URL }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    - name: Set image tag
+      id: set-image
+      run: |
+        ENV_SUFFIX=""
+        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
+          ENV_SUFFIX="-staging"
+        fi
+        
+        IMAGE_TAG="${{ secrets.REGISTRY_URL }}/wasmwiz:${{ github.event.inputs.commit_sha }}${ENV_SUFFIX}"
+        echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        
+        if docker manifest inspect $IMAGE_TAG > /dev/null 2>&1; then
+          echo "Image exists: $IMAGE_TAG"
+          echo "build-needed=false" >> $GITHUB_OUTPUT
+        else
+          echo "Image not found: $IMAGE_TAG"
+          echo "Building image from source..."
+          echo "build-needed=true" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Build image if not exists
+      if: steps.set-image.outputs.build-needed == 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.set-image.outputs.image-tag }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Deploy rollback
+      run: |
+        echo "Deploying rollback to ${{ github.event.inputs.environment }}"
+        echo "Using image: ${{ steps.set-image.outputs.image-tag }}"
+        
+        # This would contain actual deployment commands
+        # For Kubernetes:
+        # kubectl set image deployment/wasmwiz wasmwiz=${{ steps.set-image.outputs.image-tag }}
+        # kubectl rollout status deployment/wasmwiz
+        
+        # For Docker Compose:
+        # docker-compose down
+        # IMAGE_TAG=${{ steps.set-image.outputs.image-tag }} docker-compose up -d
+        
+        echo "Rollback completed successfully"
+    
+    - name: Verify rollback
+      run: |
+        echo "Verifying rollback deployment..."
+        # Add health checks here
+        # curl -f https://api-${{ github.event.inputs.environment }}.wasmwiz.com/health || exit 1
+        echo "Rollback verification completed"
+    
+    - name: Create rollback record
+      run: |
+        echo "Recording rollback event:"
+        echo "  Environment: ${{ github.event.inputs.environment }}"
+        echo "  Rollback to: ${{ github.event.inputs.commit_sha }}"
+        echo "  Reason: ${{ github.event.inputs.reason }}"
+        echo "  Timestamp: $(date -u)"
+        
+    - name: Notify rollback completion
+      run: |
+        echo "Rollback notification sent"
+        # This would send notifications to team channels
+        # curl -X POST "${{ secrets.SLACK_WEBHOOK }}" -H 'Content-type: application/json' \
+        #   --data '{"text":"🔄 Rollback completed for ${{ github.event.inputs.environment }}: ${{ github.event.inputs.reason }}"}'

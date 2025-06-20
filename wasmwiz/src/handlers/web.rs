@@ -1,10 +1,10 @@
 // src/handlers/web.rs
-use actix_web::{web, HttpResponse, Result as ActixResult};
-use askama_actix::Template;
+use crate::app::AppState;
 use crate::errors::ApiError;
 use crate::handlers::api_keys;
-use crate::app::AppState;
 use crate::middleware::generate_csrf_token;
+use actix_web::{HttpResponse, Result as ActixResult, web};
+use askama_actix::Template;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -17,12 +17,12 @@ pub async fn index() -> ActixResult<HttpResponse, ApiError> {
     let template = IndexTemplate {
         title: "Execute WebAssembly".to_string(),
     };
-    
+
     let html = template.render().map_err(|e| {
         tracing::error!("Template rendering failed: {}", e);
         ApiError::InternalError(anyhow::anyhow!("Template rendering failed"))
     })?;
-    
+
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))
@@ -39,12 +39,12 @@ pub async fn api_keys() -> ActixResult<HttpResponse, ApiError> {
     let template = ApiKeysTemplate {
         title: "API Key Management".to_string(),
     };
-    
+
     let html = template.render().map_err(|e| {
         tracing::error!("Template rendering failed: {}", e);
         ApiError::InternalError(anyhow::anyhow!("Template rendering failed"))
     })?;
-    
+
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))
@@ -69,11 +69,9 @@ pub async fn generate_key_form(
 }
 
 /// Generate CSRF token endpoint
-pub async fn csrf_token(
-    app_state: web::Data<AppState>,
-) -> ActixResult<HttpResponse, ApiError> {
+pub async fn csrf_token(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
     let token = generate_csrf_token(&app_state.config.api_salt);
-    
+
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "csrf_token": token
     })))

@@ -1,19 +1,19 @@
 // src/middleware/rate_limit.rs
+use crate::middleware::auth::AuthContext;
 use actix_web::{
+    Error, HttpMessage, HttpResponse, Result,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpResponse, Result, HttpMessage,
     http::header::{HeaderName, HeaderValue},
 };
-use futures_util::future::{ready, Ready, LocalBoxFuture};
+use futures_util::future::{LocalBoxFuture, Ready, ready};
 use std::{
     collections::HashMap,
     rc::Rc,
     sync::{Arc, Mutex},
     task::{Context, Poll},
-    time::{Instant},
+    time::Instant,
 };
 use uuid::Uuid;
-use crate::middleware::auth::AuthContext;
 
 /// Token bucket for rate limiting
 #[derive(Debug, Clone)]
@@ -36,7 +36,7 @@ impl TokenBucket {
 
     pub fn try_consume(&mut self, tokens: f64) -> bool {
         self.refill();
-        
+
         if self.tokens >= tokens {
             self.tokens -= tokens;
             true
@@ -48,7 +48,7 @@ impl TokenBucket {
     fn refill(&mut self) {
         let now = Instant::now();
         let time_passed = now.duration_since(self.last_refill).as_secs_f64();
-        
+
         self.tokens = (self.tokens + time_passed * self.refill_rate).min(self.capacity);
         self.last_refill = now;
     }
@@ -163,10 +163,9 @@ where
             let auth_context_opt = req.extensions().get::<AuthContext>().cloned();
             if auth_context_opt.is_none() {
                 tracing::warn!("Rate limit middleware called without authentication context");
-                let response = HttpResponse::InternalServerError()
-                    .json(serde_json::json!({
-                        "error": "Internal server error"
-                    }));
+                let response = HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Internal server error"
+                }));
                 return Ok(req.into_response(response).map_into_left_body());
             }
             let auth_context = auth_context_opt.unwrap();
@@ -179,14 +178,20 @@ where
                 let mut state_guard = state.lock().unwrap();
                 let buckets = state_guard.entry(api_key_id).or_insert_with(|| {
                     (
-                        TokenBucket::new(rate_limit.requests_per_minute as f64, rate_limit.requests_per_minute as f64 / 60.0),
-                        TokenBucket::new(rate_limit.requests_per_day as f64, rate_limit.requests_per_day as f64 / 86400.0),
+                        TokenBucket::new(
+                            rate_limit.requests_per_minute as f64,
+                            rate_limit.requests_per_minute as f64 / 60.0,
+                        ),
+                        TokenBucket::new(
+                            rate_limit.requests_per_day as f64,
+                            rate_limit.requests_per_day as f64 / 86400.0,
+                        ),
                     )
                 });
 
                 let minute_allowed = buckets.0.try_consume(1.0);
                 let day_allowed = buckets.1.try_consume(1.0);
-                
+
                 let allowed = minute_allowed && day_allowed;
                 let retry_after = if !minute_allowed {
                     buckets.0.get_retry_after()
@@ -200,11 +205,10 @@ where
             };
 
             if !allowed {
-                let mut response = HttpResponse::TooManyRequests()
-                    .json(serde_json::json!({
-                        "error": "Rate limit exceeded",
-                        "retry_after_seconds": retry_after
-                    }));
+                let mut response = HttpResponse::TooManyRequests().json(serde_json::json!({
+                    "error": "Rate limit exceeded",
+                    "retry_after_seconds": retry_after
+                }));
 
                 if retry_after > 0 {
                     response.headers_mut().insert(
@@ -218,7 +222,7 @@ where
 
             // Add rate limit headers to successful requests
             let mut response = service.call(req).await?.map_into_right_body();
-            
+
             // Add rate limit information to response headers
             let headers = response.headers_mut();
             headers.insert(
@@ -261,11 +265,11 @@ mod tests {
     #[test]
     fn test_token_bucket() {
         let mut bucket = TokenBucket::new(10.0, 1.0); // 10 tokens, 1 per second
-        
+
         // Should start with full capacity
         assert!(bucket.try_consume(10.0));
         assert!(!bucket.try_consume(1.0)); // No tokens left
-        
+
         // Test refill (we can't easily test time passage, so this is basic)
         bucket.tokens = 5.0; // Manually set for testing
         assert!(bucket.try_consume(5.0));
@@ -277,15 +281,15 @@ mod tests {
         let free = RateLimit::from_tier_name("free");
         assert_eq!(free.requests_per_minute, 10);
         assert_eq!(free.requests_per_day, 500);
-        
+
         let basic = RateLimit::from_tier_name("basic");
         assert_eq!(basic.requests_per_minute, 100);
         assert_eq!(basic.requests_per_day, 10_000);
-        
+
         let pro = RateLimit::from_tier_name("pro");
         assert_eq!(pro.requests_per_minute, 500);
         assert_eq!(pro.requests_per_day, 50_000);
-        
+
         let unknown = RateLimit::from_tier_name("unknown");
         assert_eq!(unknown.requests_per_minute, 10); // Default to free tier
         assert_eq!(unknown.requests_per_day, 500);

@@ -18,14 +18,12 @@ impl Config {
         Ok(Config {
             database_url: env::var("DATABASE_URL")
                 .map_err(|_| ConfigError::Missing("DATABASE_URL"))?,
-            server_host: env::var("SERVER_HOST")
-                .unwrap_or_else(|_| "127.0.0.1".to_string()),
+            server_host: env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
             server_port: env::var("SERVER_PORT")
                 .unwrap_or_else(|_| "8080".to_string())
                 .parse()
                 .map_err(|_| ConfigError::Invalid("SERVER_PORT must be a valid port number"))?,
-            api_salt: env::var("API_SALT")
-                .map_err(|_| ConfigError::Missing("API_SALT"))?,
+            api_salt: env::var("API_SALT").map_err(|_| ConfigError::Missing("API_SALT"))?,
             max_wasm_size: env::var("MAX_WASM_SIZE")
                 .unwrap_or_else(|_| "10485760".to_string()) // 10MB
                 .parse()
@@ -44,32 +42,34 @@ impl Config {
                 .map_err(|_| ConfigError::Invalid("MEMORY_LIMIT must be a valid number"))?,
         })
     }
-    
+
     pub fn validate(&self) -> Result<(), ConfigError> {
         if self.api_salt.len() < 16 {
             return Err(ConfigError::Invalid("API_SALT must be at least 16 characters"));
         }
-        
+
         if self.server_port == 0 {
             return Err(ConfigError::Invalid("SERVER_PORT must be greater than 0"));
         }
-        
+
         if self.max_wasm_size == 0 || self.max_wasm_size > 100 * 1024 * 1024 {
             return Err(ConfigError::Invalid("MAX_WASM_SIZE must be between 1 byte and 100MB"));
         }
-        
+
         if self.max_input_size == 0 || self.max_input_size > 10 * 1024 * 1024 {
             return Err(ConfigError::Invalid("MAX_INPUT_SIZE must be between 1 byte and 10MB"));
         }
-        
+
         if self.execution_timeout == 0 || self.execution_timeout > 300 {
-            return Err(ConfigError::Invalid("EXECUTION_TIMEOUT must be between 1 and 300 seconds"));
+            return Err(ConfigError::Invalid(
+                "EXECUTION_TIMEOUT must be between 1 and 300 seconds",
+            ));
         }
-        
+
         if self.memory_limit < 1024 * 1024 || self.memory_limit > 1024 * 1024 * 1024 {
             return Err(ConfigError::Invalid("MEMORY_LIMIT must be between 1MB and 1GB"));
         }
-        
+
         Ok(())
     }
 }

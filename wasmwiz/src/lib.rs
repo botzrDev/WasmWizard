@@ -9,6 +9,6 @@ pub mod models;
 pub mod services;
 pub mod utils;
 
-pub use app::{create_app, AppState};
+pub use app::{AppState, create_app};
 pub use config::Config;
 pub use services::database::establish_connection_pool;

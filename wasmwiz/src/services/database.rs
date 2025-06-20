@@ -1,9 +1,9 @@
 // src/services/database.rs
-use sqlx::{postgres::PgPoolOptions, PgPool};
-use uuid::Uuid;
-use anyhow::Result;
-use crate::models::{ApiKey, User, SubscriptionTier, UsageLog};
 use crate::config::Config;
+use crate::models::{ApiKey, SubscriptionTier, UsageLog, User};
+use anyhow::Result;
+use sqlx::{PgPool, postgres::PgPoolOptions};
+use uuid::Uuid;
 
 /// Establishes a connection pool to the database
 pub async fn establish_connection_pool(config: &Config) -> Result<PgPool, sqlx::Error> {
@@ -29,7 +29,7 @@ impl DatabaseService {
     /// Find an API key by its hash
     pub async fn find_api_key_by_hash(&self, key_hash: &str) -> Result<Option<ApiKey>> {
         let api_key = sqlx::query_as::<_, ApiKey>(
-            "SELECT * FROM api_keys WHERE key_hash = $1 AND is_active = true"
+            "SELECT * FROM api_keys WHERE key_hash = $1 AND is_active = true",
         )
         .bind(key_hash)
         .fetch_optional(&self.pool)
@@ -40,30 +40,33 @@ impl DatabaseService {
 
     /// Find a user by ID
     pub async fn find_user_by_id(&self, user_id: Uuid) -> Result<Option<User>> {
-        let user = sqlx::query_as::<_, User>(
-            "SELECT * FROM users WHERE id = $1"
-        )
-        .bind(user_id)
-        .fetch_optional(&self.pool)
-        .await?;
+        let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
+            .bind(user_id)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(user)
     }
 
     /// Find a subscription tier by ID
-    pub async fn find_subscription_tier_by_id(&self, tier_id: Uuid) -> Result<Option<SubscriptionTier>> {
-        let tier = sqlx::query_as::<_, SubscriptionTier>(
-            "SELECT * FROM subscription_tiers WHERE id = $1"
-        )
-        .bind(tier_id)
-        .fetch_optional(&self.pool)
-        .await?;
+    pub async fn find_subscription_tier_by_id(
+        &self,
+        tier_id: Uuid,
+    ) -> Result<Option<SubscriptionTier>> {
+        let tier =
+            sqlx::query_as::<_, SubscriptionTier>("SELECT * FROM subscription_tiers WHERE id = $1")
+                .bind(tier_id)
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(tier)
     }
 
     /// Get API key with user and tier information
-    pub async fn get_api_key_with_details(&self, key_hash: &str) -> Result<Option<(ApiKey, User, SubscriptionTier)>> {
+    pub async fn get_api_key_with_details(
+        &self,
+        key_hash: &str,
+    ) -> Result<Option<(ApiKey, User, SubscriptionTier)>> {
         // First get the API key
         let api_key = match self.find_api_key_by_hash(key_hash).await? {
             Some(key) => key,
@@ -114,7 +117,7 @@ impl DatabaseService {
             r#"
             INSERT INTO api_keys (id, key_hash, user_id, tier_id, is_active, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            "#
+            "#,
         )
         .bind(api_key.id)
         .bind(&api_key.key_hash)
@@ -132,7 +135,7 @@ impl DatabaseService {
     /// Get all API keys for a user
     pub async fn get_user_api_keys(&self, user_id: Uuid) -> Result<Vec<ApiKey>> {
         let api_keys = sqlx::query_as::<_, ApiKey>(
-            "SELECT * FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC"
+            "SELECT * FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC",
         )
         .bind(user_id)
         .fetch_all(&self.pool)
@@ -143,36 +146,30 @@ impl DatabaseService {
 
     /// Deactivate an API key
     pub async fn deactivate_api_key(&self, api_key_id: Uuid) -> Result<()> {
-        sqlx::query(
-            "UPDATE api_keys SET is_active = false, updated_at = NOW() WHERE id = $1"
-        )
-        .bind(api_key_id)
-        .execute(&self.pool)
-        .await?;
+        sqlx::query("UPDATE api_keys SET is_active = false, updated_at = NOW() WHERE id = $1")
+            .bind(api_key_id)
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
     }
 
     /// Check database connectivity
     pub async fn health_check(&self) -> Result<()> {
-        sqlx::query("SELECT 1")
-            .execute(&self.pool)
-            .await?;
-        
+        sqlx::query("SELECT 1").execute(&self.pool).await?;
+
         Ok(())
     }
 
     /// Clean up old usage logs (older than specified days)
     pub async fn cleanup_old_usage_logs(&self, days_old: i32) -> Result<u64, sqlx::Error> {
         let cutoff_date = chrono::Utc::now() - chrono::Duration::days(days_old as i64);
-        
-        let result = sqlx::query(
-            "DELETE FROM usage_logs WHERE created_at < $1"
-        )
-        .bind(cutoff_date)
-        .execute(&self.pool)
-        .await?;
-        
+
+        let result = sqlx::query("DELETE FROM usage_logs WHERE created_at < $1")
+            .bind(cutoff_date)
+            .execute(&self.pool)
+            .await?;
+
         Ok(result.rows_affected())
     }
 }

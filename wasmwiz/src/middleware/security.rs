@@ -1,13 +1,19 @@
 // src/middleware/security.rs
-use std::future::{Ready, ready};
 use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    http::header,
     Error,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+    http::header,
 };
 use futures_util::future::LocalBoxFuture;
+use std::future::{Ready, ready};
 
 pub struct SecurityHeadersMiddleware;
+
+impl Default for SecurityHeadersMiddleware {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl SecurityHeadersMiddleware {
     pub fn new() -> Self {
@@ -74,7 +80,7 @@ where
                      font-src 'self'; \
                      connect-src 'self'; \
                      frame-ancestors 'none'; \
-                     base-uri 'self'"
+                     base-uri 'self'",
                 ),
             );
 
@@ -107,7 +113,7 @@ where
                 header::HeaderName::from_static("permissions-policy"),
                 header::HeaderValue::from_static(
                     "camera=(), microphone=(), geolocation=(), \
-                     gyroscope=(), magnetometer=(), usb=()"
+                     gyroscope=(), magnetometer=(), usb=()",
                 ),
             );
 

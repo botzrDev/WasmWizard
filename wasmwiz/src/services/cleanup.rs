@@ -1,19 +1,19 @@
 // src/services/cleanup.rs
+use crate::services::DatabaseService;
 use std::time::Duration;
 use tokio::time::interval;
-use tracing::{info, error, warn};
-use crate::services::DatabaseService;
+use tracing::{error, info, warn};
 
 /// Start a background task that periodically cleans up old data
 pub fn start_cleanup_tasks(db_service: DatabaseService) {
     tokio::spawn(async move {
         let mut interval = interval(Duration::from_secs(24 * 60 * 60)); // Run daily
-        
+
         loop {
             interval.tick().await;
-            
+
             info!("Starting daily cleanup tasks...");
-            
+
             // Clean up usage logs older than 30 days
             match db_service.cleanup_old_usage_logs(30).await {
                 Ok(deleted_count) => {
@@ -27,12 +27,12 @@ pub fn start_cleanup_tasks(db_service: DatabaseService) {
                     error!("Failed to clean up old usage logs: {}", e);
                 }
             }
-            
+
             // TODO: Add more cleanup tasks here, such as:
             // - Cleaning up expired API keys
             // - Archiving old user data
             // - Cleaning up temporary files that might have been missed
-            
+
             info!("Daily cleanup tasks completed");
         }
     });
@@ -45,7 +45,7 @@ pub async fn cleanup_inactive_api_keys(
     _inactive_days: i32,
 ) -> Result<u64, sqlx::Error> {
     let _cutoff_date = chrono::Utc::now() - chrono::Duration::days(_inactive_days as i64);
-    
+
     // This would require tracking last_used_at in the api_keys table
     // For now, we'll just return 0 as a placeholder
     warn!("API key cleanup not implemented - requires last_used_at tracking");

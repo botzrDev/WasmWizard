@@ -1,11 +1,13 @@
 // src/app.rs
-use actix_web::{web, App};
-use actix_files as fs;
-use sqlx::PgPool;
-use crate::handlers::{health, execute, web as web_handlers, api_keys};
-use crate::middleware::{AuthMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware, InputValidationMiddleware};
-use crate::services::DatabaseService;
 use crate::config::Config;
+use crate::handlers::{api_keys, execute, health, web as web_handlers};
+use crate::middleware::{
+    AuthMiddleware, InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware,
+};
+use crate::services::DatabaseService;
+use actix_files as fs;
+use actix_web::{App, web};
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -14,7 +16,10 @@ pub struct AppState {
     pub config: Config,
 }
 
-pub fn create_app(db_pool: PgPool, config: Config) -> App<
+pub fn create_app(
+    db_pool: PgPool,
+    config: Config,
+) -> App<
     impl actix_web::dev::ServiceFactory<
         actix_web::dev::ServiceRequest,
         Config = (),
@@ -30,7 +35,7 @@ pub fn create_app(db_pool: PgPool, config: Config) -> App<
     let input_validation_middleware = InputValidationMiddleware::new();
 
     App::new()
-        .app_data(web::Data::new(AppState { 
+        .app_data(web::Data::new(AppState {
             db_pool: db_pool.clone(),
             db_service: db_service.clone(),
             config: config.clone(),
@@ -57,13 +62,15 @@ pub fn create_app(db_pool: PgPool, config: Config) -> App<
             web::scope("/api")
                 .wrap(rate_limit_middleware)
                 .wrap(auth_middleware)
-                .service(web::resource("/execute").post(execute::execute_wasm))
+                .service(web::resource("/execute").post(execute::execute_wasm)),
         )
         // API key management endpoints (no auth required for now - would need admin auth in production)
         .service(
             web::scope("/admin")
                 .service(web::resource("/api-keys").post(api_keys::create_api_key))
                 .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
-                .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key))
+                .service(
+                    web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key),
+                ),
         )
 }
