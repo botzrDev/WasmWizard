@@ -1,0 +1,76 @@
+# Node.js and npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.npm/
+.yarn/
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+cypress/fixtures/downloads/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Temporary folders
+tmp/
+temp/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Rust (from wasmwiz subdirectory)
+wasmwiz/target/
+wasmwiz/Cargo.lock
+wasmwiz/.env
+wasmwiz/.env.local
+
+# WASM temporary files
+wasmwiz/temp_wasm_src/*.wasm
+wasmwiz/temp_wasm_test/*.wasm
+wasmwiz/temp_wasm_modules/
+
+# Docker volumes
+.docker/

@@ -81,6 +81,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Sample gallery handling
+    const sampleButtons = document.querySelectorAll('.use-sample');
+    sampleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const sampleCard = this.closest('.sample-card');
+            const sampleName = sampleCard.getAttribute('data-sample');
+            loadSampleModule(sampleName);
+        });
+    });
+    
     // API Key Management
     initializeApiKeyManagement();
 });
@@ -166,17 +176,17 @@ async function executeWasm() {
         formData.append('wasm', fileInput.files[0]);
         formData.append('input', inputText.value);
         
+        // In development mode, API key is optional
         const apiKey = getApiKey();
-        if (!apiKey) {
-            throw new Error('API key is required');
+        const headers = {};
+        if (apiKey && apiKey.trim() !== '') {
+            headers['Authorization'] = `Bearer ${apiKey}`;
         }
         
         const response = await fetch('/api/execute', {
             method: 'POST',
             body: formData,
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            }
+            headers: headers
         });
         
         const result = await response.json();
@@ -339,9 +349,9 @@ function showToast(message, type = 'info') {
 }
 
 function getApiKey() {
-    // For now, get from localStorage or prompt user
+    // For development mode, return empty if not set (no-auth mode)
     // In production, this would be handled by authentication
-    return localStorage.getItem('wasmwiz-api-key') || prompt('Enter your API key:');
+    return localStorage.getItem('wasmwiz-api-key') || '';
 }
 
 function formatFileSize(bytes) {
@@ -530,6 +540,27 @@ async function deactivateApiKey(keyId) {
     }
 }
 
+function displayAlert(message, type = 'info') {
+    const notificationArea = document.querySelector('#notification-area');
+    if (!notificationArea) return;
+    
+    const alertElement = document.createElement('div');
+    alertElement.className = `alert alert-${type}`;
+    alertElement.innerHTML = `
+        <span>${escapeHtml(message)}</span>
+        <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    notificationArea.appendChild(alertElement);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertElement.parentElement) {
+            alertElement.remove();
+        }
+    }, 5000);
+}
+
 function validateFileAndShowFeedback(file) {
     const errors = [];
     
@@ -615,4 +646,49 @@ function validateForm() {
     isValid = validateApiKeyAndShowFeedback(apiKeyInput.value) && isValid;
     
     return isValid;
+}
+
+async function loadSampleModule(sampleName) {
+    try {
+        // Fetch the sample WASM file from the static directory
+        const response = await fetch(`/static/wasm_modules/${sampleName}.wasm`);
+        if (!response.ok) {
+            throw new Error(`Failed to load sample: ${response.statusText}`);
+        }
+        
+        const wasmData = await response.arrayBuffer();
+        
+        // Create a File object from the data
+        const wasmFile = new File([wasmData], `${sampleName}.wasm`, { type: 'application/wasm' });
+        
+        // Set the file input
+        const fileInput = document.querySelector('#wasm-file');
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(wasmFile);
+        fileInput.files = dataTransfer.files;
+        
+        // Update file display
+        updateFileDisplay(wasmFile);
+        
+        // Set appropriate input data for each sample
+        const inputText = document.querySelector('#input-text');
+        switch (sampleName) {
+            case 'calc_add':
+                inputText.value = '2 3';
+                break;
+            case 'echo':
+                inputText.value = 'Hello, WasmWiz!';
+                break;
+            case 'hello_world':
+                inputText.value = '';
+                break;
+            default:
+                inputText.value = '';
+        }
+        
+        displayAlert(`Loaded sample: ${sampleName}. Click "Execute WASM" to run it.`, 'success');
+        
+    } catch (error) {
+        displayAlert(`Failed to load sample ${sampleName}: ${error.message}`, 'error');
+    }
 }

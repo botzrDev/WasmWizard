@@ -1,0 +1,23 @@
+{
+  "name": "wasmwiz",
+  "version": "1.0.0",
+  "description": "A production-ready WebAssembly management and execution platform.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/botzrDev/WasmWiz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/botzrDev/WasmWiz/issues"
+  },
+  "homepage": "https://github.com/botzrDev/WasmWiz#readme",
+  "devDependencies": {
+    "cypress": "^14.5.0"
+  }
+}

@@ -40,35 +40,60 @@ pub async fn execute_wasm(
     let mut input_size = 0;
 
     // Parse multipart form data
-    while let Some(field) = payload.try_next().await.map_err(|e| {
-        error!("Failed to parse multipart data: {}", e);
-        ApiError::BadRequest("Failed to parse multipart data".to_string())
-    })? {
-        let field_name = field.name();
+    info!("Starting multipart form parsing (authenticated)");
+    let parse_timeout = Duration::from_secs(30);
+    
+    let parse_result = timeout(parse_timeout, async {
+        while let Some(field) = payload.try_next().await.map_err(|e| {
+            error!("Failed to parse multipart data: {}", e);
+            ApiError::BadRequest("Failed to parse multipart data".to_string())
+        })? {
+            let field_name = field.name();
+            info!("Processing multipart field: {}", field_name);
 
-        match field_name {
-            "wasm" => {
-                let data = collect_field_data(field, app_state.config.max_wasm_size).await?;
+            match field_name {
+                "wasm" => {
+                    info!("Reading WASM file data");
+                    let data = collect_field_data(field, app_state.config.max_wasm_size).await?;
 
-                // Validate WASM magic bytes
-                if !is_valid_wasm(&data) {
-                    return Err(ApiError::BadRequest("Invalid WASM file format".to_string()));
+                    // Validate WASM magic bytes
+                    if !is_valid_wasm(&data) {
+                        return Err(ApiError::BadRequest("Invalid WASM file format".to_string()));
+                    }
+
+                    wasm_size = data.len();
+                    info!("WASM file read and validated successfully: {} bytes", wasm_size);
+                    wasm_data = Some(data);
                 }
-
-                wasm_size = data.len();
-                wasm_data = Some(data);
+                "input" => {
+                    info!("Reading input data");
+                    let data = collect_field_data(field, app_state.config.max_input_size).await?;
+                    input_size = data.len();
+                    input_data =
+                        Some(String::from_utf8(data).map_err(|_| {
+                            ApiError::BadRequest("Input must be valid UTF-8".to_string())
+                        })?);
+                    info!("Input data read successfully: {} bytes", input_size);
+                }
+                _ => {
+                    warn!("Unknown field in multipart data: {}", field_name);
+                }
             }
-            "input" => {
-                let data = collect_field_data(field, app_state.config.max_input_size).await?;
-                input_size = data.len();
-                input_data =
-                    Some(String::from_utf8(data).map_err(|_| {
-                        ApiError::BadRequest("Input must be valid UTF-8".to_string())
-                    })?);
-            }
-            _ => {
-                warn!("Unknown field in multipart data: {}", field_name);
-            }
+        }
+        Ok::<(), ApiError>(())
+    }).await;
+    
+    match parse_result {
+        Ok(Ok(())) => {
+            info!("Multipart parsing completed successfully (authenticated)");
+        }
+        Ok(Err(e)) => {
+            error!("Multipart parsing failed (authenticated): {}", e);
+            return Err(e);
+        }
+        Err(_) => {
+            error!("Multipart parsing timed out after {:?} (authenticated)", parse_timeout);
+            return Err(ApiError::BadRequest("Multipart parsing timed out".to_string()));
         }
     }
 
@@ -161,46 +186,71 @@ pub async fn execute_wasm_no_auth(
     let mut input_size = 0;
 
     // Parse multipart form data
-    while let Some(field) = payload.try_next().await.map_err(|e| {
-        error!("Failed to parse multipart data: {}", e);
-        ApiError::BadRequest("Failed to parse multipart data".to_string())
-    })? {
-        let field_name = field.name();
+    info!("Starting multipart form parsing");
+    let parse_timeout = Duration::from_secs(30);
+    
+    let parse_result = timeout(parse_timeout, async {
+        while let Some(field) = payload.try_next().await.map_err(|e| {
+            error!("Failed to parse multipart data: {}", e);
+            ApiError::BadRequest("Failed to parse multipart data".to_string())
+        })? {
+            let field_name = field.name();
+            info!("Processing multipart field: {}", field_name);
 
-        match field_name {
-            "wasm_file" | "wasm" => {
-                let data = field
-                    .try_fold(Vec::new(), |mut acc, chunk| async move {
-                        acc.extend_from_slice(&chunk);
-                        Ok(acc)
-                    })
-                    .await
-                    .map_err(|e| {
-                        error!("Failed to read WASM file data: {}", e);
-                        ApiError::BadRequest("Failed to read WASM file".to_string())
-                    })?;
+            match field_name {
+                "wasm_file" | "wasm" => {
+                    info!("Reading WASM file data");
+                    let data = field
+                        .try_fold(Vec::new(), |mut acc, chunk| async move {
+                            acc.extend_from_slice(&chunk);
+                            Ok(acc)
+                        })
+                        .await
+                        .map_err(|e| {
+                            error!("Failed to read WASM file data: {}", e);
+                            ApiError::BadRequest("Failed to read WASM file".to_string())
+                        })?;
 
-                wasm_size = data.len();
-                wasm_data = Some(data);
-            }
-            "input_data" | "input" => {
-                let data = field
-                    .try_fold(Vec::new(), |mut acc, chunk| async move {
-                        acc.extend_from_slice(&chunk);
-                        Ok(acc)
-                    })
-                    .await
-                    .map_err(|e| {
-                        error!("Failed to read input data: {}", e);
-                        ApiError::BadRequest("Failed to read input data".to_string())
-                    })?;
+                    wasm_size = data.len();
+                    info!("WASM file read successfully: {} bytes", wasm_size);
+                    wasm_data = Some(data);
+                }
+                "input_data" | "input" => {
+                    info!("Reading input data");
+                    let data = field
+                        .try_fold(Vec::new(), |mut acc, chunk| async move {
+                            acc.extend_from_slice(&chunk);
+                            Ok(acc)
+                        })
+                        .await
+                        .map_err(|e| {
+                            error!("Failed to read input data: {}", e);
+                            ApiError::BadRequest("Failed to read input data".to_string())
+                        })?;
 
-                input_size = data.len();
-                input_data = Some(String::from_utf8_lossy(&data).to_string());
+                    input_size = data.len();
+                    input_data = Some(String::from_utf8_lossy(&data).to_string());
+                    info!("Input data read successfully: {} bytes", input_size);
+                }
+                _ => {
+                    warn!("Unknown field in multipart data: {}", field_name);
+                }
             }
-            _ => {
-                warn!("Unknown field in multipart data: {}", field_name);
-            }
+        }
+        Ok::<(), ApiError>(())
+    }).await;
+    
+    match parse_result {
+        Ok(Ok(())) => {
+            info!("Multipart parsing completed successfully");
+        }
+        Ok(Err(e)) => {
+            error!("Multipart parsing failed: {}", e);
+            return Err(e);
+        }
+        Err(_) => {
+            error!("Multipart parsing timed out after {:?}", parse_timeout);
+            return Err(ApiError::BadRequest("Multipart parsing timed out".to_string()));
         }
     }
 
@@ -281,26 +331,58 @@ pub async fn debug_execute(
     info!("Debug execute endpoint reached");
     
     let mut fields = Vec::new();
+    let start_time = Instant::now();
     
-    while let Some(field) = payload.try_next().await.map_err(|e| {
-        error!("Failed to parse multipart data: {}", e);
-        ApiError::BadRequest("Failed to parse multipart data".to_string())
-    })? {
-        let field_name = field.name().to_string();
-        let field_size = field.try_fold(0, |acc, chunk| async move {
-            Ok(acc + chunk.len())
-        }).await.unwrap_or(0);
+    // Add timeout for multipart parsing
+    let parse_timeout = Duration::from_secs(10);
+    
+    let parse_result = timeout(parse_timeout, async {
+        while let Some(field) = payload.try_next().await.map_err(|e| {
+            error!("Failed to parse multipart data: {}", e);
+            ApiError::BadRequest("Failed to parse multipart data".to_string())
+        })? {
+            let field_name = field.name().to_string();
+            info!("Processing field: {}", field_name);
+            
+            let field_start = Instant::now();
+            let field_size = field.try_fold(0, |acc, chunk| async move {
+                Ok(acc + chunk.len())
+            }).await.unwrap_or(0);
+            let field_duration = field_start.elapsed();
+            
+            fields.push(format!("{}: {} bytes ({}ms)", field_name, field_size, field_duration.as_millis()));
+            info!("Received field: {} ({} bytes) in {:?}", field_name, field_size, field_duration);
+        }
         
-        fields.push(format!("{}: {} bytes", field_name, field_size));
-        info!("Received field: {} ({} bytes)", field_name, field_size);
+        Ok::<(), ApiError>(())
+    }).await;
+    
+    let total_duration = start_time.elapsed();
+    
+    match parse_result {
+        Ok(Ok(())) => {
+            info!("Debug multipart parsing completed in {:?}", total_duration);
+            let response = serde_json::json!({
+                "status": "debug_success",
+                "fields": fields,
+                "parse_duration_ms": total_duration.as_millis()
+            });
+            Ok(HttpResponse::Ok().json(response))
+        }
+        Ok(Err(e)) => {
+            error!("Debug multipart parsing failed: {}", e);
+            Err(e)
+        }
+        Err(_) => {
+            error!("Debug multipart parsing timed out after {:?}", parse_timeout);
+            let response = serde_json::json!({
+                "status": "debug_timeout",
+                "fields": fields,
+                "parse_duration_ms": total_duration.as_millis()
+            });
+            Ok(HttpResponse::RequestTimeout().json(response))
+        }
     }
-    
-    let response = serde_json::json!({
-        "status": "debug_success",
-        "fields": fields
-    });
-    
-    Ok(HttpResponse::Ok().json(response))
 }
 
 async fn collect_field_data(
