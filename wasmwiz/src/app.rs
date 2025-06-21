@@ -63,7 +63,7 @@ pub fn create_app(
     let security_middleware = SecurityHeadersMiddleware::new();
     let input_validation_middleware = InputValidationMiddleware::new();
 
-    App::new()
+    let mut app = App::new()
         .app_data(web::Data::new(AppState {
             db_pool: db_pool.clone(),
             db_service: db_service.clone(),
@@ -86,23 +86,29 @@ pub fn create_app(
         .service(web::resource("/generate-key").post(web_handlers::generate_key_form))
         .service(web::resource("/csrf-token").get(web_handlers::csrf_token))
         // Static file serving (no auth required)
-        .service(fs::Files::new("/static", "./static").show_files_listing())
-        // API endpoints (auth conditional based on config)
-        .service(
+        .service(fs::Files::new("/static", "./static").show_files_listing());
+    
+    // Add API routes conditionally
+    if config.auth_required {
+        app = app.service(
             web::scope("/api")
-                .wrap(rate_limit_middleware)
-                .wrap(actix_web::middleware::Condition::new(
-                    auth_middleware.is_some(),
-                    auth_middleware.unwrap_or_else(|| {
-                        // This should never be called since we're using Condition
-                        // But we need a default for the type system
-                        AuthMiddleware::new(db_service.clone())
+                .wrap(RateLimitMiddleware::with_redis(
+                    redis_service.clone().unwrap_or_else(|| {
+                        RedisService::new(&config.redis_url).unwrap()
                     })
                 ))
+                .wrap(auth_middleware.unwrap())
                 .service(web::resource("/execute").post(execute::execute_wasm))
-        )
-        // API key management endpoints (no auth required for now - would need admin auth in production)
-        .service(
+        );
+    } else {
+        app = app.service(
+            web::scope("/api")
+                .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
+                .service(web::resource("/debug-execute").post(execute::debug_execute))
+        );
+    }
+
+    app.service(
             web::scope("/admin")
                 .service(web::resource("/api-keys").post(api_keys::create_api_key))
                 .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))

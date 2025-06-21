@@ -145,6 +145,164 @@ pub async fn execute_wasm(
     Ok(response)
 }
 
+/// Execute WASM without authentication (for development/demo mode)
+pub async fn execute_wasm_no_auth(
+    req: HttpRequest,
+    app_state: web::Data<AppState>,
+    mut payload: Multipart,
+) -> ActixResult<HttpResponse, ApiError> {
+    let start_time = Instant::now();
+
+    info!("WASM execution request received (no auth mode)");
+
+    let mut wasm_data: Option<Vec<u8>> = None;
+    let mut input_data: Option<String> = None;
+    let mut wasm_size = 0;
+    let mut input_size = 0;
+
+    // Parse multipart form data
+    while let Some(field) = payload.try_next().await.map_err(|e| {
+        error!("Failed to parse multipart data: {}", e);
+        ApiError::BadRequest("Failed to parse multipart data".to_string())
+    })? {
+        let field_name = field.name();
+
+        match field_name {
+            "wasm_file" | "wasm" => {
+                let data = field
+                    .try_fold(Vec::new(), |mut acc, chunk| async move {
+                        acc.extend_from_slice(&chunk);
+                        Ok(acc)
+                    })
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to read WASM file data: {}", e);
+                        ApiError::BadRequest("Failed to read WASM file".to_string())
+                    })?;
+
+                wasm_size = data.len();
+                wasm_data = Some(data);
+            }
+            "input_data" | "input" => {
+                let data = field
+                    .try_fold(Vec::new(), |mut acc, chunk| async move {
+                        acc.extend_from_slice(&chunk);
+                        Ok(acc)
+                    })
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to read input data: {}", e);
+                        ApiError::BadRequest("Failed to read input data".to_string())
+                    })?;
+
+                input_size = data.len();
+                input_data = Some(String::from_utf8_lossy(&data).to_string());
+            }
+            _ => {
+                warn!("Unknown field in multipart data: {}", field_name);
+            }
+        }
+    }
+
+    // Validate required fields
+    let wasm_data = wasm_data
+        .ok_or_else(|| ApiError::BadRequest("Missing 'wasm_file' field in form data".to_string()))?;
+
+    let input_data = input_data.unwrap_or_default();
+
+    // Save WASM to temporary file
+    let temp_path = file_system::create_unique_wasm_file_path()
+        .await
+        .map_err(|e| {
+            error!("Failed to create temp file path: {}", e);
+            ApiError::InternalError(anyhow::anyhow!("Failed to create temporary file"))
+        })?;
+
+    tokio::fs::write(&temp_path, &wasm_data)
+        .await
+        .map_err(|e| {
+            error!("Failed to write WASM to temp file: {}", e);
+            ApiError::InternalError(anyhow::anyhow!("Failed to save WASM file"))
+        })?;
+
+    info!("WASM file saved to: {:?}", temp_path);
+
+    // Create default tier for no-auth mode
+    let default_tier = crate::models::subscription_tier::SubscriptionTier {
+        id: uuid::Uuid::new_v4(),
+        name: "Development".to_string(),
+        max_executions_per_minute: 100,
+        max_executions_per_day: 1000,
+        max_memory_mb: 128,
+        max_execution_time_seconds: 5,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
+    };
+
+    // Execute WASM
+    let result = execute_wasm_file(&temp_path, &input_data, &default_tier, &app_state.config).await;
+
+    // Clean up temporary file
+    if let Err(e) = tokio::fs::remove_file(&temp_path).await {
+        warn!("Failed to clean up temp file: {}", e);
+    }
+
+    let execution_duration = start_time.elapsed();
+
+    match result {
+        Ok(output) => {
+            info!("WASM execution completed successfully in {:?}", execution_duration);
+            
+            let response = ExecuteResponse {
+                output: Some(output),
+                error: None,
+            };
+
+            Ok(HttpResponse::Ok().json(response))
+        }
+        Err(e) => {
+            error!("WASM execution failed: {}", e);
+            
+            let response = ExecuteResponse {
+                output: None,
+                error: Some(e.to_string()),
+            };
+
+            Ok(HttpResponse::BadRequest().json(response))
+        }
+    }
+}
+
+/// Debug endpoint to test multipart handling
+pub async fn debug_execute(
+    _req: HttpRequest,
+    mut payload: Multipart,
+) -> ActixResult<HttpResponse, ApiError> {
+    info!("Debug execute endpoint reached");
+    
+    let mut fields = Vec::new();
+    
+    while let Some(field) = payload.try_next().await.map_err(|e| {
+        error!("Failed to parse multipart data: {}", e);
+        ApiError::BadRequest("Failed to parse multipart data".to_string())
+    })? {
+        let field_name = field.name().to_string();
+        let field_size = field.try_fold(0, |acc, chunk| async move {
+            Ok(acc + chunk.len())
+        }).await.unwrap_or(0);
+        
+        fields.push(format!("{}: {} bytes", field_name, field_size));
+        info!("Received field: {} ({} bytes)", field_name, field_size);
+    }
+    
+    let response = serde_json::json!({
+        "status": "debug_success",
+        "fields": fields
+    });
+    
+    Ok(HttpResponse::Ok().json(response))
+}
+
 async fn collect_field_data(
     mut field: actix_multipart::Field,
     max_size: usize,
