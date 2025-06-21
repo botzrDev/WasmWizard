@@ -6,6 +6,16 @@
     <title>{% block title %}WasmWiz - WebAssembly Execution API{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <meta name="description" content="Execute WebAssembly modules securely in the cloud">
+    <meta name="theme-color" content="#6b46c1">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="WasmWiz - WebAssembly Execution API">
+    <meta property="og:description" content="Execute WebAssembly modules securely in the cloud">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wasmwiz.io">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
 </head>
 <body>
     <header>
@@ -15,22 +25,18 @@
                     🧙‍♂️ WasmWiz
                 </a>
                 <ul class="nav-menu">
-                    <li><a href="/">Execute</a></li>
-                    <li><a href="/api-keys">API Keys</a></li>
-                    <li><a href="/docs">Documentation</a></li>
+                    <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Execute</a></li>
+                    <li><a href="/api-keys" class="{% if request.path == '/api-keys' %}active{% endif %}">API Keys</a></li>
+                    <li><a href="/docs" class="{% if request.path == '/docs' %}active{% endif %}">Documentation</a></li>
                     <li>
                         <div class="language-selector">
-                            <button class="language-btn" id="language-btn">
-                                🌐 EN
-                                <span>▼</span>
-                            </button>
-                            <div class="language-dropdown" id="language-dropdown">
-                                <div class="language-option active" data-lang="en">English</div>
-                                <div class="language-option" data-lang="es">Español</div>
-                                <div class="language-option" data-lang="fr">Français</div>
-                                <div class="language-option" data-lang="de">Deutsch</div>
-                                <div class="language-option" data-lang="zh">中文</div>
-                            </div>
+                            <select id="language-selector" aria-label="Select language">
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                                <option value="fr">Français</option>
+                                <option value="de">Deutsch</option>
+                                <option value="zh">中文</option>
+                            </select>
                         </div>
                     </li>
                     <li><a href="#" id="auth-link" class="btn btn-primary">Sign In</a></li>
@@ -43,9 +49,43 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <div class="footer-content">
-            <p>&copy; 2025 WasmWiz. Secure WebAssembly execution in the cloud.</p>
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-links">
+                <div class="footer-section">
+                    <h3 class="footer-logo">🧙‍♂️ WasmWiz</h3>
+                    <p>Secure WebAssembly execution in the cloud.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Features</h3>
+                    <ul>
+                        <li><a href="/">WASM Execution</a></li>
+                        <li><a href="/api-keys">API Keys</a></li>
+                        <li><a href="/docs">API Documentation</a></li>
+                        <li><a href="/pricing">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="/docs">Documentation</a></li>
+                        <li><a href="/examples">Examples</a></li>
+                        <li><a href="/faq">FAQ</a></li>
+                        <li><a href="/support">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/security">Security</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 WasmWiz. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 

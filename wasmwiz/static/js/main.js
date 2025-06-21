@@ -40,6 +40,17 @@ document.addEventListener('DOMContentLoaded', function() {
         fileUpload.addEventListener('click', function() {
             fileInput.click();
         });
+        
+        // Remove file button
+        document.getElementById('remove-file')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.value = '';
+            document.getElementById('file-info').style.display = 'none';
+            document.getElementById('file-name').textContent = '';
+            document.getElementById('file-size').textContent = '';
+            fileUpload.classList.remove('has-file');
+        });
     }
     
     // Real-time input validation
@@ -49,6 +60,15 @@ document.addEventListener('DOMContentLoaded', function() {
             validateInputAndShowFeedback(e.target.value);
         });
     }
+    
+    // Input type selector
+    const inputTypeRadios = document.querySelectorAll('input[name="input-type"]');
+    inputTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateInputPlaceholder(this.value);
+            validateInputAndShowFeedback(inputText.value);
+        });
+    });
     
     // API key input validation
     const apiKeyInput = document.querySelector('#api-key');
@@ -69,6 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('wasmwiz-api-key', this.value);
         });
     }
+    
+    // Range sliders
+    initRangeSliders();
     
     // Form validation
     const executeForm = document.querySelector('#execute-form');
@@ -91,20 +114,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Language selector
+    const languageSelector = document.getElementById('language-selector');
+    if (languageSelector) {
+        languageSelector.addEventListener('change', function() {
+            const language = this.value;
+            localStorage.setItem('wasmwiz-language', language);
+            showToast(`Language set to ${language}`, 'info');
+        });
+        
+        // Load saved language
+        const savedLanguage = localStorage.getItem('wasmwiz-language');
+        if (savedLanguage) {
+            languageSelector.value = savedLanguage;
+        }
+    }
+    
+    // Sign-in link
+    const signInLink = document.getElementById('sign-in-link');
+    if (signInLink) {
+        signInLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showToast('Sign-in feature will be available in the next update', 'info');
+        });
+    }
+    
     // API Key Management
     initializeApiKeyManagement();
 });
 
 function updateFileDisplay(file) {
-    const fileInfo = document.querySelector('.file-info');
-    if (fileInfo) {
-        fileInfo.innerHTML = `
-            <div class="file-details">
-                <strong>Selected file:</strong> ${file.name}<br>
-                <strong>Size:</strong> ${formatFileSize(file.size)}<br>
-                <strong>Type:</strong> ${file.type || 'application/wasm'}
-            </div>
-        `;
+    const fileInfo = document.getElementById('file-info');
+    const fileNameElement = document.getElementById('file-name');
+    const fileSizeElement = document.getElementById('file-size');
+    const dropArea = document.getElementById('drop-area');
+    
+    if (fileInfo && fileNameElement && fileSizeElement) {
+        fileNameElement.textContent = file.name;
+        fileSizeElement.textContent = formatFileSize(file.size);
+        fileInfo.style.display = 'block';
+        dropArea.classList.add('has-file');
     }
     
     // Validate file
@@ -127,15 +176,63 @@ function validateFile(file) {
     return errors.length === 0;
 }
 
+function validateFileAndShowFeedback(file) {
+    if (!validateFile(file)) {
+        displayAlert('Please fix the validation errors before continuing', 'warning');
+        return false;
+    }
+    return true;
+}
+
 function validateInput(input) {
     const errors = [];
     const maxSize = 1024 * 1024; // 1MB
+    const inputType = document.querySelector('input[name="input-type"]:checked').value;
     
     if (new Blob([input]).size > maxSize) {
         errors.push('Input size must be less than 1MB');
     }
     
+    // Validate based on input type
+    if (inputType === 'json' && input.trim() !== '') {
+        try {
+            JSON.parse(input);
+        } catch (e) {
+            errors.push('Invalid JSON format: ' + e.message);
+        }
+    } else if (inputType === 'binary') {
+        // Basic validation for Base64
+        const base64Regex = /^[A-Za-z0-9+/=]*$/;
+        if (input.trim() !== '' && !base64Regex.test(input)) {
+            errors.push('Invalid Base64 format');
+        }
+    }
+    
+    displayValidationErrors(errors);
     return errors.length === 0;
+}
+
+function validateInputAndShowFeedback(input) {
+    return validateInput(input);
+}
+
+function validateApiKey(apiKey) {
+    // Simple validation for API key format
+    if (apiKey && apiKey.trim() !== '') {
+        const apiKeyRegex = /^[A-Za-z0-9_-]{20,64}$/;
+        if (!apiKeyRegex.test(apiKey)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function validateApiKeyAndShowFeedback(apiKey) {
+    if (apiKey && apiKey.trim() !== '' && !validateApiKey(apiKey)) {
+        displayAlert('Invalid API key format', 'warning');
+        return false;
+    }
+    return true;
 }
 
 function displayValidationErrors(errors) {
@@ -155,26 +252,68 @@ function displayValidationErrors(errors) {
     }
 }
 
+function validateForm() {
+    const fileInput = document.querySelector('#wasm-file');
+    const inputText = document.querySelector('#input-text');
+    const apiKeyInput = document.querySelector('#api-key');
+    
+    // Validate file is selected
+    if (!fileInput.files || fileInput.files.length === 0) {
+        displayAlert('Please select a WebAssembly (.wasm) file', 'error');
+        return false;
+    }
+    
+    // Validate file
+    if (!validateFile(fileInput.files[0])) {
+        return false;
+    }
+    
+    // Validate input
+    if (!validateInput(inputText.value)) {
+        return false;
+    }
+    
+    // Validate API key if provided
+    if (apiKeyInput.value.trim() !== '' && !validateApiKey(apiKeyInput.value)) {
+        displayAlert('Invalid API key format', 'warning');
+        return false;
+    }
+    
+    return true;
+}
+
 async function executeWasm() {
     const form = document.querySelector('#execute-form');
     const fileInput = document.querySelector('#wasm-file');
     const inputText = document.querySelector('#input-text');
+    const inputType = document.querySelector('input[name="input-type"]:checked').value;
+    const memoryLimit = document.querySelector('#memory-limit').value;
+    const timeout = document.querySelector('#timeout').value;
     const resultContainer = document.querySelector('#execution-result');
     const submitButton = document.querySelector('#submit-button');
+    const progressContainer = document.querySelector('#progress-container');
     
     // Validate form first
     if (!validateForm()) {
         return;
     }
     
+    // Update progress steps
+    if (progressContainer) {
+        progressContainer.style.display = 'flex';
+        updateProgressStep('step-upload', 'active');
+    }
+    
     // Show enhanced loading state
     setLoadingState(submitButton, true);
-    showProgressBar(resultContainer);
     
     try {
         const formData = new FormData();
         formData.append('wasm', fileInput.files[0]);
         formData.append('input', inputText.value);
+        formData.append('input_type', inputType);
+        formData.append('memory_limit', memoryLimit);
+        formData.append('timeout', timeout);
         
         // In development mode, API key is optional
         const apiKey = getApiKey();
@@ -183,24 +322,51 @@ async function executeWasm() {
             headers['Authorization'] = `Bearer ${apiKey}`;
         }
         
+        updateProgressStep('step-upload', 'completed');
+        updateProgressStep('step-execute', 'active');
+        
         const response = await fetch('/api/execute', {
             method: 'POST',
             body: formData,
             headers: headers
         });
         
+        updateProgressStep('step-execute', 'completed');
+        updateProgressStep('step-results', 'active');
+        
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+        
         const result = await response.json();
+        
+        updateProgressStep('step-results', 'completed');
         
         if (response.ok) {
             displayExecutionResult(result, response.status);
+            showToast('Execution completed successfully', 'success');
         } else {
             displayAlert(`Execution failed: ${result.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
+        updateProgressStep('step-execute', 'error');
+        updateProgressStep('step-results', 'error');
         displayAlert(`Network error: ${error.message}`, 'error');
     } finally {
         setLoadingState(submitButton, false);
-        hideProgressBar();
+        setTimeout(() => {
+            if (progressContainer) progressContainer.style.display = 'none';
+        }, 3000);
+    }
+}
+
+function updateProgressStep(stepId, status) {
+    const step = document.getElementById(stepId);
+    if (step) {
+        // Remove all status classes first
+        step.classList.remove('active', 'completed', 'error');
+        // Add the new status class
+        step.classList.add(status);
     }
 }
 
@@ -217,30 +383,13 @@ function setLoadingState(button, loading) {
     }
 }
 
-function showProgressBar(container) {
-    const progressHtml = `
-        <div id="execution-progress" class="progress-container">
-            <div class="progress-bar indeterminate">
-                <div class="progress-bar-fill"></div>
-            </div>
-            <p class="progress-text">Executing WebAssembly module...</p>
-        </div>
-    `;
-    container.innerHTML = progressHtml;
-}
-
-function hideProgressBar() {
-    const progressElement = document.getElementById('execution-progress');
-    if (progressElement) {
-        progressElement.remove();
-    }
-}
-
 // Enhanced execution result display
 function displayExecutionResult(result, statusCode) {
     const resultContainer = document.querySelector('#execution-result');
     const hasOutput = result.output && result.output.trim().length > 0;
     const hasError = result.error && result.error.trim().length > 0;
+    const executionTime = result.execution_time_ms || 0;
+    const memoryUsage = result.memory_usage_mb || 0;
     
     let statusBadge = '';
     if (statusCode === 200) {
@@ -280,9 +429,20 @@ function displayExecutionResult(result, statusCode) {
                 </div>
             ` : ''}
             
+            <div class="result-metadata">
+                <div class="metadata-item">
+                    <span class="metadata-label">Execution Time:</span>
+                    <span class="metadata-value">${executionTime} ms</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Memory Usage:</span>
+                    <span class="metadata-value">${memoryUsage} MB</span>
+                </div>
+            </div>
+            
             <div class="result-actions">
                 <button onclick="clearResults()" class="btn btn-secondary">Clear Results</button>
-                <button onclick="downloadResults()" class="btn btn-secondary">💾 Download Results</button>
+                <button onclick="downloadResults()" class="btn btn-primary">💾 Download Results</button>
             </div>
         </div>
     `;
@@ -301,20 +461,34 @@ function downloadResults() {
     const outputElement = resultContainer.querySelector('.code-output');
     const errorElement = resultContainer.querySelector('.error-output');
     
-    let content = '';
+    let content = '# WasmWiz Execution Results\n\n';
+    content += `Date: ${new Date().toLocaleString()}\n\n`;
+    
     if (outputElement) {
-        content += 'Program Output:\n' + outputElement.textContent + '\n\n';
+        content += '## Program Output\n\n```\n' + outputElement.textContent + '\n```\n\n';
     }
+    
     if (errorElement) {
-        content += 'Error Details:\n' + errorElement.textContent + '\n';
+        content += '## Error Details\n\n```\n' + errorElement.textContent + '\n```\n\n';
+    }
+    
+    // Add metadata
+    const metadataItems = resultContainer.querySelectorAll('.metadata-item');
+    if (metadataItems.length > 0) {
+        content += '## Execution Metadata\n\n';
+        metadataItems.forEach(item => {
+            const label = item.querySelector('.metadata-label').textContent;
+            const value = item.querySelector('.metadata-value').textContent;
+            content += `${label} ${value}\n`;
+        });
     }
     
     if (content) {
-        const blob = new Blob([content], { type: 'text/plain' });
+        const blob = new Blob([content], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `wasmwiz-result-${new Date().toISOString().slice(0, 19)}.txt`;
+        a.download = `wasmwiz-result-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.md`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -324,11 +498,53 @@ function downloadResults() {
 
 function copyToClipboard(text, type) {
     navigator.clipboard.writeText(text).then(function() {
-        showToast(`${type} copied to clipboard!`, 'success');
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} copied to clipboard!`, 'success');
     }, function(err) {
         console.error('Could not copy text: ', err);
         showToast('Failed to copy to clipboard', 'error');
     });
+}
+
+function displayAlert(message, type = 'info') {
+    const notificationArea = document.getElementById('notification-area');
+    if (!notificationArea) return;
+    
+    const alertId = 'alert-' + Date.now();
+    const alertHtml = `
+        <div id="${alertId}" class="alert alert-${type} alert-animated">
+            <div class="alert-content">
+                <span class="alert-icon">${getAlertIcon(type)}</span>
+                <span class="alert-message">${message}</span>
+            </div>
+            <button class="alert-close" onclick="dismissAlert('${alertId}')">×</button>
+        </div>
+    `;
+    
+    notificationArea.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        dismissAlert(alertId);
+    }, 5000);
+}
+
+function dismissAlert(alertId) {
+    const alert = document.getElementById(alertId);
+    if (alert) {
+        alert.classList.add('alert-dismissing');
+        setTimeout(() => {
+            alert.remove();
+        }, 300);
+    }
+}
+
+function getAlertIcon(type) {
+    switch (type) {
+        case 'success': return '✅';
+        case 'error': return '❌';
+        case 'warning': return '⚠️';
+        case 'info': default: return 'ℹ️';
+    }
 }
 
 function showToast(message, type = 'info') {
@@ -363,9 +579,93 @@ function formatFileSize(bytes) {
 }
 
 function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function updateInputPlaceholder(inputType) {
+    const inputTextarea = document.querySelector('#input-text');
+    if (!inputTextarea) return;
+    
+    switch (inputType) {
+        case 'text':
+            inputTextarea.placeholder = 'Enter plain text input for your WebAssembly module...';
+            break;
+        case 'json':
+            inputTextarea.placeholder = 'Enter JSON input for your WebAssembly module...\nExample: {"name": "value"}';
+            break;
+        case 'binary':
+            inputTextarea.placeholder = 'Enter Base64-encoded binary input for your WebAssembly module...';
+            break;
+    }
+}
+
+function initRangeSliders() {
+    const memorySlider = document.querySelector('#memory-limit');
+    const memoryDisplay = document.querySelector('#memory-display');
+    const timeoutSlider = document.querySelector('#timeout');
+    const timeoutDisplay = document.querySelector('#timeout-display');
+    
+    if (memorySlider && memoryDisplay) {
+        memorySlider.addEventListener('input', function() {
+            memoryDisplay.textContent = `${this.value} MB`;
+        });
+    }
+    
+    if (timeoutSlider && timeoutDisplay) {
+        timeoutSlider.addEventListener('input', function() {
+            timeoutDisplay.textContent = `${this.value} sec`;
+        });
+    }
+}
+
+async function loadSampleModule(sampleName) {
+    // Show loading state
+    displayAlert(`Loading sample module: ${sampleName}...`, 'info');
+    
+    try {
+        // Fetch the sample WASM file
+        const response = await fetch(`/static/wasm_modules/${sampleName}.wasm`);
+        if (!response.ok) {
+            throw new Error(`Failed to load sample module: ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
+        
+        // Create a File object from the blob
+        const file = new File([blob], `${sampleName}.wasm`, { type: 'application/wasm' });
+        
+        // Set the file input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        const fileInput = document.querySelector('#wasm-file');
+        fileInput.files = dataTransfer.files;
+        
+        // Update the file display
+        updateFileDisplay(file);
+        
+        // Set default input based on sample
+        const inputText = document.querySelector('#input-text');
+        switch (sampleName) {
+            case 'calc_add':
+                inputText.value = '2 3';
+                break;
+            case 'echo':
+                inputText.value = 'Hello, WasmWiz!';
+                break;
+            case 'hello_world':
+                inputText.value = '';
+                break;
+        }
+        
+        // Show success message
+        displayAlert(`Sample module "${sampleName}" loaded successfully!`, 'success');
+    } catch (error) {
+        displayAlert(`Error loading sample: ${error.message}`, 'error');
+    }
 }
 
 function initializeApiKeyManagement() {
@@ -379,6 +679,17 @@ function initializeApiKeyManagement() {
     if (listKeysForm) {
         listKeysForm.addEventListener('submit', handleListApiKeys);
     }
+    
+    // Revoke key buttons
+    document.querySelectorAll('.revoke-key-button').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const keyId = this.getAttribute('data-key-id');
+            if (confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+                await revokeApiKey(keyId);
+            }
+        });
+    });
 }
 
 async function handleCreateApiKey(event) {
@@ -417,6 +728,9 @@ async function handleCreateApiKey(event) {
                     <div class="warning">
                         ⚠️ <strong>Important:</strong> Save this API key now. You won't be able to see it again!
                     </div>
+                    <button onclick="copyToClipboard('${result.api_key}', 'API Key')" class="btn btn-secondary">
+                        📋 Copy API Key
+                    </button>
                 </div>
             `;
             form.reset();
@@ -449,54 +763,77 @@ async function handleListApiKeys(event) {
     const formData = new FormData(form);
     const submitButton = form.querySelector('button[type="submit"]');
     const resultDiv = document.getElementById('list-keys-result');
-    const userEmail = formData.get('user_email');
     
     // Disable submit button
     submitButton.disabled = true;
     submitButton.textContent = 'Loading...';
     
     try {
-        const response = await fetch(`/admin/api-keys/${encodeURIComponent(userEmail)}`);
-        const apiKeys = await response.json();
+        const email = formData.get('user_email');
+        const response = await fetch(`/admin/api-keys/${encodeURIComponent(email)}`, {
+            method: 'GET',
+        });
         
-        if (response.ok) {
-            if (apiKeys.length === 0) {
-                resultDiv.innerHTML = `
-                    <div class="result info">
-                        <p>No API keys found for user: ${userEmail}</p>
-                    </div>
-                `;
-            } else {
-                const keysHtml = apiKeys.map(key => `
-                    <div class="api-key-item">
-                        <div class="key-info">
-                            <span class="key-hash">${key.key_hash}</span>
-                            <span class="tier-badge tier-${key.tier_name.toLowerCase()}">${key.tier_name}</span>
-                            <span class="status ${key.is_active ? 'active' : 'inactive'}">
-                                ${key.is_active ? '✓ Active' : '✗ Inactive'}
-                            </span>
-                        </div>
-                        <div class="key-meta">
-                            <small>Created: ${new Date(key.created_at).toLocaleString()}</small>
-                            ${key.is_active ? `<button onclick="deactivateApiKey('${key.id}')" class="btn-deactivate">Deactivate</button>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-                
-                resultDiv.innerHTML = `
-                    <div class="result success">
-                        <h4>API Keys for ${userEmail}</h4>
-                        <div class="api-keys-list">
-                            ${keysHtml}
-                        </div>
-                    </div>
-                `;
-            }
+        const result = await response.json();
+        
+        if (response.ok && result.api_keys && result.api_keys.length > 0) {
+            resultDiv.innerHTML = `
+                <div class="result success">
+                    <h4>API Keys for ${email}</h4>
+                    <table class="api-keys-table">
+                        <thead>
+                            <tr>
+                                <th>Key ID</th>
+                                <th>Created</th>
+                                <th>Tier</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.api_keys.map(key => `
+                                <tr>
+                                    <td>${key.id}</td>
+                                    <td>${new Date(key.created_at).toLocaleString()}</td>
+                                    <td>${key.tier_name}</td>
+                                    <td>${key.active ? '<span class="badge success">Active</span>' : '<span class="badge error">Revoked</span>'}</td>
+                                    <td>
+                                        ${key.active ? 
+                                            `<button class="btn btn-small btn-danger revoke-key-button" data-key-id="${key.id}">Revoke</button>` : 
+                                            '<span class="text-muted">Revoked</span>'
+                                        }
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            // Re-initialize revoke buttons
+            resultDiv.querySelectorAll('.revoke-key-button').forEach(button => {
+                button.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const keyId = this.getAttribute('data-key-id');
+                    if (confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+                        await revokeApiKey(keyId);
+                        // Refresh the list
+                        handleListApiKeys(event);
+                    }
+                });
+            });
+        } else if (response.ok && (!result.api_keys || result.api_keys.length === 0)) {
+            resultDiv.innerHTML = `
+                <div class="result info">
+                    <h4>No API Keys Found</h4>
+                    <p>No API keys found for ${email}.</p>
+                </div>
+            `;
         } else {
             resultDiv.innerHTML = `
                 <div class="result error">
-                    <h4>Error Loading API Keys</h4>
-                    <p>${apiKeys.error || 'Unknown error occurred'}</p>
+                    <h4>Error Fetching API Keys</h4>
+                    <p>${result.error || 'Unknown error occurred'}</p>
                 </div>
             `;
         }
@@ -504,7 +841,7 @@ async function handleListApiKeys(event) {
         resultDiv.innerHTML = `
             <div class="result error">
                 <h4>Network Error</h4>
-                <p>Failed to load API keys: ${error.message}</p>
+                <p>Failed to fetch API keys: ${error.message}</p>
             </div>
         `;
     } finally {
@@ -514,181 +851,23 @@ async function handleListApiKeys(event) {
     }
 }
 
-async function deactivateApiKey(keyId) {
-    if (!confirm('Are you sure you want to deactivate this API key?')) {
-        return;
-    }
-    
+async function revokeApiKey(keyId) {
     try {
         const response = await fetch(`/admin/api-keys/${keyId}/deactivate`, {
-            method: 'POST'
+            method: 'POST',
         });
         
         const result = await response.json();
         
         if (response.ok) {
-            // Refresh the list
-            const listForm = document.getElementById('list-api-keys-form');
-            if (listForm) {
-                listForm.dispatchEvent(new Event('submit'));
-            }
+            showToast('API key revoked successfully', 'success');
+            return true;
         } else {
-            alert(`Error deactivating API key: ${result.error || 'Unknown error'}`);
+            displayAlert(`Failed to revoke API key: ${result.error || 'Unknown error'}`, 'error');
+            return false;
         }
     } catch (error) {
-        alert(`Network error: ${error.message}`);
-    }
-}
-
-function displayAlert(message, type = 'info') {
-    const notificationArea = document.querySelector('#notification-area');
-    if (!notificationArea) return;
-    
-    const alertElement = document.createElement('div');
-    alertElement.className = `alert alert-${type}`;
-    alertElement.innerHTML = `
-        <span>${escapeHtml(message)}</span>
-        <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
-    `;
-    
-    notificationArea.appendChild(alertElement);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        if (alertElement.parentElement) {
-            alertElement.remove();
-        }
-    }, 5000);
-}
-
-function validateFileAndShowFeedback(file) {
-    const errors = [];
-    
-    if (!validateFile(file)) {
-        errors.push('Invalid file selected');
-    }
-    
-    showValidationFeedback('file', errors);
-    return errors.length === 0;
-}
-
-function validateInputAndShowFeedback(input) {
-    const errors = [];
-    
-    if (!validateInput(input)) {
-        errors.push('Input too large (max 1MB)');
-    }
-    
-    showValidationFeedback('input', errors);
-    return errors.length === 0;
-}
-
-function validateApiKeyAndShowFeedback(apiKey) {
-    const errors = [];
-    
-    if (!apiKey || apiKey.trim().length === 0) {
-        errors.push('API key is required');
-    } else if (!apiKey.startsWith('ww_')) {
-        errors.push('Invalid API key format (should start with "ww_")');
-    } else if (apiKey.length < 30) {
-        errors.push('API key appears to be too short');
-    }
-    
-    showValidationFeedback('api-key', errors);
-    return errors.length === 0;
-}
-
-function showValidationFeedback(fieldType, errors) {
-    const fieldElement = document.querySelector(`#${fieldType.replace('api-key', 'api-key')}`);
-    if (!fieldElement) return;
-    
-    // Remove existing feedback
-    const existingFeedback = fieldElement.parentElement.querySelector('.validation-feedback');
-    if (existingFeedback) {
-        existingFeedback.remove();
-    }
-    
-    if (errors.length > 0) {
-        const feedback = document.createElement('div');
-        feedback.className = 'validation-feedback error';
-        feedback.innerHTML = errors.map(error => `<small>❌ ${error}</small>`).join('<br>');
-        fieldElement.parentElement.appendChild(feedback);
-        fieldElement.classList.add('error');
-    } else if (fieldElement.value || fieldElement.files?.length > 0) {
-        const feedback = document.createElement('div');
-        feedback.className = 'validation-feedback success';
-        feedback.innerHTML = '<small>✅ Valid</small>';
-        fieldElement.parentElement.appendChild(feedback);
-        fieldElement.classList.remove('error');
-        fieldElement.classList.add('success');
-    }
-}
-
-function validateForm() {
-    const fileInput = document.querySelector('#wasm-file');
-    const inputText = document.querySelector('#input-text');
-    const apiKeyInput = document.querySelector('#api-key');
-    
-    let isValid = true;
-    
-    // Validate file
-    if (!fileInput.files[0]) {
-        showValidationFeedback('file', ['Please select a WASM file']);
-        isValid = false;
-    } else {
-        isValid = validateFileAndShowFeedback(fileInput.files[0]) && isValid;
-    }
-    
-    // Validate input
-    isValid = validateInputAndShowFeedback(inputText.value) && isValid;
-    
-    // Validate API key
-    isValid = validateApiKeyAndShowFeedback(apiKeyInput.value) && isValid;
-    
-    return isValid;
-}
-
-async function loadSampleModule(sampleName) {
-    try {
-        // Fetch the sample WASM file from the static directory
-        const response = await fetch(`/static/wasm_modules/${sampleName}.wasm`);
-        if (!response.ok) {
-            throw new Error(`Failed to load sample: ${response.statusText}`);
-        }
-        
-        const wasmData = await response.arrayBuffer();
-        
-        // Create a File object from the data
-        const wasmFile = new File([wasmData], `${sampleName}.wasm`, { type: 'application/wasm' });
-        
-        // Set the file input
-        const fileInput = document.querySelector('#wasm-file');
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(wasmFile);
-        fileInput.files = dataTransfer.files;
-        
-        // Update file display
-        updateFileDisplay(wasmFile);
-        
-        // Set appropriate input data for each sample
-        const inputText = document.querySelector('#input-text');
-        switch (sampleName) {
-            case 'calc_add':
-                inputText.value = '2 3';
-                break;
-            case 'echo':
-                inputText.value = 'Hello, WasmWiz!';
-                break;
-            case 'hello_world':
-                inputText.value = '';
-                break;
-            default:
-                inputText.value = '';
-        }
-        
-        displayAlert(`Loaded sample: ${sampleName}. Click "Execute WASM" to run it.`, 'success');
-        
-    } catch (error) {
-        displayAlert(`Failed to load sample ${sampleName}: ${error.message}`, 'error');
+        displayAlert(`Network error: ${error.message}`, 'error');
+        return false;
     }
 }
