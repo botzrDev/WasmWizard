@@ -76,25 +76,25 @@
 
 ---
 
-# Sprint 1: Core UI & Public Upload Experience
+# Sprint 1: Core UI & Public Upload Experience ✅ COMPLETED
 
-## Goals
-- Deliver a visually appealing, accessible, and responsive homepage for anonymous WASM execution.
-- Lay the foundation for the design system and component library.
+## Goals ✅
+- ✅ Deliver a visually appealing, accessible, and responsive homepage for anonymous WASM execution.
+- ✅ Lay the foundation for the design system and component library.
 
-## Sprint 1 Tasks
-- [ ] Set up color palette, typography, and base layout (dark royal purple, cobalt blue, white, grey)
-- [ ] Implement drag-and-drop WASM upload zone (with validation and feedback)
-- [ ] Input data area (plain text, JSON, binary, with validation)
-- [ ] Basic execution options (memory, timeout)
-- [ ] Display output/results (final output only, no logs)
-- [ ] Show execution metadata (time, memory)
-- [ ] Add sample gallery with at least 2 platform-provided WASM modules
-- [ ] Responsive design for mobile/desktop
-- [ ] Accessibility: keyboard navigation, ARIA roles, color contrast
-- [ ] Banner notifications for errors/status
-- [ ] Language selector (UI only, no translations yet)
-- [ ] Placeholder for sign-in/registration (no backend integration yet)
+## Sprint 1 Tasks ✅ ALL COMPLETED
+- ✅ Set up color palette, typography, and base layout (dark royal purple, cobalt blue, white, grey)
+- ✅ Implement drag-and-drop WASM upload zone (with validation and feedback)
+- ✅ Input data area (plain text, JSON, binary, with validation)
+- ✅ Basic execution options (memory, timeout)
+- ✅ Display output/results (final output only, no logs)
+- ✅ Show execution metadata (time, memory)
+- ✅ Add sample gallery with at least 2 platform-provided WASM modules
+- ✅ Responsive design for mobile/desktop
+- ✅ Accessibility: keyboard navigation, ARIA roles, color contrast
+- ✅ Banner notifications for errors/status
+- ✅ Language selector (UI only, no translations yet)
+- ✅ Placeholder for sign-in/registration (no backend integration yet)
 
 ---
 Refer to ERD and DOCS for backend integration details and data flows.
