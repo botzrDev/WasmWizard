@@ -167,7 +167,7 @@ impl DatabaseService {
     pub async fn cleanup_old_usage_logs(&self, days_old: i32) -> Result<u64, sqlx::Error> {
         let cutoff_date = chrono::Utc::now() - chrono::Duration::days(days_old as i64);
 
-        let result = sqlx::query("DELETE FROM usage_logs WHERE created_at < $1")
+        let result = sqlx::query("DELETE FROM usage_logs WHERE timestamp < $1")
             .bind(cutoff_date)
             .execute(&self.pool)
             .await?;
