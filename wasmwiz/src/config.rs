@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
-    pub database_url: Option<String>,  // Make optional for demo mode
+    pub database_url: String,  // Always required, but can be SQLite
     pub redis_url: String,
     pub server_host: String,
     pub server_port: u16,
@@ -15,13 +15,12 @@ pub struct Config {
     pub memory_limit: usize,
     pub log_level: String,
     pub environment: Environment,
-    pub demo_mode: bool,  // Add demo mode flag
+    pub auth_required: bool,  // Feature flag for auth (off in development)
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub enum Environment {
     Development,
-    Demo,      // Add demo environment
     Staging,
     Production,
 }
@@ -31,29 +30,26 @@ impl Config {
         let environment = match env::var("ENVIRONMENT").as_deref() {
             Ok("production") => Environment::Production,
             Ok("staging") => Environment::Staging,
-            Ok("demo") => Environment::Demo,
             _ => Environment::Development,
         };
 
-        // Check for demo mode
-        let demo_mode = env::var("DEMO_MODE").unwrap_or_else(|_| "false".to_string()) == "true" 
-                     || environment == Environment::Demo;
+        // Professional defaults based on environment
+        let (default_host, default_log_level, default_auth) = match environment {
+            Environment::Production => ("0.0.0.0", "info", true),
+            Environment::Staging => ("0.0.0.0", "debug", true),
+            Environment::Development => ("127.0.0.1", "debug", false),
+        };
 
-        // Production-specific defaults
-        let (default_host, default_log_level) = match environment {
-            Environment::Production => ("0.0.0.0", "info"),
-            Environment::Staging => ("0.0.0.0", "debug"),
-            Environment::Demo => ("127.0.0.1", "debug"),
-            Environment::Development => ("127.0.0.1", "debug"),
+        // Default to local PostgreSQL for development
+        let default_database_url = match environment {
+            Environment::Development => "postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev".to_string(),
+            _ => env::var("DATABASE_URL")
+                .map_err(|_| ConfigError::Missing("DATABASE_URL must be set for production/staging"))?
         };
 
         Ok(Config {
-            database_url: if demo_mode {
-                None  // No database required in demo mode
-            } else {
-                Some(env::var("DATABASE_URL")
-                    .map_err(|_| ConfigError::Missing("DATABASE_URL"))?)
-            },
+            database_url: env::var("DATABASE_URL")
+                .unwrap_or(default_database_url),
             redis_url: env::var("REDIS_URL")
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
             server_host: env::var("SERVER_HOST").unwrap_or_else(|_| default_host.to_string()),
@@ -61,7 +57,7 @@ impl Config {
                 .unwrap_or_else(|_| "8080".to_string())
                 .parse()
                 .map_err(|_| ConfigError::Invalid("SERVER_PORT must be a valid port number"))?,
-            api_salt: env::var("API_SALT").unwrap_or_else(|_| "demo-salt-12345".to_string()),
+            api_salt: env::var("API_SALT").unwrap_or_else(|_| "dev-salt-please-change-in-production".to_string()),
             max_wasm_size: env::var("MAX_WASM_SIZE")
                 .unwrap_or_else(|_| "10485760".to_string()) // 10MB
                 .parse()
@@ -81,7 +77,9 @@ impl Config {
             log_level: env::var("LOG_LEVEL")
                 .unwrap_or_else(|_| default_log_level.to_string()),
             environment,
-            demo_mode,
+            auth_required: env::var("AUTH_REQUIRED")
+                .map(|v| v.parse().unwrap_or(default_auth))
+                .unwrap_or(default_auth),
         })
     }
 
@@ -89,11 +87,6 @@ impl Config {
         matches!(self.environment, Environment::Production)
     }
 
-    pub fn is_demo(&self) -> bool {
-        self.demo_mode || matches!(self.environment, Environment::Demo)
-    }
-
-    #[allow(dead_code)] // Utility method for future use
     pub fn is_development(&self) -> bool {
         matches!(self.environment, Environment::Development)
     }

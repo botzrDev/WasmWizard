@@ -3,7 +3,7 @@ use actix_multipart::Multipart;
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, web};
 use futures_util::TryStreamExt;
 use std::time::Instant;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::app::AppState;
 use crate::errors::ApiError;

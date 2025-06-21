@@ -7,8 +7,7 @@ use uuid::Uuid;
 
 /// Establishes a connection pool to the database
 pub async fn establish_connection_pool(config: &Config) -> Result<PgPool, sqlx::Error> {
-    let database_url = config.database_url.as_ref()
-        .ok_or_else(|| sqlx::Error::Configuration("DATABASE_URL not configured for demo mode".into()))?;
+    let database_url = &config.database_url;
         
     PgPoolOptions::new()
         .max_connections(50) // Increased from 20 to 50

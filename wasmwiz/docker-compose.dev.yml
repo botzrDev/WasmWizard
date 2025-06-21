@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for development
+  db:
+    image: postgres:15
+    container_name: wasmwiz_dev_db
+    environment:
+      POSTGRES_DB: wasmwiz_dev
+      POSTGRES_USER: wasmwiz
+      POSTGRES_PASSWORD: wasmwiz
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wasmwiz -d wasmwiz_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: wasmwiz_dev_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: wasmwiz_dev_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@wasmwiz.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  redis_data:
+  pgadmin_data:

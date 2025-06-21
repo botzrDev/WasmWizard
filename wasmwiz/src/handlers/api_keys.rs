@@ -109,19 +109,23 @@ pub async fn list_api_keys(
     let mut api_key_infos = Vec::new();
     for api_key in api_keys {
         // Get tier information
-        if let Ok(Some(tier)) = app_state
+        let tier_name = if let Ok(Some(tier)) = app_state
             .db_service
             .find_subscription_tier_by_id(api_key.tier_id)
             .await
         {
-            api_key_infos.push(ApiKeyInfo {
-                id: api_key.id,
-                key_hash: format!("{}...", &api_key.key_hash[..8]), // Show only first 8 chars
-                is_active: api_key.is_active,
-                created_at: api_key.created_at.to_rfc3339(),
-                tier_name: tier.name,
-            });
-        }
+            tier.name
+        } else {
+            "Unknown".to_string()
+        };
+
+        api_key_infos.push(ApiKeyInfo {
+            id: api_key.id,
+            key_hash: format!("{}...", &api_key.key_hash[..8]), // Show only first 8 chars
+            is_active: api_key.is_active,
+            created_at: api_key.created_at.to_rfc3339(),
+            tier_name: tier_name,
+        });
     }
 
     Ok(HttpResponse::Ok().json(api_key_infos))

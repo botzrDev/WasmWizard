@@ -48,44 +48,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "WasmWiz starting up"
     );
 
-    // 4. Database connection pool setup (skip in demo mode)
-    let db_pool = if config.is_demo() {
-        info!("Demo mode: Skipping database connection");
-        None
-    } else {
-        info!("Attempting to connect to database...");
-        let pool = establish_connection_pool(&config).await.map_err(|e| {
-            error!("Failed to connect to database: {:?}", e);
-            "Failed to connect to database"
-        })?;
-        info!("Database connection pool established");
+    // 4. Database connection and setup
+    info!("Connecting to database: {}", &config.database_url);
+    let db_pool = establish_connection_pool(&config).await.map_err(|e| {
+        error!("Failed to connect to database: {:?}", e);
+        "Failed to connect to database"
+    })?;
+    info!("Database connection pool established");
 
-        // 5. Run database migrations (essential for production)
-        if !config.is_production() {
-            info!("Running database migrations...");
-            sqlx::migrate!("./migrations") // Path to your migrations directory
-                .run(&pool)
-                .await
-                .map_err(|e| {
-                    error!("Failed to run database migrations: {:?}", e);
-                    "Failed to run database migrations"
-                })?;
-            info!("Database migrations complete");
-        } else {
-            info!("Production mode: Skipping automatic migrations");
-        }
-        
-        Some(pool)
-    };
-
-    // 6. Start background cleanup tasks (skip database cleanup in demo mode)
-    file_system::start_wasm_cleanup_task();
-    if let Some(ref pool) = db_pool {
-        cleanup::start_cleanup_tasks(DatabaseService::new(pool.clone()));
-        info!("Background cleanup tasks started");
+    // 5. Run database migrations (auto-run in development, manual in production)
+    if config.is_development() {
+        info!("Development mode: Running database migrations...");
+        sqlx::migrate!("./migrations") // Path to your migrations directory
+            .run(&db_pool)
+            .await
+            .map_err(|e| {
+                error!("Failed to run database migrations: {:?}", e);
+                "Failed to run database migrations"
+            })?;
+        info!("Database migrations complete");
     } else {
-        info!("Demo mode: Skipping database cleanup tasks");
+        info!("Production/Staging mode: Migrations should be run manually before deployment");
     }
+
+    // 6. Start background cleanup tasks
+    file_system::start_wasm_cleanup_task();
+    cleanup::start_cleanup_tasks(DatabaseService::new(db_pool.clone()));
+    info!("Background cleanup tasks started");
 
     // 7. Set up Actix-web server with production optimizations
     let server_host = config.server_host.clone();

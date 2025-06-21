@@ -23,11 +23,11 @@ pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
         }
         Err(e) => {
             error!("Database health check failed: {}", e);
+            status = "unhealthy";
             checks.insert(
                 "database".to_string(),
                 json!({"status": "unhealthy", "message": format!("Database error: {}", e)}),
             );
-            status = "unhealthy";
         }
     }
 

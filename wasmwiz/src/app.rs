@@ -11,15 +11,15 @@ use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db_pool: Option<PgPool>,  // Make optional for demo mode
-    pub db_service: Option<DatabaseService>,  // Make optional for demo mode
+    pub db_pool: PgPool,  // Always required now
+    pub db_service: DatabaseService,  // Always required now
     pub config: Config,
     #[allow(dead_code)] // Reserved for future Redis integration
     pub redis_service: Option<RedisService>,
 }
 
 pub fn create_app(
-    db_pool: Option<PgPool>,
+    db_pool: PgPool,  // No longer optional
     config: Config,
 ) -> App<
     impl actix_web::dev::ServiceFactory<
@@ -30,9 +30,11 @@ pub fn create_app(
         InitError = (),
     >,
 > {
-    let db_service = db_pool.as_ref().map(|pool| DatabaseService::new(pool.clone()));
-    let auth_middleware = if let Some(ref service) = db_service {
-        Some(AuthMiddleware::new(service.clone()))
+    let db_service = DatabaseService::new(db_pool.clone());
+    
+    // Professional approach: conditionally enable auth based on config
+    let auth_middleware = if config.auth_required {
+        Some(AuthMiddleware::new(db_service.clone()))
     } else {
         None
     };
@@ -85,12 +87,19 @@ pub fn create_app(
         .service(web::resource("/csrf-token").get(web_handlers::csrf_token))
         // Static file serving (no auth required)
         .service(fs::Files::new("/static", "./static").show_files_listing())
-        // Protected API endpoints with auth and rate limiting
+        // API endpoints (auth conditional based on config)
         .service(
             web::scope("/api")
                 .wrap(rate_limit_middleware)
-                .wrap(auth_middleware)
-                .service(web::resource("/execute").post(execute::execute_wasm)),
+                .wrap(actix_web::middleware::Condition::new(
+                    auth_middleware.is_some(),
+                    auth_middleware.unwrap_or_else(|| {
+                        // This should never be called since we're using Condition
+                        // But we need a default for the type system
+                        AuthMiddleware::new(db_service.clone())
+                    })
+                ))
+                .service(web::resource("/execute").post(execute::execute_wasm))
         )
         // API key management endpoints (no auth required for now - would need admin auth in production)
         .service(
