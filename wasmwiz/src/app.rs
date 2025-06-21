@@ -11,15 +11,15 @@ use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db_pool: PgPool,
-    pub db_service: DatabaseService,
+    pub db_pool: Option<PgPool>,  // Make optional for demo mode
+    pub db_service: Option<DatabaseService>,  // Make optional for demo mode
     pub config: Config,
     #[allow(dead_code)] // Reserved for future Redis integration
     pub redis_service: Option<RedisService>,
 }
 
 pub fn create_app(
-    db_pool: PgPool,
+    db_pool: Option<PgPool>,
     config: Config,
 ) -> App<
     impl actix_web::dev::ServiceFactory<
@@ -30,8 +30,12 @@ pub fn create_app(
         InitError = (),
     >,
 > {
-    let db_service = DatabaseService::new(db_pool.clone());
-    let auth_middleware = AuthMiddleware::new(db_service.clone());
+    let db_service = db_pool.as_ref().map(|pool| DatabaseService::new(pool.clone()));
+    let auth_middleware = if let Some(ref service) = db_service {
+        Some(AuthMiddleware::new(service.clone()))
+    } else {
+        None
+    };
     
     // Initialize Redis service if URL is available
     let redis_service = match RedisService::new(&config.redis_url) {

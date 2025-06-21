@@ -97,4 +97,143 @@
 - ✅ Placeholder for sign-in/registration (no backend integration yet)
 
 ---
-Refer to ERD and DOCS for backend integration details and data flows.
+
+# Sprint 2: Minimal Backend Integration & Working Demo
+
+## Goals
+- Get the frontend fully functional with a working backend
+- Implement anonymous WASM execution (no authentication required)
+- Create a complete vertical slice from upload to execution results
+- Remove database dependency for basic functionality
+
+## Sprint 2 Tasks - Backend Integration
+- [ ] Create database-optional backend mode for development/demo
+- [ ] Implement anonymous WASM execution endpoint (/api/execute)
+- [ ] File upload handling and validation on backend
+- [ ] WASM runtime integration for actual execution
+- [ ] Error handling and response formatting
+- [ ] Static file serving for frontend assets
+- [ ] CORS configuration for frontend-backend communication
+
+## Sprint 2 Tasks - Frontend Integration
+- [ ] Replace simulated execution with real API calls
+- [ ] Implement proper file upload to backend
+- [ ] Handle real execution responses and errors
+- [ ] Display actual WASM execution output
+- [ ] Show real execution metadata (time, memory usage)
+- [ ] Implement proper error handling for API failures
+- [ ] Add loading states during actual execution
+
+## Sprint 2 Tasks - Sample Module Integration
+- [ ] Integrate real sample WASM modules with backend
+- [ ] Implement sample loading from backend
+- [ ] Test all three sample modules (calc_add, echo, hello_world)
+- [ ] Validate sample execution works end-to-end
+
+## Sprint 2 Tasks - Development Setup
+- [ ] Create development configuration without database
+- [ ] Set up simple file-based storage for demos
+- [ ] Configure server to serve both API and static files
+- [ ] Add development documentation for running the demo
+
+## Acceptance Criteria
+- ✅ User can visit the homepage and see the frontend
+- ✅ User can upload a .wasm file or select a sample
+- ✅ User can provide input and adjust execution options
+- ✅ User can execute WASM and see real output
+- ✅ All three sample modules work correctly
+- ✅ Error handling shows meaningful messages
+- ✅ Frontend is fully responsive and accessible
+- ✅ No authentication required for basic functionality
+
+## Technical Requirements
+- Backend runs without database dependency
+- Frontend makes real API calls instead of simulations
+- WASM execution uses the actual Wasmer runtime
+- All static assets served correctly
+- CORS properly configured
+- File uploads handled securely
+- Execution sandboxing and limits enforced
+
+This sprint will deliver a fully working demo that showcases the core WasmWiz functionality!
+
+---
+
+# Sprint 3: Functional Vertical Slice - Frontend Working Demo
+
+## Goals
+- Get the frontend fully functional with a minimal backend in demo mode
+- Complete anonymous WASM execution from upload to results display
+- Fix all compilation errors and deliver a working vertical slice
+- Enable users to actually use the application in a browser
+
+## Sprint 3 Tasks - Backend Demo Mode Completion
+- [ ] Fix middleware compilation errors (Optional<AuthMiddleware> issues)
+- [ ] Complete demo mode configuration for all handlers
+- [ ] Bypass authentication for demo mode in all middleware
+- [ ] Fix database optional patterns in all handlers
+- [ ] Handle Environment::Demo in logging.rs
+- [ ] Ensure execute endpoint works without database in demo mode
+- [ ] Add static file serving for frontend assets
+- [ ] Configure CORS for frontend-backend communication
+
+## Sprint 3 Tasks - Frontend Integration & Testing
+- [ ] Replace all simulated execution with real backend API calls
+- [ ] Test file upload to backend works correctly
+- [ ] Verify WASM execution returns real output
+- [ ] Test all three sample modules work end-to-end
+- [ ] Implement proper error handling for backend failures
+- [ ] Add loading states during real execution
+- [ ] Test responsive design on mobile and desktop
+- [ ] Verify accessibility features work correctly
+
+## Sprint 3 Tasks - Demo Polish & Documentation
+- [ ] Create simple development setup instructions
+- [ ] Test the complete user flow: visit → upload/select → execute → view results
+- [ ] Add demo mode indicators in the UI
+- [ ] Ensure sample gallery integrates with backend samples
+- [ ] Document known limitations for demo mode
+- [ ] Create screenshots for documentation
+
+## Sprint 3 Tasks - Essential UI Improvements
+- [ ] Improve file upload feedback and validation messages
+- [ ] Add execution time and memory usage display
+- [ ] Enhance result display formatting (syntax highlighting for JSON/text)
+- [ ] Add copy-to-clipboard functionality for results
+- [ ] Improve notification banners for different types of messages
+- [ ] Add better loading indicators during execution
+
+## Acceptance Criteria ✅ Success Metrics
+- [ ] User can visit http://localhost:8080 and see the homepage
+- [ ] User can drag-and-drop a .wasm file and see upload feedback
+- [ ] User can select from sample WASM modules
+- [ ] User can provide input (text/JSON) and adjust execution options
+- [ ] User can click "Execute WASM" and see real execution happen
+- [ ] User sees actual WASM output (not simulated)
+- [ ] User sees execution metadata (time, memory)
+- [ ] All three sample modules (calc_add, echo, hello_world) work
+- [ ] Error messages are helpful when things go wrong
+- [ ] Page works on mobile and desktop
+- [ ] Keyboard navigation works for accessibility
+- [ ] No authentication required - fully anonymous usage
+
+## Technical Requirements
+- Backend compiles without errors
+- Frontend makes real HTTP requests to backend
+- WASM execution uses actual Wasmer runtime
+- File uploads handled securely with size limits
+- CORS configured properly for local development
+- Static assets served correctly
+- Error responses properly formatted and handled
+- Demo mode clearly documented
+
+## Sprint 3 Priority Order
+1. **Fix compilation errors** - Backend must compile and run
+2. **Basic API integration** - Frontend must connect to backend
+3. **WASM execution** - Core functionality must work
+4. **Sample modules** - All samples must execute correctly
+5. **Error handling** - Failures must be handled gracefully
+6. **UI polish** - Improve user experience and feedback
+7. **Documentation** - Setup and usage instructions
+
+This sprint will deliver the first fully working version of WasmWiz that users can actually use in their browser!

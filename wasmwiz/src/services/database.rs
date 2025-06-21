@@ -7,12 +7,15 @@ use uuid::Uuid;
 
 /// Establishes a connection pool to the database
 pub async fn establish_connection_pool(config: &Config) -> Result<PgPool, sqlx::Error> {
+    let database_url = config.database_url.as_ref()
+        .ok_or_else(|| sqlx::Error::Configuration("DATABASE_URL not configured for demo mode".into()))?;
+        
     PgPoolOptions::new()
         .max_connections(50) // Increased from 20 to 50
         .acquire_timeout(std::time::Duration::from_secs(30)) // Increased from 5 to 30 seconds
         .idle_timeout(std::time::Duration::from_secs(600)) // 10 minutes idle timeout
         .max_lifetime(std::time::Duration::from_secs(1800)) // 30 minutes max lifetime
-        .connect(&config.database_url)
+        .connect(database_url)
         .await
 }
 
