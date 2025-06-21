@@ -3,29 +3,49 @@
 {% block title %}{{ title }} - WasmWiz{% endblock %}
 
 {% block content %}
+<!-- Notification Banner Area -->
+<div id="notification-area"></div>
+
 <div class="card">
     <div class="card-header">
         <h1 class="card-title">Execute WebAssembly Module</h1>
         <p class="card-description">
             Upload a WebAssembly (.wasm) file and provide input to execute it securely in our sandboxed environment.
+            <strong>No account required</strong> for basic execution.
         </p>
     </div>
 
     <form id="execute-form" enctype="multipart/form-data">
+        <!-- File Upload Section -->
         <div class="form-group">
             <label for="wasm-file" class="form-label">WebAssembly File (.wasm)</label>
-            <div class="file-upload">
+            <div class="file-upload" id="drop-area">
                 <input type="file" id="wasm-file" name="wasm" accept=".wasm" style="display: none;">
                 <div class="upload-content">
-                    <p>📁 Click to select a .wasm file or drag and drop here</p>
-                    <p class="text-secondary">Maximum file size: 10MB</p>
+                    <div class="upload-icon">
+                        📁
+                    </div>
+                    <p class="upload-text">Drop your .wasm file here or click to browse</p>
+                    <p class="upload-subtext">Maximum file size: 10MB</p>
                 </div>
             </div>
-            <div class="file-info"></div>
+            <div class="file-info" id="file-info">
+                <div class="file-details">
+                    <span class="file-name" id="file-name"></span>
+                    <span class="file-size" id="file-size"></span>
+                    <button type="button" class="remove-file" id="remove-file">Remove</button>
+                </div>
+            </div>
         </div>
 
+        <!-- Input Data Section -->
         <div class="form-group">
             <label for="input-text" class="form-label">Input Data</label>
+            <div class="input-type-selector">
+                <label><input type="radio" name="input-type" value="text" checked> Plain Text</label>
+                <label><input type="radio" name="input-type" value="json"> JSON</label>
+                <label><input type="radio" name="input-type" value="binary"> Binary (Base64)</label>
+            </div>
             <textarea 
                 id="input-text" 
                 name="input" 
@@ -36,18 +56,54 @@
             <small class="text-secondary">Maximum input size: 1MB</small>
         </div>
 
+        <!-- Execution Options -->
+        <div class="execution-options">
+            <h3>Execution Options</h3>
+            <div class="option-group">
+                <label for="memory-limit">Memory Limit</label>
+                <div class="range-display">
+                    <input type="range" id="memory-limit" class="range-input" min="16" max="128" value="128" step="16">
+                    <span class="value-display" id="memory-display">128 MB</span>
+                </div>
+            </div>
+            <div class="option-group">
+                <label for="timeout">Timeout</label>
+                <div class="range-display">
+                    <input type="range" id="timeout" class="range-input" min="1" max="5" value="5" step="1">
+                    <span class="value-display" id="timeout-display">5 sec</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Key Section (Optional) -->
         <div class="form-group">
-            <label for="api-key" class="form-label">API Key</label>
+            <label for="api-key" class="form-label">API Key (Optional)</label>
             <input 
                 type="password" 
                 id="api-key" 
                 class="form-input" 
-                placeholder="Enter your API key..."
-                required
+                placeholder="Enter your API key for enhanced features..."
             >
             <small class="text-secondary">
-                Don't have an API key? <a href="/api-keys">Generate one here</a>
+                With an API key you get access to execution logs, result downloads, and higher rate limits. 
+                <a href="/api-keys">Generate one here</a> or <a href="#" id="sign-in-link">sign in</a>.
             </small>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="progress-container" id="progress-container" style="display: none;">
+            <div class="progress-step" id="step-upload">
+                <div class="step-icon">1</div>
+                <div class="step-label">Uploading</div>
+            </div>
+            <div class="progress-step" id="step-execute">
+                <div class="step-icon">2</div>
+                <div class="step-label">Executing</div>
+            </div>
+            <div class="progress-step" id="step-results">
+                <div class="step-icon">3</div>
+                <div class="step-label">Processing Results</div>
+            </div>
         </div>
 
         <div id="validation-errors"></div>
@@ -56,6 +112,28 @@
             Execute WASM
         </button>
     </form>
+</div>
+
+<!-- Sample Gallery -->
+<div class="card sample-gallery">
+    <h3>Try Sample Modules</h3>
+    <div class="sample-grid">
+        <div class="sample-card" data-sample="calc_add">
+            <h4>Basic Addition</h4>
+            <p>Simple calculator that adds two numbers together. Great for testing basic WASM functionality.</p>
+            <button class="use-sample">Try This Sample</button>
+        </div>
+        <div class="sample-card" data-sample="echo">
+            <h4>Echo Module</h4>
+            <p>Echoes the input data back to output. Perfect for testing input/output functionality.</p>
+            <button class="use-sample">Try This Sample</button>
+        </div>
+        <div class="sample-card" data-sample="hello_world">
+            <h4>Hello World</h4>
+            <p>Classic "Hello, World!" program compiled to WebAssembly. No input required.</p>
+            <button class="use-sample">Try This Sample</button>
+        </div>
+    </div>
 </div>
 
 <div id="execution-result"></div>

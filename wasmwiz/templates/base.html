@@ -11,11 +11,29 @@
     <header>
         <nav class="navbar">
             <div class="nav-container">
-                <h1 class="nav-logo">WasmWiz</h1>
+                <a href="/" class="nav-logo">
+                    🧙‍♂️ WasmWiz
+                </a>
                 <ul class="nav-menu">
                     <li><a href="/">Execute</a></li>
                     <li><a href="/api-keys">API Keys</a></li>
                     <li><a href="/docs">Documentation</a></li>
+                    <li>
+                        <div class="language-selector">
+                            <button class="language-btn" id="language-btn">
+                                🌐 EN
+                                <span>▼</span>
+                            </button>
+                            <div class="language-dropdown" id="language-dropdown">
+                                <div class="language-option active" data-lang="en">English</div>
+                                <div class="language-option" data-lang="es">Español</div>
+                                <div class="language-option" data-lang="fr">Français</div>
+                                <div class="language-option" data-lang="de">Deutsch</div>
+                                <div class="language-option" data-lang="zh">中文</div>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a href="#" id="auth-link" class="btn btn-primary">Sign In</a></li>
                 </ul>
             </div>
         </nav>
