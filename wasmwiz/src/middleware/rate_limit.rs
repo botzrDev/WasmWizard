@@ -180,14 +180,12 @@ where
         let use_redis = self.use_redis;
 
         Box::pin(async move {
-            // Extract AuthContext before any early return to avoid borrow checker issues
+            // Extract AuthContext - if not present, let the request continue 
+            // so that PreAuth middleware can handle authentication
             let auth_context_opt = req.extensions().get::<AuthContext>().cloned();
             if auth_context_opt.is_none() {
-                tracing::warn!("Rate limit middleware called without authentication context");
-                let response = HttpResponse::InternalServerError().json(serde_json::json!({
-                    "error": "Internal server error"
-                }));
-                return Ok(req.into_response(response).map_into_left_body());
+                tracing::debug!("Rate limit middleware: no auth context found, proceeding without rate limiting");
+                return service.call(req).await.map(ServiceResponse::map_into_right_body);
             }
             let auth_context = auth_context_opt.unwrap();
 
