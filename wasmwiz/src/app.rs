@@ -1,9 +1,8 @@
 // src/app.rs
 use crate::config::Config;
 use crate::handlers::{api_keys, execute, health, web as web_handlers};
-use crate::middleware::{
-    AuthMiddleware, InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware,
-};
+use crate::middleware::{InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware};
+use crate::middleware::pre_auth::PreAuth;
 use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{App, web};
@@ -31,13 +30,6 @@ pub fn create_app(
     >,
 > {
     let db_service = DatabaseService::new(db_pool.clone());
-    
-    // Professional approach: conditionally enable auth based on config
-    let auth_middleware = if config.auth_required {
-        Some(AuthMiddleware::new(db_service.clone()))
-    } else {
-        None
-    };
     
     // Initialize Redis service if URL is available
     let redis_service = match RedisService::new(&config.redis_url) {
@@ -95,12 +87,12 @@ pub fn create_app(
     if config.auth_required {
         app = app.service(
             web::scope("/api")
+                .wrap(PreAuth::new(db_service.clone()))
                 .wrap(RateLimitMiddleware::with_redis(
                     redis_service.clone().unwrap_or_else(|| {
                         RedisService::new(&config.redis_url).unwrap()
                     })
                 ))
-                .wrap(auth_middleware.unwrap())
                 .service(web::resource("/execute").post(execute::execute_wasm))
         );
     } else {

@@ -33,6 +33,8 @@ async fn setup_test_environment() -> PgPool {
     // Set environment variables for the test application
     unsafe {
         env::set_var("DATABASE_URL", &database_url);
+        env::set_var("ENVIRONMENT", "staging"); // Enable auth for tests
+        env::set_var("AUTH_REQUIRED", "true"); // Explicitly enable auth
         env::set_var("SERVER_HOST", "127.0.0.1");
         env::set_var("SERVER_PORT", "8080");
         env::set_var("API_SALT", "test_salt_for_api_keys_that_is_long_enough");

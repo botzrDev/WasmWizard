@@ -31,6 +31,9 @@ pub enum ApiError {
     #[display(fmt = "Unprocessable Entity: {}", _0)]
     UnprocessableEntity(String),
 
+    #[display(fmt = "Payload Too Large: {}", _0)]
+    PayloadTooLarge(String),
+
     #[display(fmt = "Rate Limit Exceeded")]
     TooManyRequests,
 
@@ -84,6 +87,7 @@ impl ResponseError for ApiError {
             ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
+            ApiError::PayloadTooLarge(_) => StatusCode::PAYLOAD_TOO_LARGE,
             ApiError::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
             ApiError::RateLimited => StatusCode::TOO_MANY_REQUESTS,
             ApiError::UnprocessableEntity(_)
@@ -133,5 +137,11 @@ impl From<RuntimeError> for ApiError {
 impl From<WasiError> for ApiError {
     fn from(err: WasiError) -> Self {
         ApiError::WasmRuntimeError(format!("WASI error during execution: {}", err))
+    }
+}
+
+impl From<actix_multipart::MultipartError> for ApiError {
+    fn from(err: actix_multipart::MultipartError) -> Self {
+        ApiError::BadRequest(format!("Multipart parsing error: {}", err))
     }
 }

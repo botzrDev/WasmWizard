@@ -1,5 +1,5 @@
 // src/middleware/rate_limit.rs
-use crate::middleware::auth::AuthContext;
+use crate::middleware::pre_auth::AuthContext;
 use crate::middleware::redis_rate_limit::RedisRateLimiter;
 use crate::services::RedisService;
 use actix_web::{

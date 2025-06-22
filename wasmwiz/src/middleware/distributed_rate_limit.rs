@@ -7,7 +7,7 @@ use redis::{AsyncCommands, Client};
 use std::time::Duration;
 use tracing::{debug, error, warn};
 use crate::errors::ApiError;
-use crate::middleware::auth::AuthContext;
+use crate::middleware::pre_auth::AuthContext;
 
 #[async_trait]
 pub trait RateLimiter: Send + Sync {
