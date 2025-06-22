@@ -87,10 +87,17 @@ hex = "0.4"
 
 # Security patches for indirect dependencies
 # Force updated RSA version to fix RUSTSEC-2023-0071 timing sidechannel attack
+# Note: RSA 0.9.x still has the vulnerability but no patched version is available yet
+# TODO: Monitor RSA releases for fixed version and update when available
 rsa = "0.9.8"  # Latest stable version, 0.10.0-rc.0 available but not stable yet
+
+# Force protobuf to a patched version for RUSTSEC-2024-0437
+protobuf = "3.7.2"
+
 # Note: IDNA vulnerability RUSTSEC-2024-0421 exists in deep transitive dependencies
 # from Wasmer ecosystem. Cannot be easily patched without breaking compatibility.
 # This is being tracked and will be resolved when Wasmer updates their dependencies.
+# For now, the risk is minimal as we don't directly use IDNA functionality.
 
 # For Prometheus metrics exposition
 actix-web-prom = "0.7"
