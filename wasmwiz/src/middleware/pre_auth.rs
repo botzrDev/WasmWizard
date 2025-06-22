@@ -2,7 +2,7 @@
 
 use actix_web::{
     body::{BoxBody, MessageBody},
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage,
 };
 use futures_util::future::LocalBoxFuture;

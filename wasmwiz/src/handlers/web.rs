@@ -4,7 +4,6 @@ use crate::errors::ApiError;
 use crate::handlers::api_keys;
 use crate::middleware::generate_csrf_token;
 use actix_web::{HttpResponse, Result as ActixResult, web};
-use std::fs;
 use askama_actix::{Template, TemplateToResponse};
 
 #[derive(Template)]

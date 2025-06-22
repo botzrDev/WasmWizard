@@ -47,7 +47,7 @@ pub fn create_app(
     };
     
     // Create rate limit middleware with Redis if available
-    let rate_limit_middleware = if let Some(redis) = redis_service.clone() {
+    let _rate_limit_middleware = if let Some(redis) = redis_service.clone() {
         tracing::info!("Using Redis-based rate limiting");
         RateLimitMiddleware::with_redis(redis)
     } else {

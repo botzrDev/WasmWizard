@@ -1,9 +1,10 @@
 // src/middleware/security.rs
 use actix_web::{
-    Error,
+    Error, HttpMessage,
     dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
     http::header,
 };
+use base64::Engine;
 use crate::config::Config;
 use futures_util::future::LocalBoxFuture;
 use rand::{thread_rng, Rng};
@@ -26,8 +27,8 @@ impl SecurityHeadersMiddleware {
 
     fn generate_nonce() -> String {
         let mut rng = thread_rng();
-        let bytes: [u8; 16] = rng.gen();
-        base64::encode(bytes)
+        let bytes: [u8; 16] = rng.r#gen();
+        base64::engine::general_purpose::STANDARD.encode(bytes)
     }
 }
 
@@ -68,7 +69,19 @@ where
 
     forward_ready!(service);
 
-    fn call(&self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
+        // Generate nonce and add to request extensions before service call
+        let nonce = if self.config.csp_enable_nonce {
+            SecurityHeadersMiddleware::generate_nonce()
+        } else {
+            String::new()
+        };
+
+        if !nonce.is_empty() {
+            req.extensions_mut().insert(nonce.clone());
+        }
+
+        let config = self.config.clone();
         let fut = self.service.call(req);
 
         Box::pin(async move {
@@ -84,41 +97,43 @@ where
             );
 
             // Content Security Policy
-            let nonce = if self.config.csp_enable_nonce {
-                SecurityHeadersMiddleware::generate_nonce()
-            } else {
-                String::new()
-            };
-
-            let mut csp = if self.config.is_production() {
+            let mut csp = if config.is_production() {
                 // Strict policy for production
-                format!(
+                if nonce.is_empty() {
                     "default-src 'self'; \
-                     script-src 'self'{}; \
-                     style-src 'self'{}; \
-                     img-src 'self' data:; \
-                     font-src 'self'; \
-                     connect-src 'self'; \
-                     frame-ancestors 'none'; \
-                     base-uri 'self'",
-                    if nonce.is_empty() { "" } else { format!(" 'nonce-{}'", nonce) },
-                    if nonce.is_empty() { " 'unsafe-inline'" } else { format!(" 'nonce-{}'", nonce) }
-                )
-            } else {
-                // More permissive for development
-                format!(
-                    "default-src 'self'; \
-                     script-src 'self' 'unsafe-inline' 'unsafe-eval'; \
+                     script-src 'self'; \
                      style-src 'self' 'unsafe-inline'; \
                      img-src 'self' data:; \
                      font-src 'self'; \
                      connect-src 'self'; \
                      frame-ancestors 'none'; \
-                     base-uri 'self'"
-                )
+                     base-uri 'self'".to_string()
+                } else {
+                    format!(
+                        "default-src 'self'; \
+                         script-src 'self' 'nonce-{}'; \
+                         style-src 'self' 'nonce-{}'; \
+                         img-src 'self' data:; \
+                         font-src 'self'; \
+                         connect-src 'self'; \
+                         frame-ancestors 'none'; \
+                         base-uri 'self'",
+                        nonce, nonce
+                    )
+                }
+            } else {
+                // More permissive for development
+                "default-src 'self'; \
+                 script-src 'self' 'unsafe-inline' 'unsafe-eval'; \
+                 style-src 'self' 'unsafe-inline'; \
+                 img-src 'self' data:; \
+                 font-src 'self'; \
+                 connect-src 'self'; \
+                 frame-ancestors 'none'; \
+                 base-uri 'self'".to_string()
             };
 
-            if let Some(report_uri) = &self.config.csp_report_uri {
+            if let Some(report_uri) = &config.csp_report_uri {
                 csp.push_str(&format!("; report-uri {}", report_uri));
             }
 
@@ -129,11 +144,6 @@ where
                 );
             } else {
                 tracing::error!("Failed to create CSP header value");
-            }
-
-            // Add nonce to request extensions if generated
-            if !nonce.is_empty() {
-                req.extensions_mut().insert(nonce);
             }
 
             // X-Frame-Options

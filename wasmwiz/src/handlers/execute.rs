@@ -206,7 +206,7 @@ pub async fn execute_wasm(
 
 /// Execute WASM without authentication (for development/demo mode)
 pub async fn execute_wasm_no_auth(
-    req: HttpRequest,
+    _req: HttpRequest,
     app_state: web::Data<AppState>,
     mut payload: Multipart,
 ) -> ActixResult<HttpResponse, ApiError> {
@@ -591,7 +591,7 @@ async fn execute_wasm_file(
 async fn execute_non_wasi_wasm(
     store: &mut Store,
     module: &Module,
-    input: &str,
+    _input: &str,
     tier: &crate::models::subscription_tier::SubscriptionTier,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     use wasmer::imports;
