@@ -34,6 +34,9 @@ pub enum ApiError {
     #[display(fmt = "Rate Limit Exceeded")]
     TooManyRequests,
 
+    #[display(fmt = "Rate Limited")]
+    RateLimited,
+
     // Specific errors related to Wasm execution
     #[display(fmt = "Wasm Load Error: {}", _0)]
     WasmLoadError(String),
@@ -82,6 +85,7 @@ impl ResponseError for ApiError {
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
             ApiError::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
+            ApiError::RateLimited => StatusCode::TOO_MANY_REQUESTS,
             ApiError::UnprocessableEntity(_)
             | ApiError::WasmLoadError(_)
             | ApiError::WasmRuntimeError(_)

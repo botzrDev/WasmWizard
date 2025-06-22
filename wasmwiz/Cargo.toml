@@ -87,10 +87,14 @@ hex = "0.4"
 
 # Security patches for indirect dependencies
 # Force updated RSA version to fix RUSTSEC-2023-0071 timing sidechannel attack
+# Note: RSA 0.9.x still has the vulnerability but no patched version is available yet
+# TODO: Monitor RSA releases for fixed version and update when available
 rsa = "0.9.8"  # Latest stable version, 0.10.0-rc.0 available but not stable yet
+
 # Note: IDNA vulnerability RUSTSEC-2024-0421 exists in deep transitive dependencies
 # from Wasmer ecosystem. Cannot be easily patched without breaking compatibility.
 # This is being tracked and will be resolved when Wasmer updates their dependencies.
+# For now, the risk is minimal as we don't directly use IDNA functionality.
 
 # For Prometheus metrics exposition
 actix-web-prom = "0.7"
@@ -128,8 +132,11 @@ opt-level = 0
 debug = true
 
 # Force consistent dependency versions across workspace
-# Note: Using direct dependency specification instead of patches
-# to avoid crates.io patch conflicts
+# Note: Known security vulnerabilities that cannot be easily fixed:
+# - protobuf 2.28.0 (RUSTSEC-2024-0437): Comes from prometheus dependency
+# - rsa 0.9.8 (RUSTSEC-2023-0071): No patched version available yet  
+# - idna 0.5.0 (RUSTSEC-2024-0421): Deep transitive from Wasmer ecosystem
+# These are being tracked and will be resolved when upstream dependencies update.
 
 [dev-dependencies]
 actix-web = { version = "4", features = ["macros"] }
