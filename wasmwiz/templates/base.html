@@ -25,9 +25,9 @@
                     🧙‍♂️ WasmWiz
                 </a>
                 <ul class="nav-menu">
-                    <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Execute</a></li>
-                    <li><a href="/api-keys" class="{% if request.path == '/api-keys' %}active{% endif %}">API Keys</a></li>
-                    <li><a href="/docs" class="{% if request.path == '/docs' %}active{% endif %}">Documentation</a></li>
+                    <li><a href="/" class="{% if active_page == "index" %}active{% endif %}">Execute</a></li>
+                    <li><a href="/api-keys" class="{% if active_page == "api-keys" %}active{% endif %}">API Keys</a></li>
+                    <li><a href="/docs" class="{% if active_page == "docs" %}active{% endif %}">Documentation</a></li>
                     <li>
                         <div class="language-selector">
                             <select id="language-selector" aria-label="Select language">

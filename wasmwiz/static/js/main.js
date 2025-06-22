@@ -1,5 +1,102 @@
-// WasmWiz Main JavaScript
+/**
+ * WasmWiz Main JavaScript - Production Version
+ * @version 1.0.0
+ * @author WasmWiz Team
+ * @description Main frontend functionality for the WasmWiz platform
+ */
+
+// Browser compatibility check
+function checkBrowserCompatibility() {
+    const isWebAssemblySupported = (typeof WebAssembly === 'object');
+    const isFileReaderSupported = (typeof FileReader === 'function');
+    const isFetchSupported = (typeof fetch === 'function');
+    
+    if (!isWebAssemblySupported || !isFileReaderSupported || !isFetchSupported) {
+        displayAlert('Your browser does not support all features required for WasmWiz. Please upgrade to a modern browser.', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
+// Get CSRF token from form
+function getCsrfToken() {
+    const tokenInput = document.querySelector('input[name="csrf_token"]');
+    return tokenInput ? tokenInput.value : '';
+}
+
+// Performance monitoring
+const performanceMetrics = {
+    pageLoadTime: 0,
+    uploadTime: 0,
+    executionTime: 0,
+    startTiming: function(metric) {
+        this[`${metric}Start`] = performance.now();
+    },
+    endTiming: function(metric) {
+        this[metric] = performance.now() - this[`${metric}Start`];
+        console.debug(`Performance: ${metric} = ${this[metric].toFixed(2)}ms`);
+    },
+    reset: function() {
+        this.pageLoadTime = 0;
+        this.uploadTime = 0;
+        this.executionTime = 0;
+    }
+};
+
+// Initialize performance tracking
+performanceMetrics.startTiming('pageLoadTime');
+
+// Error tracking and reporting
+function reportError(error, context) {
+    console.error(`Error in ${context}:`, error);
+    
+    // In production, you would send this to your error monitoring service
+    // Example: Sentry.captureException(error);
+    
+    // For now, we'll just log it
+    const errorData = {
+        message: error.message,
+        stack: error.stack,
+        context: context,
+        url: window.location.href,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
+    };
+    
+    // In development, log the full error details
+    console.debug('Error details:', errorData);
+    
+    // Show a user-friendly message
+    displayAlert(`An error occurred in ${context}. Please try again.`, 'error');
+}
+
+// Initialize offline detection
+function setupOfflineDetection() {
+    window.addEventListener('online', () => {
+        displayAlert('You are back online. All features are available.', 'success');
+    });
+    
+    window.addEventListener('offline', () => {
+        displayAlert('You are offline. Some features may not work correctly.', 'warning');
+    });
+    
+    // Check initial state
+    if (!navigator.onLine) {
+        displayAlert('You are currently offline. Some features may not work correctly.', 'warning');
+    }
+}
+
+// Application initialization
 document.addEventListener('DOMContentLoaded', function() {
+    // Check browser compatibility
+    if (!checkBrowserCompatibility()) {
+        return; // Stop initialization if browser is not compatible
+    }
+    
+    // Set up offline detection
+    setupOfflineDetection();
+    
     // File upload handling
     const fileUpload = document.querySelector('.file-upload');
     const fileInput = document.querySelector('#wasm-file');
@@ -56,9 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Real-time input validation
     const inputText = document.querySelector('#input-text');
     if (inputText) {
-        inputText.addEventListener('input', function(e) {
+        inputText.addEventListener('input', debounce(function(e) {
             validateInputAndShowFeedback(e.target.value);
-        });
+        }, 300));
     }
     
     // Input type selector
@@ -73,9 +170,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // API key input validation
     const apiKeyInput = document.querySelector('#api-key');
     if (apiKeyInput) {
-        apiKeyInput.addEventListener('input', function(e) {
+        apiKeyInput.addEventListener('input', debounce(function(e) {
             validateApiKeyAndShowFeedback(e.target.value);
-        });
+        }, 300));
         
         // Load saved API key
         const savedApiKey = localStorage.getItem('wasmwiz-api-key');
@@ -141,7 +238,66 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // API Key Management
     initializeApiKeyManagement();
+    
+    // End page load timing
+    performanceMetrics.endTiming('pageLoadTime');
+    
+    // Initial accessibility check
+    runAccessibilityCheck();
 });
+
+// Debounce function to limit function calls
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+// Throttle function for events that fire rapidly
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Basic accessibility check
+function runAccessibilityCheck() {
+    // Check for contrast issues and missing alt text
+    const potentialIssues = [];
+    
+    // Check images for alt text
+    document.querySelectorAll('img').forEach(img => {
+        if (!img.hasAttribute('alt')) {
+            potentialIssues.push(`Image missing alt text: ${img.src}`);
+        }
+    });
+    
+    // Check form fields for labels
+    document.querySelectorAll('input, textarea, select').forEach(field => {
+        if (!field.id) return;
+        
+        const hasLabel = document.querySelector(`label[for="${field.id}"]`);
+        const hasAriaLabel = field.getAttribute('aria-label');
+        
+        if (!hasLabel && !hasAriaLabel) {
+            potentialIssues.push(`Form field missing label: ${field.id}`);
+        }
+    });
+    
+    // Log issues in development
+    if (potentialIssues.length > 0) {
+        console.warn('Accessibility issues detected:', potentialIssues);
+    }
+}
 
 function updateFileDisplay(file) {
     const fileInfo = document.getElementById('file-info');
@@ -172,6 +328,28 @@ function validateFile(file) {
         errors.push('File size must be less than 10MB');
     }
     
+    // Check WASM header bytes if possible
+    if (window.FileReader && file.size > 4) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const arrayBuffer = e.target.result;
+            const headerBytes = new Uint8Array(arrayBuffer, 0, 4);
+            
+            // Check for WASM magic bytes: 0x00, 0x61, 0x73, 0x6D
+            const isValidWasm = (
+                headerBytes[0] === 0x00 &&
+                headerBytes[1] === 0x61 &&
+                headerBytes[2] === 0x73 &&
+                headerBytes[3] === 0x6D
+            );
+            
+            if (!isValidWasm) {
+                displayAlert('The selected file does not appear to be a valid WebAssembly module.', 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file.slice(0, 4));
+    }
+    
     displayValidationErrors(errors);
     return errors.length === 0;
 }
@@ -187,7 +365,7 @@ function validateFileAndShowFeedback(file) {
 function validateInput(input) {
     const errors = [];
     const maxSize = 1024 * 1024; // 1MB
-    const inputType = document.querySelector('input[name="input-type"]:checked').value;
+    const inputType = document.querySelector('input[name="input-type"]:checked')?.value || 'text';
     
     if (new Blob([input]).size > maxSize) {
         errors.push('Input size must be less than 1MB');
@@ -283,18 +461,21 @@ function validateForm() {
 }
 
 async function executeWasm() {
+    performanceMetrics.startTiming('executionTime');
+    
     const form = document.querySelector('#execute-form');
     const fileInput = document.querySelector('#wasm-file');
     const inputText = document.querySelector('#input-text');
-    const inputType = document.querySelector('input[name="input-type"]:checked').value;
-    const memoryLimit = document.querySelector('#memory-limit').value;
-    const timeout = document.querySelector('#timeout').value;
+    const inputType = document.querySelector('input[name="input-type"]:checked')?.value || 'text';
+    const memoryLimit = document.querySelector('#memory-limit')?.value || '128';
+    const timeout = document.querySelector('#timeout')?.value || '5';
     const resultContainer = document.querySelector('#execution-result');
     const submitButton = document.querySelector('#submit-button');
     const progressContainer = document.querySelector('#progress-container');
     
     // Validate form first
     if (!validateForm()) {
+        performanceMetrics.endTiming('executionTime');
         return;
     }
     
@@ -308,6 +489,11 @@ async function executeWasm() {
     setLoadingState(submitButton, true);
     
     try {
+        // Check if online
+        if (!navigator.onLine) {
+            throw new Error('You are currently offline. Please check your internet connection and try again.');
+        }
+        
         const formData = new FormData();
         formData.append('wasm', fileInput.files[0]);
         formData.append('input', inputText.value);
@@ -315,27 +501,50 @@ async function executeWasm() {
         formData.append('memory_limit', memoryLimit);
         formData.append('timeout', timeout);
         
+        // Add session and analytics data
+        formData.append('session_id', getSessionId());
+        formData.append('client_timestamp', new Date().toISOString());
+        
         // In development mode, API key is optional
         const apiKey = getApiKey();
-        const headers = {};
+        const headers = {
+            'X-CSRF-Token': getCsrfToken()
+        };
         if (apiKey && apiKey.trim() !== '') {
             headers['Authorization'] = `Bearer ${apiKey}`;
         }
         
+        performanceMetrics.startTiming('uploadTime');
         updateProgressStep('step-upload', 'completed');
         updateProgressStep('step-execute', 'active');
+        
+        // Set up request timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout
         
         const response = await fetch('/api/execute', {
             method: 'POST',
             body: formData,
-            headers: headers
+            headers: headers,
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        performanceMetrics.endTiming('uploadTime');
         
         updateProgressStep('step-execute', 'completed');
         updateProgressStep('step-results', 'active');
         
         if (!response.ok) {
-            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+            // Try to parse error response
+            let errorMessage;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || `Server error: ${response.status} ${response.statusText}`;
+            } catch (e) {
+                errorMessage = `Server error: ${response.status} ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
         
         const result = await response.json();
@@ -345,18 +554,39 @@ async function executeWasm() {
         if (response.ok) {
             displayExecutionResult(result, response.status);
             showToast('Execution completed successfully', 'success');
+            
+            // Log successful execution
+            console.debug('Execution successful:', {
+                fileSize: fileInput.files[0].size,
+                inputSize: new Blob([inputText.value]).size,
+                executionTime: result.execution_time_ms || 0,
+                memoryUsage: result.memory_usage_mb || 0
+            });
         } else {
             displayAlert(`Execution failed: ${result.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
         updateProgressStep('step-execute', 'error');
         updateProgressStep('step-results', 'error');
-        displayAlert(`Network error: ${error.message}`, 'error');
+        
+        // Handle specific error types
+        if (error.name === 'AbortError') {
+            displayAlert('The request timed out. The server may be experiencing high load.', 'error');
+        } else if (error.message.includes('Failed to fetch')) {
+            displayAlert('Network error: Failed to connect to the server. Please check your internet connection.', 'error');
+        } else {
+            displayAlert(`Error: ${error.message}`, 'error');
+        }
+        
+        // Report error
+        reportError(error, 'WASM Execution');
     } finally {
         setLoadingState(submitButton, false);
         setTimeout(() => {
             if (progressContainer) progressContainer.style.display = 'none';
         }, 3000);
+        
+        performanceMetrics.endTiming('executionTime');
     }
 }
 
@@ -371,6 +601,8 @@ function updateProgressStep(stepId, status) {
 }
 
 function setLoadingState(button, loading) {
+    if (!button) return;
+    
     if (loading) {
         button.disabled = true;
         button.classList.add('loading');
@@ -386,6 +618,8 @@ function setLoadingState(button, loading) {
 // Enhanced execution result display
 function displayExecutionResult(result, statusCode) {
     const resultContainer = document.querySelector('#execution-result');
+    if (!resultContainer) return;
+    
     const hasOutput = result.output && result.output.trim().length > 0;
     const hasError = result.error && result.error.trim().length > 0;
     const executionTime = result.execution_time_ms || 0;
@@ -438,6 +672,10 @@ function displayExecutionResult(result, statusCode) {
                     <span class="metadata-label">Memory Usage:</span>
                     <span class="metadata-value">${memoryUsage} MB</span>
                 </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Frontend Processing:</span>
+                    <span class="metadata-value">${performanceMetrics.executionTime.toFixed(2)} ms</span>
+                </div>
             </div>
             
             <div class="result-actions">
@@ -453,11 +691,15 @@ function displayExecutionResult(result, statusCode) {
 
 function clearResults() {
     const resultContainer = document.querySelector('#execution-result');
-    resultContainer.innerHTML = '';
+    if (resultContainer) {
+        resultContainer.innerHTML = '';
+    }
 }
 
 function downloadResults() {
     const resultContainer = document.querySelector('#execution-result');
+    if (!resultContainer) return;
+    
     const outputElement = resultContainer.querySelector('.code-output');
     const errorElement = resultContainer.querySelector('.error-output');
     
@@ -483,26 +725,62 @@ function downloadResults() {
         });
     }
     
+    // Add system information
+    content += '\n## System Information\n\n';
+    content += `Browser: ${navigator.userAgent}\n`;
+    content += `Platform: ${navigator.platform}\n`;
+    content += `Language: ${navigator.language}\n`;
+    content += `Viewport: ${window.innerWidth}x${window.innerHeight}\n`;
+    content += `Date: ${new Date().toISOString()}\n`;
+    
     if (content) {
-        const blob = new Blob([content], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `wasmwiz-result-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.md`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        try {
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wasmwiz-result-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            reportError(error, 'Download Results');
+            displayAlert('Failed to download results. Please try again.', 'error');
+        }
     }
 }
 
 function copyToClipboard(text, type) {
-    navigator.clipboard.writeText(text).then(function() {
-        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} copied to clipboard!`, 'success');
-    }, function(err) {
-        console.error('Could not copy text: ', err);
-        showToast('Failed to copy to clipboard', 'error');
-    });
+    try {
+        navigator.clipboard.writeText(text).then(function() {
+            showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} copied to clipboard!`, 'success');
+        }, function(err) {
+            throw err;
+        });
+    } catch (error) {
+        // Fallback for browsers that don't support clipboard API
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';  // Prevent scrolling to bottom
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} copied to clipboard!`, 'success');
+            } else {
+                throw new Error('Copy command failed');
+            }
+        } catch (err) {
+            reportError(err, 'Copy to Clipboard');
+            showToast('Failed to copy to clipboard', 'error');
+        }
+        
+        document.body.removeChild(textarea);
+    }
 }
 
 function displayAlert(message, type = 'info') {
@@ -511,12 +789,12 @@ function displayAlert(message, type = 'info') {
     
     const alertId = 'alert-' + Date.now();
     const alertHtml = `
-        <div id="${alertId}" class="alert alert-${type} alert-animated">
+        <div id="${alertId}" class="alert alert-${type} alert-animated" role="alert" aria-live="assertive">
             <div class="alert-content">
-                <span class="alert-icon">${getAlertIcon(type)}</span>
+                <span class="alert-icon" aria-hidden="true">${getAlertIcon(type)}</span>
                 <span class="alert-message">${message}</span>
             </div>
-            <button class="alert-close" onclick="dismissAlert('${alertId}')">×</button>
+            <button class="alert-close" onclick="dismissAlert('${alertId}')" aria-label="Dismiss">×</button>
         </div>
     `;
     
@@ -550,6 +828,8 @@ function getAlertIcon(type) {
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'polite');
     toast.textContent = message;
     
     document.body.appendChild(toast);
@@ -626,6 +906,8 @@ async function loadSampleModule(sampleName) {
     displayAlert(`Loading sample module: ${sampleName}...`, 'info');
     
     try {
+        performanceMetrics.startTiming('loadSampleTime');
+        
         // Fetch the sample WASM file
         const response = await fetch(`/static/wasm_modules/${sampleName}.wasm`);
         if (!response.ok) {
@@ -661,9 +943,18 @@ async function loadSampleModule(sampleName) {
                 break;
         }
         
+        performanceMetrics.endTiming('loadSampleTime');
+        
         // Show success message
         displayAlert(`Sample module "${sampleName}" loaded successfully!`, 'success');
+        
+        // Log analytics
+        console.debug(`Sample module loaded: ${sampleName}`, {
+            loadTime: performanceMetrics.loadSampleTime,
+            fileSize: blob.size
+        });
     } catch (error) {
+        reportError(error, 'Load Sample Module');
         displayAlert(`Error loading sample: ${error.message}`, 'error');
     }
 }
@@ -700,6 +991,20 @@ async function handleCreateApiKey(event) {
     const submitButton = form.querySelector('button[type="submit"]');
     const resultDiv = document.getElementById('create-key-result');
     
+    if (!resultDiv) return;
+    
+    // Validate form
+    const userEmail = formData.get('user_email');
+    if (!userEmail || !isValidEmail(userEmail)) {
+        resultDiv.innerHTML = `
+            <div class="result error">
+                <h4>Validation Error</h4>
+                <p>Please enter a valid email address.</p>
+            </div>
+        `;
+        return;
+    }
+    
     // Disable submit button
     submitButton.disabled = true;
     submitButton.textContent = 'Creating...';
@@ -709,6 +1014,7 @@ async function handleCreateApiKey(event) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRF-Token': getCsrfToken()
             },
             body: JSON.stringify({
                 user_email: formData.get('user_email'),
@@ -716,37 +1022,34 @@ async function handleCreateApiKey(event) {
             })
         });
         
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+        
         const result = await response.json();
         
-        if (response.ok) {
-            resultDiv.innerHTML = `
-                <div class="result success">
-                    <h4>API Key Created Successfully!</h4>
-                    <p><strong>API Key:</strong> <code class="api-key-display">${result.api_key}</code></p>
-                    <p><strong>Key ID:</strong> ${result.api_key_id}</p>
-                    <p><strong>Created:</strong> ${new Date(result.created_at).toLocaleString()}</p>
-                    <div class="warning">
-                        ⚠️ <strong>Important:</strong> Save this API key now. You won't be able to see it again!
-                    </div>
-                    <button onclick="copyToClipboard('${result.api_key}', 'API Key')" class="btn btn-secondary">
-                        📋 Copy API Key
-                    </button>
+        resultDiv.innerHTML = `
+            <div class="result success">
+                <h4>API Key Created Successfully!</h4>
+                <p><strong>API Key:</strong> <code class="api-key-display">${result.api_key}</code></p>
+                <p><strong>Key ID:</strong> ${result.api_key_id}</p>
+                <p><strong>Created:</strong> ${new Date(result.created_at).toLocaleString()}</p>
+                <div class="warning">
+                    ⚠️ <strong>Important:</strong> Save this API key now. You won't be able to see it again!
                 </div>
-            `;
-            form.reset();
-        } else {
-            resultDiv.innerHTML = `
-                <div class="result error">
-                    <h4>Error Creating API Key</h4>
-                    <p>${result.error || 'Unknown error occurred'}</p>
-                </div>
-            `;
-        }
+                <button onclick="copyToClipboard('${result.api_key}', 'API Key')" class="btn btn-secondary">
+                    📋 Copy API Key
+                </button>
+            </div>
+        `;
+        form.reset();
     } catch (error) {
+        reportError(error, 'Create API Key');
+        
         resultDiv.innerHTML = `
             <div class="result error">
-                <h4>Network Error</h4>
-                <p>Failed to create API key: ${error.message}</p>
+                <h4>Error Creating API Key</h4>
+                <p>${error.message}</p>
             </div>
         `;
     } finally {
@@ -756,6 +1059,11 @@ async function handleCreateApiKey(event) {
     }
 }
 
+function isValidEmail(email) {
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return re.test(String(email).toLowerCase());
+}
+
 async function handleListApiKeys(event) {
     event.preventDefault();
     
@@ -763,6 +1071,20 @@ async function handleListApiKeys(event) {
     const formData = new FormData(form);
     const submitButton = form.querySelector('button[type="submit"]');
     const resultDiv = document.getElementById('list-keys-result');
+    
+    if (!resultDiv) return;
+    
+    // Validate form
+    const userEmail = formData.get('user_email');
+    if (!userEmail || !isValidEmail(userEmail)) {
+        resultDiv.innerHTML = `
+            <div class="result error">
+                <h4>Validation Error</h4>
+                <p>Please enter a valid email address.</p>
+            </div>
+        `;
+        return;
+    }
     
     // Disable submit button
     submitButton.disabled = true;
@@ -774,9 +1096,13 @@ async function handleListApiKeys(event) {
             method: 'GET',
         });
         
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+        
         const result = await response.json();
         
-        if (response.ok && result.api_keys && result.api_keys.length > 0) {
+        if (result.api_keys && result.api_keys.length > 0) {
             resultDiv.innerHTML = `
                 <div class="result success">
                     <h4>API Keys for ${email}</h4>
@@ -822,26 +1148,21 @@ async function handleListApiKeys(event) {
                     }
                 });
             });
-        } else if (response.ok && (!result.api_keys || result.api_keys.length === 0)) {
+        } else {
             resultDiv.innerHTML = `
                 <div class="result info">
                     <h4>No API Keys Found</h4>
                     <p>No API keys found for ${email}.</p>
                 </div>
             `;
-        } else {
-            resultDiv.innerHTML = `
-                <div class="result error">
-                    <h4>Error Fetching API Keys</h4>
-                    <p>${result.error || 'Unknown error occurred'}</p>
-                </div>
-            `;
         }
     } catch (error) {
+        reportError(error, 'List API Keys');
+        
         resultDiv.innerHTML = `
             <div class="result error">
-                <h4>Network Error</h4>
-                <p>Failed to fetch API keys: ${error.message}</p>
+                <h4>Error Fetching API Keys</h4>
+                <p>${error.message}</p>
             </div>
         `;
     } finally {
@@ -857,17 +1178,39 @@ async function revokeApiKey(keyId) {
             method: 'POST',
         });
         
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+        
         const result = await response.json();
         
-        if (response.ok) {
-            showToast('API key revoked successfully', 'success');
-            return true;
-        } else {
-            displayAlert(`Failed to revoke API key: ${result.error || 'Unknown error'}`, 'error');
-            return false;
-        }
+        showToast('API key revoked successfully', 'success');
+        return true;
     } catch (error) {
-        displayAlert(`Network error: ${error.message}`, 'error');
+        reportError(error, 'Revoke API Key');
+        displayAlert(`Failed to revoke API key: ${error.message}`, 'error');
         return false;
     }
 }
+
+// Generate a persistent session ID for analytics
+function getSessionId() {
+    let sessionId = localStorage.getItem('wasmwiz-session-id');
+    if (!sessionId) {
+        sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('wasmwiz-session-id', sessionId);
+    }
+    return sessionId;
+}
+
+// Error handling for uncaught exceptions
+window.addEventListener('error', function(event) {
+    reportError(event.error || new Error(event.message), 'Uncaught Exception');
+    event.preventDefault();
+});
+
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    reportError(event.reason || new Error('Unhandled Promise Rejection'), 'Unhandled Promise Rejection');
+    event.preventDefault();
+});

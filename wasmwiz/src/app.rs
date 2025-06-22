@@ -104,7 +104,10 @@ pub fn create_app(
         app = app.service(
             web::scope("/api")
                 .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
-                .service(web::resource("/debug-execute").post(execute::debug_execute))
+                .service(
+                    web::resource("/debug-execute")
+                        .route(web::post().to(execute::debug_execute))
+                )
         );
     }
 

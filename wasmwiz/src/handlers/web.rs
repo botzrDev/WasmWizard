@@ -4,50 +4,45 @@ use crate::errors::ApiError;
 use crate::handlers::api_keys;
 use crate::middleware::generate_csrf_token;
 use actix_web::{HttpResponse, Result as ActixResult, web};
-use askama_actix::Template;
+use std::fs;
+use askama_actix::{Template, TemplateToResponse};
 
 #[derive(Template)]
 #[template(path = "index.html")]
-struct IndexTemplate {
-    title: String,
-}
-
-/// Serve the main upload interface
-pub async fn index() -> ActixResult<HttpResponse, ApiError> {
-    let template = IndexTemplate {
-        title: "Execute WebAssembly".to_string(),
-    };
-
-    let html = template.render().map_err(|e| {
-        tracing::error!("Template rendering failed: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Template rendering failed"))
-    })?;
-
-    Ok(HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body(html))
+pub struct IndexTemplate {
+    pub title: String,
+    pub csrf_token: String,
+    pub active_page: &'static str,
 }
 
 #[derive(Template)]
 #[template(path = "api_keys.html")]
-struct ApiKeysTemplate {
-    title: String,
+pub struct ApiKeysTemplate {
+    pub title: String,
+    pub csrf_token: String,
+    pub active_page: &'static str,
+}
+
+/// Serve the main upload interface
+pub async fn index(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let csrf_token = generate_csrf_token(&app_state.config.api_salt);
+    let template = IndexTemplate {
+        title: "Execute WebAssembly".to_string(),
+        csrf_token,
+        active_page: "index",
+    };
+    Ok(template.to_response())
 }
 
 /// Serve the API keys management page
-pub async fn api_keys() -> ActixResult<HttpResponse, ApiError> {
+pub async fn api_keys(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let csrf_token = generate_csrf_token(&app_state.config.api_salt);
     let template = ApiKeysTemplate {
         title: "API Key Management".to_string(),
+        csrf_token,
+        active_page: "api-keys",
     };
-
-    let html = template.render().map_err(|e| {
-        tracing::error!("Template rendering failed: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Template rendering failed"))
-    })?;
-
-    Ok(HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body(html))
+    Ok(template.to_response())
 }
 
 /// Handle web form upload (placeholder - directs to AJAX)

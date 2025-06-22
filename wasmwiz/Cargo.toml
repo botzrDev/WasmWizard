@@ -105,6 +105,12 @@ once_cell = "1.19"
 # For CPU detection in production
 num_cpus = "1.16"
 
+# For URL-encoded form parsing (e.g., in debug endpoint)
+serde_urlencoded = "0.7"
+
+# For bytes manipulation
+bytes = "1.6"
+
 [features]
 # Enable this feature for test-specific configurations or modules
 test = []

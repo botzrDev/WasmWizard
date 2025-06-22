@@ -16,6 +16,7 @@
     </div>
 
     <form id="execute-form" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <!-- File Upload Section -->
         <div class="form-group">
             <label for="wasm-file" class="form-label">WebAssembly File (.wasm)</label>

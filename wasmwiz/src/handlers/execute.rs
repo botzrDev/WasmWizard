@@ -2,8 +2,16 @@
 use actix_multipart::Multipart;
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, web};
 use futures_util::TryStreamExt;
+use serde::Deserialize;
+use serde_urlencoded;
+use bytes::BytesMut;
+use futures_util::StreamExt;
 use std::time::Instant;
+use std::time::Duration;
+use tokio::time::timeout;
 use tracing::{debug, error, info, warn};
+use wasmer::{Instance, Module, Store};
+use wasmer_wasix::{Pipe, WasiEnv};
 
 use crate::app::AppState;
 use crate::errors::ApiError;
@@ -12,10 +20,6 @@ use crate::models::api_payloads::ExecuteResponse;
 use crate::models::usage_log::UsageLog;
 use crate::utils::file_system;
 use std::fs;
-use std::time::Duration;
-use tokio::time::timeout;
-use wasmer::{Instance, Module, Store};
-use wasmer_wasix::{Pipe, WasiEnv};
 
 /// Execute a WebAssembly module with provided input
 pub async fn execute_wasm(
@@ -323,65 +327,91 @@ pub async fn execute_wasm_no_auth(
     }
 }
 
-/// Debug endpoint to test multipart handling
+#[derive(Deserialize, Debug)]
+pub struct DebugForm {
+    pub wasm: Option<String>,
+    pub input: Option<String>,
+}
+
+/// Debug endpoint to test multipart and urlencoded handling
 pub async fn debug_execute(
-    _req: HttpRequest,
-    mut payload: Multipart,
+    req: HttpRequest,
+    mut payload: web::Payload,
 ) -> ActixResult<HttpResponse, ApiError> {
-    info!("Debug execute endpoint reached");
-    
+    let content_type = req.headers().get("content-type").and_then(|v| v.to_str().ok()).unwrap_or("");
     let mut fields = Vec::new();
     let start_time = Instant::now();
-    
-    // Add timeout for multipart parsing
-    let parse_timeout = Duration::from_secs(10);
-    
-    let parse_result = timeout(parse_timeout, async {
-        while let Some(field) = payload.try_next().await.map_err(|e| {
-            error!("Failed to parse multipart data: {}", e);
-            ApiError::BadRequest("Failed to parse multipart data".to_string())
-        })? {
-            let field_name = field.name().to_string();
-            info!("Processing field: {}", field_name);
-            
-            let field_start = Instant::now();
-            let field_size = field.try_fold(0, |acc, chunk| async move {
-                Ok(acc + chunk.len())
-            }).await.unwrap_or(0);
-            let field_duration = field_start.elapsed();
-            
-            fields.push(format!("{}: {} bytes ({}ms)", field_name, field_size, field_duration.as_millis()));
-            info!("Received field: {} ({} bytes) in {:?}", field_name, field_size, field_duration);
+
+    if content_type.starts_with("multipart/form-data") {
+        let mut multipart = Multipart::new(&req.headers(), payload);
+        let parse_timeout = Duration::from_secs(10);
+        let parse_result = timeout(parse_timeout, async {
+            let mut found_field = false;
+            while let Some(field) = multipart.try_next().await.map_err(|e| {
+                error!("Failed to parse multipart data: {}", e);
+                ApiError::BadRequest("Failed to parse multipart data".to_string())
+            })? {
+                found_field = true;
+                let field_name = field.name().to_string();
+                info!("DEBUG FIELD NAME: {}", field_name);
+                let field_start = Instant::now();
+                let field_size = field.try_fold(0, |acc, chunk| async move {
+                    Ok(acc + chunk.len())
+                }).await.unwrap_or(0);
+                let field_duration = field_start.elapsed();
+                fields.push(format!("{}: {} bytes ({}ms)", field_name, field_size, field_duration.as_millis()));
+                info!("Received field: {} ({} bytes) in {:?}", field_name, field_size, field_duration);
+            }
+            if !found_field {
+                warn!("No fields found in multipart upload");
+            }
+            Ok::<(), ApiError>(())
+        }).await;
+        let total_duration = start_time.elapsed();
+        match parse_result {
+            Ok(Ok(())) => {
+                let response = serde_json::json!({
+                    "status": "debug_success",
+                    "fields": fields,
+                    "parse_duration_ms": total_duration.as_millis()
+                });
+                return Ok(HttpResponse::Ok().json(response));
+            }
+            Ok(Err(e)) => return Err(e),
+            Err(_) => {
+                let response = serde_json::json!({
+                    "status": "debug_timeout",
+                    "fields": fields,
+                    "parse_duration_ms": total_duration.as_millis()
+                });
+                return Ok(HttpResponse::RequestTimeout().json(response));
+            }
         }
-        
-        Ok::<(), ApiError>(())
-    }).await;
-    
-    let total_duration = start_time.elapsed();
-    
-    match parse_result {
-        Ok(Ok(())) => {
-            info!("Debug multipart parsing completed in {:?}", total_duration);
-            let response = serde_json::json!({
-                "status": "debug_success",
-                "fields": fields,
-                "parse_duration_ms": total_duration.as_millis()
-            });
-            Ok(HttpResponse::Ok().json(response))
+    } else if content_type.starts_with("application/x-www-form-urlencoded") {
+        let mut body = BytesMut::new();
+        while let Some(chunk) = payload.next().await {
+            let chunk = chunk.map_err(|e| ApiError::BadRequest(format!("Payload error: {}", e)))?;
+            body.extend_from_slice(&chunk);
         }
-        Ok(Err(e)) => {
-            error!("Debug multipart parsing failed: {}", e);
-            Err(e)
+        let form: DebugForm = serde_urlencoded::from_bytes(&body).map_err(|e| {
+            error!("Failed to parse urlencoded body: {}", e);
+            ApiError::BadRequest("Failed to parse urlencoded body".to_string())
+        })?;
+        if let Some(wasm) = &form.wasm {
+            fields.push(format!("wasm: {} bytes", wasm.len()));
         }
-        Err(_) => {
-            error!("Debug multipart parsing timed out after {:?}", parse_timeout);
-            let response = serde_json::json!({
-                "status": "debug_timeout",
-                "fields": fields,
-                "parse_duration_ms": total_duration.as_millis()
-            });
-            Ok(HttpResponse::RequestTimeout().json(response))
+        if let Some(input) = &form.input {
+            fields.push(format!("input: {} bytes", input.len()));
         }
+        let total_duration = start_time.elapsed();
+        let response = serde_json::json!({
+            "status": "debug_success",
+            "fields": fields,
+            "parse_duration_ms": total_duration.as_millis()
+        });
+        return Ok(HttpResponse::Ok().json(response));
+    } else {
+        return Err(ApiError::BadRequest("Unsupported content type for debug endpoint".to_string()));
     }
 }
 
