@@ -467,29 +467,46 @@ async fn execute_wasm_file(
     debug!("WASM module imports: {:?}", module.imports().collect::<Vec<_>>());
     debug!("WASM module exports: {:?}", module.exports().collect::<Vec<_>>());
 
+    // Try to build WASI environment with better error handling
     let mut wasi_env = WasiEnv::builder("wasmwiz")
         .stdin(Box::new(stdin_pipe))
         .stdout(Box::new(stdout_pipe.clone()))
         .stderr(Box::new(stderr_pipe))
         .finalize(&mut store)?;
 
-    // Get import object for WASI, with error handling for version issues
+    // Get import object for WASI, with improved error handling for version issues
     let import_object = match wasi_env.import_object(&mut store, &module) {
-        Ok(obj) => obj,
+        Ok(obj) => {
+            debug!("WASI import object created successfully");
+            obj
+        },
         Err(e) => {
-            debug!(
-                "WASI import_object failed: {}. WASI version could not be determined or is unsupported.",
-                e
-            );
+            debug!("WASI import_object failed: {}. Attempting fallback approaches.", e);
+            
+            // Check if this is a non-WASI WASM file
+            let has_wasi_imports = module.imports().any(|import| {
+                import.module() == "wasi_snapshot_preview1" || 
+                import.module() == "wasi_unstable" ||
+                import.module().starts_with("wasi")
+            });
+            
+            if !has_wasi_imports {
+                debug!("Module appears to be a non-WASI WASM file, attempting direct execution");
+                return execute_non_wasi_wasm(&mut store, &module, input, tier).await;
+            }
+            
             return Err(
-                format!("WASI version could not be determined or is unsupported: {}", e).into()
+                format!("WASI version could not be determined or is unsupported: {}. Module has WASI imports but version detection failed.", e).into()
             );
         }
     };
 
     // Create instance with improved error handling
     let instance = match Instance::new(&mut store, &module, &import_object) {
-        Ok(instance) => instance,
+        Ok(instance) => {
+            debug!("WASM instance created successfully");
+            instance
+        },
         Err(err) => {
             debug!("Instance creation failed: {}", err);
             return Err(format!("WASM instance creation failed: {}", err).into());
@@ -507,7 +524,16 @@ async fn execute_wasm_file(
         tokio::task::spawn_blocking(move || {
             // Call the _start function (WASI entrypoint)
             if let Ok(start_func) = instance.exports.get_function("_start") {
+                debug!("Calling _start function");
                 let _ = start_func.call(&mut store, &[])?;
+            } else {
+                debug!("No _start function found, checking for main");
+                if let Ok(main_func) = instance.exports.get_function("main") {
+                    debug!("Calling main function");
+                    let _ = main_func.call(&mut store, &[])?;
+                } else {
+                    return Err("No suitable entry point found (_start or main)".into());
+                }
             }
 
             // Read stdout content
@@ -529,4 +555,69 @@ async fn execute_wasm_file(
         },
         Err(_) => Err("WASM execution timed out".into()),
     }
+}
+
+// Fallback function for non-WASI WASM modules
+async fn execute_non_wasi_wasm(
+    store: &mut Store,
+    module: &Module,
+    input: &str,
+    tier: &crate::models::subscription_tier::SubscriptionTier,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    use wasmer::imports;
+    use tracing::debug;
+    
+    debug!("Attempting to execute non-WASI WASM module");
+    
+    // Create a simple import object for basic functionality
+    let import_object = imports! {
+        "env" => {
+            // Add basic environment functions if needed
+        }
+    };
+    
+    let instance = Instance::new(store, module, &import_object)?;
+    
+    // Look for exported functions to call
+    let exports = instance.exports;
+    
+    // Try common function names
+    let function_names = ["main", "run", "execute", "start", "_start"];
+    
+    for func_name in &function_names {
+        if let Ok(func) = exports.get_function(func_name) {
+            debug!("Found and calling function: {}", func_name);
+            
+            let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
+            
+            let result = timeout(
+                exec_timeout,
+                tokio::task::spawn_blocking({
+                    let func = func.clone();
+                    move || {
+                        let mut local_store = Store::default();
+                        // Call function with no parameters for now
+                        let result = func.call(&mut local_store, &[])?;
+                        
+                        // Convert result to string if possible
+                        if result.is_empty() {
+                            Ok("Function executed successfully (no return value)".to_string())
+                        } else {
+                            Ok(format!("Function returned: {:?}", result))
+                        }
+                    }
+                })
+            ).await;
+            
+            return match result {
+                Ok(join_result) => match join_result {
+                    Ok(output) => output,
+                    Err(e) => Err(format!("Function execution error: {}", e).into()),
+                },
+                Err(_) => Err("Function execution timed out".into()),
+            };
+        }
+    }
+    
+    Err("No suitable entry point found in non-WASI module".into())
 }

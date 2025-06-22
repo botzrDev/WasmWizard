@@ -7,6 +7,7 @@ pub mod handlers;
 pub mod logging;
 pub mod middleware;
 pub mod models;
+pub mod monitoring;
 pub mod services;
 pub mod utils;
 

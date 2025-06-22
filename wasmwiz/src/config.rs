@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     pub database_url: String,  // Always required, but can be SQLite
     pub redis_url: String,
+    pub redis_enabled: bool,   // Enable Redis for rate limiting
     pub server_host: String,
     pub server_port: u16,
     pub api_salt: String,
@@ -52,6 +53,9 @@ impl Config {
                 .unwrap_or(default_database_url),
             redis_url: env::var("REDIS_URL")
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
+            redis_enabled: env::var("REDIS_ENABLED")
+                .map(|v| v.parse().unwrap_or(false))
+                .unwrap_or(false), // Default to memory-based rate limiting
             server_host: env::var("SERVER_HOST").unwrap_or_else(|_| default_host.to_string()),
             server_port: env::var("SERVER_PORT")
                 .unwrap_or_else(|_| "8080".to_string())
