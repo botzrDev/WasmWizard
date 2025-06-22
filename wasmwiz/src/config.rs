@@ -99,29 +99,32 @@ impl Config {
         if self.api_salt.len() < 16 {
             return Err(ConfigError::Invalid("API_SALT must be at least 16 characters"));
         }
-
         if self.server_port == 0 {
             return Err(ConfigError::Invalid("SERVER_PORT must be greater than 0"));
         }
-
         if self.max_wasm_size == 0 || self.max_wasm_size > 100 * 1024 * 1024 {
             return Err(ConfigError::Invalid("MAX_WASM_SIZE must be between 1 byte and 100MB"));
         }
-
         if self.max_input_size == 0 || self.max_input_size > 10 * 1024 * 1024 {
             return Err(ConfigError::Invalid("MAX_INPUT_SIZE must be between 1 byte and 10MB"));
         }
-
         if self.execution_timeout == 0 || self.execution_timeout > 300 {
             return Err(ConfigError::Invalid(
                 "EXECUTION_TIMEOUT must be between 1 and 300 seconds",
             ));
         }
-
         if self.memory_limit < 1024 * 1024 || self.memory_limit > 1024 * 1024 * 1024 {
             return Err(ConfigError::Invalid("MEMORY_LIMIT must be between 1MB and 1GB"));
         }
-
+        // Require Redis in production
+        if self.is_production() {
+            if self.redis_url.is_empty() {
+                return Err(ConfigError::Missing("REDIS_URL must be set in production"));
+            }
+            if !self.redis_enabled {
+                return Err(ConfigError::Invalid("REDIS_ENABLED must be true in production"));
+            }
+        }
         Ok(())
     }
 }

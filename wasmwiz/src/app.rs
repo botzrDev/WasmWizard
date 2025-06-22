@@ -46,6 +46,9 @@ pub fn create_app(
             Some(service)
         },
         Err(e) => {
+            if config.is_production() {
+                panic!("FATAL: Redis is required in production but could not be initialized: {}", e);
+            }
             tracing::warn!("Failed to initialize Redis service, falling back to in-memory rate limiting: {}", e);
             None
         }
