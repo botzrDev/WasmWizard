@@ -4,20 +4,30 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
     http::header,
 };
+use crate::config::Config;
 use futures_util::future::LocalBoxFuture;
+use rand::{thread_rng, Rng};
 use std::future::{Ready, ready};
 
-pub struct SecurityHeadersMiddleware;
+pub struct SecurityHeadersMiddleware {
+    config: Config,
+}
 
 impl Default for SecurityHeadersMiddleware {
     fn default() -> Self {
-        Self::new()
+        Self::new(Config::from_env().unwrap_or_default())
     }
 }
 
 impl SecurityHeadersMiddleware {
-    pub fn new() -> Self {
-        Self
+    pub fn new(config: Config) -> Self {
+        Self { config }
+    }
+
+    fn generate_nonce() -> String {
+        let mut rng = thread_rng();
+        let bytes: [u8; 16] = rng.gen();
+        base64::encode(bytes)
     }
 }
 
@@ -34,12 +44,16 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(SecurityHeadersService { service }))
+        ready(Ok(SecurityHeadersService { 
+            service,
+            config: self.config.clone(),
+        }))
     }
 }
 
 pub struct SecurityHeadersService<S> {
     service: S,
+    config: Config,
 }
 
 impl<S, B> Service<ServiceRequest> for SecurityHeadersService<S>
@@ -70,19 +84,57 @@ where
             );
 
             // Content Security Policy
-            headers.insert(
-                header::HeaderName::from_static("content-security-policy"),
-                header::HeaderValue::from_static(
+            let nonce = if self.config.csp_enable_nonce {
+                SecurityHeadersMiddleware::generate_nonce()
+            } else {
+                String::new()
+            };
+
+            let mut csp = if self.config.is_production() {
+                // Strict policy for production
+                format!(
                     "default-src 'self'; \
-                     script-src 'self' 'unsafe-inline'; \
-                     style-src 'self' 'unsafe-inline'; \
+                     script-src 'self'{}; \
+                     style-src 'self'{}; \
                      img-src 'self' data:; \
                      font-src 'self'; \
                      connect-src 'self'; \
                      frame-ancestors 'none'; \
                      base-uri 'self'",
-                ),
-            );
+                    if nonce.is_empty() { "" } else { format!(" 'nonce-{}'", nonce) },
+                    if nonce.is_empty() { " 'unsafe-inline'" } else { format!(" 'nonce-{}'", nonce) }
+                )
+            } else {
+                // More permissive for development
+                format!(
+                    "default-src 'self'; \
+                     script-src 'self' 'unsafe-inline' 'unsafe-eval'; \
+                     style-src 'self' 'unsafe-inline'; \
+                     img-src 'self' data:; \
+                     font-src 'self'; \
+                     connect-src 'self'; \
+                     frame-ancestors 'none'; \
+                     base-uri 'self'"
+                )
+            };
+
+            if let Some(report_uri) = &self.config.csp_report_uri {
+                csp.push_str(&format!("; report-uri {}", report_uri));
+            }
+
+            if let Ok(header_value) = header::HeaderValue::from_str(&csp) {
+                headers.insert(
+                    header::HeaderName::from_static("content-security-policy"),
+                    header_value,
+                );
+            } else {
+                tracing::error!("Failed to create CSP header value");
+            }
+
+            // Add nonce to request extensions if generated
+            if !nonce.is_empty() {
+                req.extensions_mut().insert(nonce);
+            }
 
             // X-Frame-Options
             headers.insert(

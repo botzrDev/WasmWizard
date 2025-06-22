@@ -17,6 +17,8 @@ pub struct Config {
     pub log_level: String,
     pub environment: Environment,
     pub auth_required: bool,  // Feature flag for auth (off in development)
+    pub csp_report_uri: Option<String>, // URI for CSP violation reports
+    pub csp_enable_nonce: bool, // Whether to use nonce-based CSP
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
@@ -84,6 +86,10 @@ impl Config {
             auth_required: env::var("AUTH_REQUIRED")
                 .map(|v| v.parse().unwrap_or(default_auth))
                 .unwrap_or(default_auth),
+            csp_report_uri: env::var("CSP_REPORT_URI").ok(),
+            csp_enable_nonce: env::var("CSP_ENABLE_NONCE")
+                .map(|v| v.parse().unwrap_or(false))
+                .unwrap_or(false),
         })
     }
 
@@ -126,6 +132,28 @@ impl Config {
             }
         }
         Ok(())
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            database_url: "postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev".to_string(),
+            redis_url: "redis://127.0.0.1:6379".to_string(),
+            redis_enabled: false,
+            server_host: "127.0.0.1".to_string(),
+            server_port: 8080,
+            api_salt: "dev-salt-please-change-in-production".to_string(),
+            max_wasm_size: 10485760, // 10MB
+            max_input_size: 1048576, // 1MB
+            execution_timeout: 5,
+            memory_limit: 134217728, // 128MB
+            log_level: "debug".to_string(),
+            environment: Environment::Development,
+            auth_required: false,
+            csp_report_uri: None,
+            csp_enable_nonce: false,
+        }
     }
 }
 

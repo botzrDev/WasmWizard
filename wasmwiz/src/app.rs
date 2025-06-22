@@ -55,7 +55,7 @@ pub fn create_app(
         RateLimitMiddleware::new()
     };
     
-    let security_middleware = SecurityHeadersMiddleware::new();
+        let security_middleware = SecurityHeadersMiddleware::new(config.clone());
     let input_validation_middleware = InputValidationMiddleware::new();
 
     let mut app = App::new()

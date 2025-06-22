@@ -259,7 +259,12 @@ curl http://localhost:8080/health
 - [ ] **HTTPS/TLS Configuration**
   - [ ] Configure TLS certificate handling
   - [ ] Add HTTPS redirect middleware
-  - [x] Set security headers (HSTS, CSP, X-Frame-Options, etc.)
+  - [x] Enhanced security headers implementation with:
+  - [x] Configurable CSP policies through environment variables
+  - [x] Nonce-based CSP support for scripts/styles
+  - [x] Different policies for production vs development
+  - [x] CSP violation reporting capability
+  - [x] HSTS, X-Frame-Options, X-Content-Type-Options, etc.
   - [ ] Implement secure cookie configuration
 
 ### **3.2 Input Validation & Sanitization**
