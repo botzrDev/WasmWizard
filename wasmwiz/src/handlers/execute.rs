@@ -29,18 +29,15 @@ pub async fn execute_wasm(
 ) -> ActixResult<HttpResponse, ApiError> {
     let start_time = Instant::now();
 
-    // Get authentication context
-    let auth_context = req
-        .extensions()
-        .get::<AuthContext>()
-        .cloned();
-    if auth_context.is_none() {
-        // Return 401 Unauthorized for missing/invalid auth
-        return Ok(HttpResponse::Unauthorized().json(serde_json::json!({
-            "error": "Authentication required"
-        })));
-    }
-    let auth_context = auth_context.unwrap();
+    // Get authentication context and fail immediately if missing
+    let auth_context = match req.extensions().get::<AuthContext>().cloned() {
+        Some(ctx) => ctx,
+        None => {
+            return Ok(HttpResponse::Unauthorized().json(serde_json::json!({
+                "error": "Authentication required"
+            })));
+        }
+    };
     info!("WASM execution request received for user: {}", auth_context.user.email);
 
     let mut wasm_data: Option<Vec<u8>> = None;
@@ -93,52 +90,44 @@ pub async fn execute_wasm(
         Ok::<(), ApiError>(())
     }).await;
 
-    match parse_result {
-        Ok(Ok(())) => {
-            info!("Multipart parsing completed successfully (authenticated)");
-        }
-        Ok(Err(e)) => {
-            error!("Multipart parsing failed (authenticated): {}", e);
-            error_to_log = Some(format!("Multipart parse error: {}", e));
-            error_status = Some(400);
-            error_body = Some(serde_json::json!({"error": "Failed to parse multipart data"}));
-        }
-        Err(_) => {
-            error!("Multipart parsing timed out after {:?} (authenticated)", parse_timeout);
-            error_to_log = Some("Multipart parsing timed out".to_string());
-            error_status = Some(400);
-            error_body = Some(serde_json::json!({"error": "Multipart parsing timed out"}));
-        }
-    }
-
-    // Validate required fields
-    if error_to_log.is_none() && wasm_data.is_none() {
-        error_to_log = Some("Missing 'wasm' field".to_string());
-        error_status = Some(400);
-        error_body = Some(serde_json::json!({"error": "Missing 'wasm' field"}));
-    }
-
-    if let Some(err_msg) = error_to_log {
-        let usage_log = UsageLog::error(auth_context.api_key.id, err_msg)
+    // If multipart parsing failed, log usage and return error
+    if let Ok(Err(_)) | Err(_) = &parse_result {
+        let usage_log = UsageLog::error(auth_context.api_key.id, "Failed to parse multipart data".to_string())
             .with_execution_duration(start_time.elapsed().as_millis() as i32)
             .with_file_sizes(wasm_size as i32, input_size as i32);
         let _ = app_state.db_service.create_usage_log(&usage_log).await;
-        let status = error_status.unwrap_or(400);
-        let body = error_body.unwrap_or_else(|| serde_json::json!({"error": "Bad request"}));
-        return Ok(HttpResponse::build(actix_web::http::StatusCode::from_u16(status).unwrap()).json(body));
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Failed to parse multipart data"})));
+    }
+
+    // Validate required fields
+    if wasm_data.is_none() {
+        let usage_log = UsageLog::error(auth_context.api_key.id, "Missing 'wasm' field".to_string())
+            .with_execution_duration(start_time.elapsed().as_millis() as i32)
+            .with_file_sizes(wasm_size as i32, input_size as i32);
+        let _ = app_state.db_service.create_usage_log(&usage_log).await;
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Missing 'wasm' field"})));
     }
     let wasm_data = wasm_data.unwrap();
     let input_data = input_data.unwrap_or_default();
 
     // Save WASM to temporary file
-    let temp_path = file_system::create_unique_wasm_file_path().await.map_err(|e| {
-        error!("Failed to create temp file path: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Failed to create temporary file"))
-    })?;
-    tokio::fs::write(&temp_path, &wasm_data).await.map_err(|e| {
-        error!("Failed to write WASM to temp file: {}", e);
-        ApiError::InternalError(anyhow::anyhow!("Failed to save WASM file"))
-    })?;
+    let temp_path = match file_system::create_unique_wasm_file_path().await {
+        Ok(path) => path,
+        Err(e) => {
+            let usage_log = UsageLog::error(auth_context.api_key.id, "Failed to create temporary file".to_string())
+                .with_execution_duration(start_time.elapsed().as_millis() as i32)
+                .with_file_sizes(wasm_size as i32, input_size as i32);
+            let _ = app_state.db_service.create_usage_log(&usage_log).await;
+            return Ok(HttpResponse::InternalServerError().json(serde_json::json!({"error": "Failed to create temporary file"})));
+        }
+    };
+    if let Err(e) = tokio::fs::write(&temp_path, &wasm_data).await {
+        let usage_log = UsageLog::error(auth_context.api_key.id, "Failed to save WASM file".to_string())
+            .with_execution_duration(start_time.elapsed().as_millis() as i32)
+            .with_file_sizes(wasm_size as i32, input_size as i32);
+        let _ = app_state.db_service.create_usage_log(&usage_log).await;
+        return Ok(HttpResponse::InternalServerError().json(serde_json::json!({"error": "Failed to save WASM file"})));
+    }
     info!("WASM file saved to: {:?}", temp_path);
 
     // Execute WASM
@@ -159,10 +148,19 @@ pub async fn execute_wasm(
         }
         Err(e) => {
             error!("WASM execution failed: {}", e);
-            let usage_log = UsageLog::error(auth_context.api_key.id, e.to_string()).with_execution_duration(execution_time_ms).with_file_sizes(wasm_size as i32, input_size as i32);
-            let response = HttpResponse::UnprocessableEntity().json(ExecuteResponse {
+            // Standardize WASM format errors
+            let err_str = e.to_string();
+            let (status, error_msg) = if err_str.contains("WebAssembly") || err_str.contains("magic header") || err_str.contains("unexpected character") || err_str.contains("translation error") {
+                (400, "Invalid WASM file format".to_string())
+            } else if err_str.contains("No suitable entry point") {
+                (422, format!("Execution failed: {}", err_str))
+            } else {
+                (422, format!("Execution failed: {}", err_str))
+            };
+            let usage_log = UsageLog::error(auth_context.api_key.id, error_msg.clone()).with_execution_duration(execution_time_ms).with_file_sizes(wasm_size as i32, input_size as i32);
+            let response = HttpResponse::build(actix_web::http::StatusCode::from_u16(status).unwrap()).json(ExecuteResponse {
                 output: None,
-                error: Some(format!("Execution failed: {}", e)),
+                error: Some(error_msg.clone()),
             });
             (response, usage_log)
         }
