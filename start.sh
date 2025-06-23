@@ -6,7 +6,7 @@ cargo run &
 BACKEND_PID=$!
 
 # Start the frontend (if applicable, replace with actual frontend start command)
-cd ../static
+cd static
 # Example: npm start or any other command
 # Uncomment and replace the following line with the actual command
 # npm start &

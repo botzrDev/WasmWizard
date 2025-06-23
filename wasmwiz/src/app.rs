@@ -1,7 +1,7 @@
 // src/app.rs
 use crate::config::Config;
 use crate::handlers::{api_keys, execute, health, web as web_handlers};
-use crate::middleware::{InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware};
+use crate::middleware::{DistributedRateLimitMiddleware, InputValidationMiddleware, SecurityHeadersMiddleware};
 use crate::middleware::pre_auth::PreAuth;
 use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
@@ -47,15 +47,18 @@ pub fn create_app(
     };
     
     // Create rate limit middleware with Redis if available
-    let _rate_limit_middleware = if let Some(redis) = redis_service.clone() {
+    let rate_limit_service = if let Some(redis) = redis_service.clone() {
         tracing::info!("Using Redis-based rate limiting");
-        RateLimitMiddleware::with_redis(redis)
+        let redis_limiter = crate::middleware::distributed_rate_limit::RedisRateLimiter::new(&config.redis_url)
+            .expect("Failed to create Redis rate limiter");
+        crate::middleware::distributed_rate_limit::RateLimitService::new(Box::new(redis_limiter))
     } else {
         tracing::warn!("Using in-memory rate limiting");
-        RateLimitMiddleware::new()
+        let memory_limiter = crate::middleware::distributed_rate_limit::MemoryRateLimiter::new();
+        crate::middleware::distributed_rate_limit::RateLimitService::new(Box::new(memory_limiter))
     };
     
-        let security_middleware = SecurityHeadersMiddleware::new(config.clone());
+    let security_middleware = SecurityHeadersMiddleware::new(config.clone());
     let input_validation_middleware = InputValidationMiddleware::new();
 
     let mut app = App::new()
@@ -65,8 +68,10 @@ pub fn create_app(
             config: config.clone(),
             redis_service: redis_service.clone(),
         }))
+        .app_data(web::Data::new(rate_limit_service.clone()))
         .wrap(security_middleware)
         .wrap(input_validation_middleware)
+        .wrap(DistributedRateLimitMiddleware::new())
         // Health check endpoint (no auth required)
         .service(web::resource("/health").get(health::health_check))
         // Health check endpoints (Kubernetes probes)
@@ -88,16 +93,15 @@ pub fn create_app(
         app = app.service(
             web::scope("/api")
                 .wrap(PreAuth::new(db_service.clone()))
-                .wrap(RateLimitMiddleware::with_redis(
-                    redis_service.clone().unwrap_or_else(|| {
-                        RedisService::new(&config.redis_url).unwrap()
-                    })
-                ))
+                // Add the rate limit service to app data for middleware to use
+                .app_data(web::Data::new(rate_limit_service.clone()))
                 .service(web::resource("/execute").post(execute::execute_wasm))
         );
     } else {
         app = app.service(
             web::scope("/api")
+                // Add rate limiting even for non-auth mode (based on IP address)
+                .app_data(web::Data::new(rate_limit_service.clone()))
                 .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
                 .service(
                     web::resource("/debug-execute")

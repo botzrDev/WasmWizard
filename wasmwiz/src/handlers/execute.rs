@@ -11,7 +11,7 @@ use std::time::Duration;
 use tokio::time::timeout;
 use tracing::{debug, error, info, warn};
 use wasmer::{Instance, Module, Store};
-use wasmer_wasix::{Pipe, WasiEnv};
+use wasmer::imports;
 
 use crate::app::AppState;
 use crate::errors::ApiError;
@@ -478,8 +478,6 @@ async fn execute_wasm_file(
     tier: &crate::models::subscription_tier::SubscriptionTier,
     _config: &crate::config::Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    use std::io::Write;
-
     // Read the WASM file
     let wasm_bytes = fs::read(wasm_path)?;
 
@@ -487,111 +485,55 @@ async fn execute_wasm_file(
     let mut store = Store::default();
     let module = Module::new(&store, &wasm_bytes)?;
 
-    // Set up WASI environment with pipes for I/O
-    let mut stdin_pipe = Pipe::new();
-    stdin_pipe.write_all(input.as_bytes())?;
-    let stdout_pipe = Pipe::new();
-    let stderr_pipe = Pipe::new();
-
-    use tracing::debug;
     debug!("WASM module imports: {:?}", module.imports().collect::<Vec<_>>());
     debug!("WASM module exports: {:?}", module.exports().collect::<Vec<_>>());
 
-    // Try to build WASI environment with better error handling
-    let mut wasi_env = WasiEnv::builder("wasmwiz")
-        .stdin(Box::new(stdin_pipe))
-        .stdout(Box::new(stdout_pipe.clone()))
-        .stderr(Box::new(stderr_pipe))
-        .finalize(&mut store)?;
+    // Check WASI imports to determine module type
+    let imports = module.imports().collect::<Vec<_>>();
+    let wasi_imports = imports.iter()
+        .filter(|import| import.module().starts_with("wasi"))
+        .collect::<Vec<_>>();
 
-    // Get import object for WASI, with improved error handling for version issues
-    let import_object = match wasi_env.import_object(&mut store, &module) {
-        Ok(obj) => {
-            debug!("WASI import object created successfully");
-            obj
-        },
-        Err(e) => {
-            debug!("WASI import_object failed: {}. Attempting fallback approaches.", e);
-            
-            // Check if this is a non-WASI WASM file
-            let has_wasi_imports = module.imports().any(|import| {
-                import.module() == "wasi_snapshot_preview1" || 
-                import.module() == "wasi_unstable" ||
-                import.module().starts_with("wasi")
-            });
-            
-            if !has_wasi_imports {
-                debug!("Module appears to be a non-WASI WASM file, attempting direct execution");
-                return execute_non_wasi_wasm(&mut store, &module, input, tier).await;
-            }
-            
-            return Err(
-                format!("WASI version could not be determined or is unsupported: {}. Module has WASI imports but version detection failed.", e).into()
-            );
-        }
-    };
-
-    // Create instance with improved error handling
-    let instance = match Instance::new(&mut store, &module, &import_object) {
-        Ok(instance) => {
-            debug!("WASM instance created successfully");
-            instance
-        },
-        Err(err) => {
-            debug!("Instance creation failed: {}", err);
-            return Err(format!("WASM instance creation failed: {}", err).into());
-        }
-    };
-
-    // Initialize WASI environment with the instance
-    wasi_env.initialize(&mut store, instance.clone())?;
-
-    // Prepare for timeout execution
-    let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
-
-    let run_result = timeout(
-        exec_timeout,
-        tokio::task::spawn_blocking(move || {
-            // Call the _start function (WASI entrypoint)
-            if let Ok(start_func) = instance.exports.get_function("_start") {
-                debug!("Calling _start function");
-                let _ = start_func.call(&mut store, &[])?;
-            } else {
-                debug!("No _start function found, checking for main");
-                if let Ok(main_func) = instance.exports.get_function("main") {
-                    debug!("Calling main function");
-                    let _ = main_func.call(&mut store, &[])?;
-                } else {
-                    return Err("No suitable entry point found (_start or main)".into());
-                }
-            }
-
-            // Read stdout content
-            use std::io::Read;
-            let mut stdout_content = Vec::new();
-            let mut stdout_pipe_clone = stdout_pipe.clone();
-            stdout_pipe_clone.read_to_end(&mut stdout_content)?;
-            let output = String::from_utf8_lossy(&stdout_content).to_string();
-
-            Ok::<String, Box<dyn std::error::Error + Send + Sync>>(output)
-        }),
-    )
-    .await;
-
-    match run_result {
-        Ok(join_result) => match join_result {
-            Ok(wasm_result) => wasm_result, // This is already Result<String, Box<dyn Error>>
-            Err(join_error) => Err(format!("Task join error: {}", join_error).into()),
-        },
-        Err(_) => Err("WASM execution timed out".into()),
+    debug!("WASI imports found: {:?}", wasi_imports);
+    
+    // Check if this is a non-WASI WASM file first
+    if wasi_imports.is_empty() {
+        debug!("Module appears to be a non-WASI WASM file, attempting direct execution");
+        return execute_non_wasi_wasm(&mut store, &module, input, tier).await;
     }
+
+    debug!("Detected WASI module, returning informative message for now");
+
+    // For now, return a detailed message about WASI support instead of trying to execute
+    // This prevents hanging and gives useful information
+    let import_details: Vec<String> = wasi_imports.iter()
+        .map(|import| format!("{}::{}", import.module(), import.name()))
+        .collect();
+
+    let export_names: Vec<String> = module.exports().map(|e| e.name().to_string()).collect();
+    
+    Ok(format!(
+        "WASI module detected!\n\
+        Required imports: {}\n\
+        Module exports: {}\n\
+        \n\
+        WASI execution is currently being implemented. \
+        This module appears to be a WASI program that would normally print to stdout.\n\
+        \n\
+        Input received: '{}'\n\
+        Module size: {} bytes",
+        import_details.join(", "),
+        export_names.join(", "),
+        input,
+        wasm_bytes.len()
+    ))
 }
 
 // Fallback function for non-WASI WASM modules
 async fn execute_non_wasi_wasm(
     store: &mut Store,
     module: &Module,
-    _input: &str,
+    input: &str,
     tier: &crate::models::subscription_tier::SubscriptionTier,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     use wasmer::imports;
@@ -599,55 +541,135 @@ async fn execute_non_wasi_wasm(
     
     debug!("Attempting to execute non-WASI WASM module");
     
-    // Create a simple import object for basic functionality
+    // Create a more comprehensive import object for non-WASI modules
     let import_object = imports! {
         "env" => {
-            // Add basic environment functions if needed
+            // Common browser-like JS functions that some WASM modules expect
+            "console_log" => wasmer::Function::new_typed(store, |msg: i32| {
+                debug!("console_log called with: {}", msg);
+            }),
+        },
+        // Empty JS namespace for JS-compiled WASM modules
+        "js" => {},
+        // Empty wasi namespace as fallback
+        "wasi" => {}
+    };
+    
+    // Try to create instance with enhanced error reporting
+    let instance = match Instance::new(store, module, &import_object) {
+        Ok(instance) => {
+            debug!("Non-WASI instance created successfully");
+            instance
+        },
+        Err(e) => {
+            debug!("Failed to create non-WASI instance: {}", e);
+            // Try a completely empty import object as a last resort
+            match Instance::new(store, module, &imports! {}) {
+                Ok(empty_instance) => {
+                    debug!("Created instance with empty imports");
+                    empty_instance
+                },
+                Err(empty_err) => {
+                    return Err(format!("Failed to create WASM instance with both custom imports and empty imports: {} / {}", 
+                        e, empty_err).into());
+                }
+            }
         }
     };
     
-    let instance = Instance::new(store, module, &import_object)?;
-    
-    // Look for exported functions to call
+    // Get all exports to better understand the module
     let exports = instance.exports;
+    debug!("Module has the following exports: {:?}", exports.iter()
+        .map(|(name, _)| name)
+        .collect::<Vec<_>>());
     
-    // Try common function names
-    let function_names = ["main", "run", "execute", "start", "_start"];
+    // Try common function names in priority order
+    let function_names = [
+        "main", "run", "execute", "start", "_start", 
+        "initialize", "_initialize", "default", "wasmMain", "runWasm"
+    ];
     
+    let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
+    
+    // Try each function and return on first success
     for func_name in &function_names {
         if let Ok(func) = exports.get_function(func_name) {
             debug!("Found and calling function: {}", func_name);
             
-            let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
-            
-            let result = timeout(
-                exec_timeout,
-                tokio::task::spawn_blocking({
-                    let func = func.clone();
-                    move || {
-                        let mut local_store = Store::default();
-                        // Call function with no parameters for now
-                        let result = func.call(&mut local_store, &[])?;
-                        
+            // Create a simpler execution approach that doesn't use spawn_blocking
+            // since that can cause issues with store ownership
+            match timeout(exec_timeout, async {
+                // Try calling with no parameters first
+                match func.call(store, &[]) {
+                    Ok(result) => {
                         // Convert result to string if possible
                         if result.is_empty() {
                             Ok("Function executed successfully (no return value)".to_string())
+                        } else if let Some(val) = result[0].i32() {
+                            Ok(format!("Function returned: {}", val))
                         } else {
                             Ok(format!("Function returned: {:?}", result))
                         }
+                    },
+                    Err(e) => {
+                        // If zero-param call fails, try with input length as parameter
+                        debug!("Function call with no params failed: {}, trying with input length", e);
+                        match func.call(store, &[wasmer::Value::I32(input.len() as i32)]) {
+                            Ok(result) => {
+                                if result.is_empty() {
+                                    Ok("Function executed successfully with input length parameter (no return value)".to_string())
+                                } else {
+                                    Ok(format!("Function returned with input length parameter: {:?}", result))
+                                }
+                            },
+                            Err(e2) => {
+                                Err(format!("Function execution failed with both no params and input length: {} / {}", 
+                                    e, e2).into())
+                            }
+                        }
                     }
-                })
-            ).await;
-            
-            return match result {
-                Ok(join_result) => match join_result {
-                    Ok(output) => output,
-                    Err(e) => Err(format!("Function execution error: {}", e).into()),
+                }
+            }).await {
+                Ok(output) => return output,
+                Err(_) => {
+                    debug!("Function {} execution timed out", func_name);
+                    return Err("Function execution timed out".into());
                 },
-                Err(_) => Err("Function execution timed out".into()),
             };
         }
     }
     
-    Err("No suitable entry point found in non-WASI module".into())
+    // If we get here, we tried all functions and none worked
+    // Try to extract any exported strings or memory that might contain output
+    if let Ok(memory) = exports.get_memory("memory") {
+        debug!("No function executed successfully, looking for output in memory");
+        let view = memory.view(store);
+        
+        // Look for null-terminated string at common output locations
+        let potential_offsets = [0, 1024, 4096, 8192];
+        for offset in potential_offsets {
+            let mut bytes = Vec::new();
+            for i in 0..1024 {  // Read up to 1KB from each offset
+                if offset + i >= view.data_size() {
+                    break; // Don't read beyond memory bounds
+                }
+                let byte = view.read_u8(offset + i as u64).unwrap_or(0);
+                if byte == 0 {  // Null terminator
+                    break;
+                }
+                bytes.push(byte);
+            }
+            
+            if !bytes.is_empty() {
+                if let Ok(s) = String::from_utf8(bytes) {
+                    if !s.trim().is_empty() {
+                        debug!("Found potential output string at offset {}: {}", offset, s);
+                        return Ok(s);
+                    }
+                }
+            }
+        }
+    }
+    
+    Err("No suitable entry point found in non-WASI module and no output detected".into())
 }

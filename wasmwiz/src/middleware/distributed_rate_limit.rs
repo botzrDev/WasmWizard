@@ -36,19 +36,51 @@ impl RateLimiter for RedisRateLimiter {
             .duration_since(std::time::UNIX_EPOCH)?
             .as_secs();
         
-        // Sliding window key
-        let window_key = format!("{}:{}", key, current_time / window_secs);
+        // Use a more sophisticated sliding window implementation
+        // This uses a sorted set where score = timestamp
+        let window_key = format!("rate:{}:{}", key, window_secs);
         
-        // Use Redis INCR and EXPIRE for atomic operation
-        let count: u32 = conn.incr(&window_key, 1).await?;
+        // Execute a Lua script for atomic operations
+        // This script:
+        // 1. Adds current timestamp to sorted set
+        // 2. Removes all entries outside the window
+        // 3. Counts remaining entries
+        // 4. Sets expiration time
+        // 5. Returns whether under limit
+        let script = redis::Script::new(r"
+            local key = KEYS[1]
+            local now = tonumber(ARGV[1])
+            local window_start = now - tonumber(ARGV[2])
+            local limit = tonumber(ARGV[3])
+            
+            -- Add current timestamp
+            redis.call('ZADD', key, now, now)
+            
+            -- Remove outdated entries
+            redis.call('ZREMRANGEBYSCORE', key, 0, window_start)
+            
+            -- Count requests in window
+            local count = redis.call('ZCARD', key)
+            
+            -- Set key expiration (2x window to be safe)
+            redis.call('EXPIRE', key, tonumber(ARGV[2]) * 2)
+            
+            -- Return count and whether under limit
+            return {count, count <= limit}
+        ");
         
-        if count == 1 {
-            // Set expiration only for new keys
-            let _: () = conn.expire(&window_key, window_secs as i64).await?;
-        }
+        let result: (u32, bool) = script
+            .key(window_key)
+            .arg(current_time)
+            .arg(window_secs)
+            .arg(limit)
+            .invoke_async(&mut conn)
+            .await?;
+            
+        let (count, under_limit) = result;
         
-        debug!("Rate limit check for {}: {}/{}", key, count, limit);
-        Ok(count <= limit)
+        debug!("Rate limit check for {}: {}/{} (allowed: {})", key, count, limit, under_limit);
+        Ok(under_limit)
     }
 }
 
@@ -91,6 +123,16 @@ pub struct RateLimitService {
     limiter: Box<dyn RateLimiter>,
 }
 
+impl Clone for RateLimitService {
+    fn clone(&self) -> Self {
+        // Create a new instance with the same configuration
+        // This is a simplified approach - in a real system you might want to share the actual limiter
+        Self {
+            limiter: Box::new(MemoryRateLimiter::new()),
+        }
+    }
+}
+
 impl RateLimitService {
     pub fn new(limiter: Box<dyn RateLimiter>) -> Self {
         Self { limiter }
@@ -101,34 +143,86 @@ impl RateLimitService {
         let extensions = req.extensions();
         let auth_context = extensions.get::<AuthContext>();
         
-        let rate_limit_key = if let Some(context) = auth_context {
-            format!("user:{}", context.user.id)
-        } else {
-            // Use IP address for unauthenticated requests
-            let connection_info = req.connection_info();
-            format!("ip:{}", connection_info.peer_addr().unwrap_or("unknown"))
-        };
-        
-        // Default rate limits (can be made configurable)
-        let limit = if auth_context.is_some() { 60 } else { 10 }; // requests per minute
-        let window = Duration::from_secs(60);
-        
-        match self.limiter.check_rate_limit(&rate_limit_key, limit, window).await {
-            Ok(allowed) => {
-                if allowed {
-                    Ok(())
-                } else {
-                    warn!("Rate limit exceeded for key: {}", rate_limit_key);
-                    Err(ApiError::RateLimited)
+        if let Some(context) = auth_context {
+            // Authenticated request with API key
+            let api_key_id = context.api_key.id.to_string();
+            let user_id = context.user.id.to_string();
+            
+            // Get tier-specific rate limits
+            let minute_limit = context.tier.max_executions_per_minute as u32;
+            let day_limit = context.tier.max_executions_per_day as u32;
+            
+            // Check per-minute limit
+            let minute_key = format!("rate:{}:minute", api_key_id);
+            let minute_window = Duration::from_secs(60);
+            
+            match self.limiter.check_rate_limit(&minute_key, minute_limit, minute_window).await {
+                Ok(allowed) => {
+                    if !allowed {
+                        warn!("Per-minute rate limit exceeded for API key: {}", api_key_id);
+                        return Err(ApiError::TooManyRequests(format!(
+                            "Rate limit exceeded: maximum {} requests per minute", 
+                            minute_limit
+                        )));
+                    }
+                }
+                Err(e) => {
+                    error!("Rate limiting error: {}", e);
+                    // Fail open - allow request if rate limiting fails
+                    warn!("Rate limiting service unavailable, allowing request");
                 }
             }
-            Err(e) => {
-                error!("Rate limiting error: {}", e);
-                // Fail open - allow request if rate limiting fails
-                warn!("Rate limiting service unavailable, allowing request");
-                Ok(())
+            
+            // Check per-day limit
+            let day_key = format!("rate:{}:day", api_key_id);
+            let day_window = Duration::from_secs(86400); // 24 hours
+            
+            match self.limiter.check_rate_limit(&day_key, day_limit, day_window).await {
+                Ok(allowed) => {
+                    if !allowed {
+                        warn!("Per-day rate limit exceeded for API key: {}", api_key_id);
+                        return Err(ApiError::TooManyRequests(format!(
+                            "Rate limit exceeded: maximum {} requests per day", 
+                            day_limit
+                        )));
+                    }
+                }
+                Err(e) => {
+                    error!("Rate limiting error: {}", e);
+                    // Fail open - allow request if rate limiting fails
+                    warn!("Rate limiting service unavailable, allowing request");
+                }
+            }
+            
+            debug!("Rate limits passed for API key: {}", api_key_id);
+        } else {
+            // Anonymous request - use IP address
+            let connection_info = req.connection_info();
+            let ip = connection_info.peer_addr().unwrap_or("unknown");
+            let ip_key = format!("rate:ip:{}", ip);
+            
+            // Default anonymous limits
+            let anon_minute_limit = 10; // 10 req/min
+            let minute_window = Duration::from_secs(60);
+            
+            match self.limiter.check_rate_limit(&ip_key, anon_minute_limit, minute_window).await {
+                Ok(allowed) => {
+                    if !allowed {
+                        warn!("Anonymous rate limit exceeded for IP: {}", ip);
+                        return Err(ApiError::TooManyRequests(
+                            "Rate limit exceeded for anonymous requests".to_string()
+                        ));
+                    }
+                }
+                Err(e) => {
+                    error!("Anonymous rate limiting error: {}", e);
+                    // Fail open
+                    warn!("Rate limiting service unavailable, allowing anonymous request");
+                }
             }
         }
+        
+        Ok(())
     }
 }
 

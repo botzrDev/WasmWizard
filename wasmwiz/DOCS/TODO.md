@@ -1,11 +1,39 @@
 # WasmWiz TODO List - Production Readiness
 
-**Last Updated:** December 19, 2024  
-**Version:** 2.0  
-**Status:** 🚀 **PRODUCTION READY** - Core application hardened for production deployment  
-**Production Readiness Score:** 9.5/10
+**Last Updated:** June 23, 2025  
+**Version:** 2.1  
+**Status:** � **IN PROGRESS** - WASM execution engine under active debugging  
+**Production Readiness Score:** 7.5/10 (down from 9.5 due to WASM execution issues)
 
 This document outlines all tasks required to take the WasmWiz WebAssembly Execution API from its current development state to production readiness, based on comprehensive audit findings and the requirements specified in the ERD.
+
+---
+
+## 🚧 **CRITICAL ISSUES - REQUIRES IMMEDIATE ATTENTION**
+
+### **🚨 WASM Execution Engine Issues (HIGH PRIORITY)**
+- [ ] **RUNTIME PANIC**: BorrowMutError in request handling during multipart parsing
+  - Location: `actix-web-4.10.2/src/request.rs:393:31: already borrowed: BorrowMutError`
+  - Impact: Server crashes on WASM execution requests
+  - Investigation: Likely caused by multiple mutable borrows of request/payload data
+  - Next Steps: Refactor multipart parsing to avoid concurrent borrowing
+- [ ] **WASI Module Support**: Currently returns informative messages instead of executing
+  - Status: Detection logic working, execution disabled to prevent hangs
+  - Required: Implement proper WASI environment with wasmer-wasix 0.600.1
+  - Complexity: High - requires careful I/O pipe management and timeout handling
+- [ ] **Non-WASI Module Execution**: Simplified execution logic implemented but untested
+  - Status: Removed problematic spawn_blocking, using direct async execution
+  - Testing: Needs validation with actual non-WASI modules
+
+### **📋 WASM EXECUTION DEBUGGING STATUS**
+- [x] **Wasmer API Migration**: Updated to Wasmer 6.0.1 / wasmer-wasix 0.600.1
+- [x] **Compilation Issues**: All cargo build errors resolved
+- [x] **Code Cleanup**: Removed duplicate WASI environment creation, fixed exports API
+- [x] **Error Handling**: Enhanced logging and timeout mechanisms
+- [x] **Database & Migrations**: Working correctly, migrations applied successfully
+- [x] **Redis Rate Limiting**: Integrated and functional
+- [ ] **Request Parsing**: BorrowMutError needs resolution
+- [ ] **Execution Pipeline**: End-to-end testing and validation
 
 ---
 

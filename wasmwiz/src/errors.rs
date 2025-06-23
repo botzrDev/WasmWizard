@@ -34,8 +34,8 @@ pub enum ApiError {
     #[display(fmt = "Payload Too Large: {}", _0)]
     PayloadTooLarge(String),
 
-    #[display(fmt = "Rate Limit Exceeded")]
-    TooManyRequests,
+    #[display(fmt = "Rate Limit Exceeded: {}", _0)]
+    TooManyRequests(String),
 
     #[display(fmt = "Rate Limited")]
     RateLimited,
@@ -76,7 +76,19 @@ impl ResponseError for ApiError {
         let status_code = self.status_code();
         let error_message = self.to_string(); // Uses the #[display] attribute
 
-        HttpResponse::build(status_code).json(serde_json::json!({
+        let mut response = HttpResponse::build(status_code);
+        
+        // Add rate limit headers for rate limiting errors
+        if let ApiError::TooManyRequests(_) = self {
+            response
+                .insert_header(("Retry-After", "60"))
+                .insert_header(("X-RateLimit-Reset", (std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs() + 60).to_string()));
+        }
+        
+        response.json(serde_json::json!({
             "error": error_message,
         }))
     }
@@ -88,7 +100,7 @@ impl ResponseError for ApiError {
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
             ApiError::PayloadTooLarge(_) => StatusCode::PAYLOAD_TOO_LARGE,
-            ApiError::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
+            ApiError::TooManyRequests(_) => StatusCode::TOO_MANY_REQUESTS,
             ApiError::RateLimited => StatusCode::TOO_MANY_REQUESTS,
             ApiError::UnprocessableEntity(_)
             | ApiError::WasmLoadError(_)
