@@ -309,7 +309,7 @@ body {
     border-radius: var(--border-radius);
     background-color: rgba(16, 185, 129, 0.1);
     display: none;
-    animation: fadeIn 0.3s ease;
+    /* animation: fadeIn 0.3s ease; */
 }
 
 .file-details {
@@ -569,43 +569,20 @@ body {
 }
 
 .alert-animated {
-    animation: slideIn 0.3s ease-out;
+    /* animation: slideIn 0.3s ease-out; */
 }
 
 .alert-dismissing {
-    animation: slideOut 0.3s ease-out forwards;
+    /* animation: slideOut 0.3s ease-out forwards; */
 }
 
-@keyframes slideIn {
-    from {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideOut {
-    from {
-        transform: translateY(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
+/* Removed all @keyframes for animations */
+/*
+@keyframes slideIn {}
+@keyframes slideOut {}
+@keyframes fadeIn {}
+@keyframes spin {}
+*/
 
 /* Loading Spinner */
 .spinner {
@@ -615,13 +592,7 @@ body {
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     border-top-color: white;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    /* animation: spin 1s linear infinite; */
 }
 
 /* Toast Notifications */
@@ -731,7 +702,7 @@ body {
 /* Execution Result Styling */
 #execution-result {
     margin-top: 2rem;
-    animation: fadeIn 0.5s ease;
+    /* animation: fadeIn 0.5s ease; */
 }
 
 .execution-result-card {
