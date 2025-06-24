@@ -2,11 +2,11 @@
 
 use actix_web::{
     body::{BoxBody, MessageBody},
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpMessage,
+    dev::{Payload, Service, ServiceRequest, ServiceResponse, Transform},
+    error::ErrorUnauthorized,
+    Error, FromRequest, HttpMessage, HttpRequest, Result,
 };
-use futures_util::future::LocalBoxFuture;
-use std::future::{ready, Ready};
+use futures_util::future::{ready, LocalBoxFuture, Ready};
 use crate::services::DatabaseService;
 use sha2::{Digest, Sha256};
 use crate::models::{ApiKey, User, SubscriptionTier};
@@ -73,6 +73,19 @@ pub struct AuthContext {
     pub api_key: ApiKey,
     pub user: User,
     pub tier: SubscriptionTier,
+}
+
+// Implement FromRequest for AuthContext to resolve BorrowMutError
+impl FromRequest for AuthContext {
+    type Error = actix_web::Error;
+    type Future = Ready<Result<Self, Self::Error>>;
+
+    fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
+        match req.extensions().get::<AuthContext>().cloned() {
+            Some(ctx) => ready(Ok(ctx)),
+            None => ready(Err(ErrorUnauthorized("Authentication required"))),
+        }
+    }
 }
 
 

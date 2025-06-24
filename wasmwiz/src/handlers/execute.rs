@@ -1,6 +1,6 @@
 // src/handlers/execute.rs
 use actix_multipart::Multipart;
-use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, web, ResponseError};
+use actix_web::{HttpRequest, HttpResponse, Result as ActixResult, web, ResponseError};
 use futures_util::TryStreamExt;
 use serde::Deserialize;
 use serde_urlencoded;
@@ -23,22 +23,12 @@ use std::fs;
 
 /// Execute a WebAssembly module with provided input
 pub async fn execute_wasm(
-    req: HttpRequest,
+    auth_context: AuthContext, // Custom FromRequest extractor handles authentication
     app_state: web::Data<AppState>,
     mut payload: Multipart,
 ) -> ActixResult<HttpResponse, ApiError> {
     let start_time = Instant::now();
 
-    // Get authentication context and fail immediately if missing
-    let auth_context = match req.extensions().get::<AuthContext>().cloned() {
-        Some(ctx) => ctx,
-        None => {
-            // This case should ideally not be reached if PreAuth middleware is effective.
-            return Ok(HttpResponse::Unauthorized().json(serde_json::json!({
-                "error": "Authentication required"
-            })));
-        }
-    };
     info!("WASM execution request received for user: {}", auth_context.user.email);
 
     let mut wasm_data: Option<Vec<u8>> = None;

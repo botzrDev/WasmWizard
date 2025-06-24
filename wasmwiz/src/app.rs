@@ -71,7 +71,7 @@ pub fn create_app(
         .app_data(web::Data::new(rate_limit_service.clone()))
         .wrap(security_middleware)
         .wrap(input_validation_middleware)
-        .wrap(DistributedRateLimitMiddleware::new())
+        // .wrap(DistributedRateLimitMiddleware::new()) // Temporarily disabled
         // Health check endpoint (no auth required)
         .service(web::resource("/health").get(health::health_check))
         // Health check endpoints (Kubernetes probes)
