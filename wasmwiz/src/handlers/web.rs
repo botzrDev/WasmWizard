@@ -7,7 +7,7 @@ use actix_web::{HttpResponse, Result as ActixResult, web};
 use askama_actix::{Template, TemplateToResponse};
 
 #[derive(Template)]
-#[template(path = "index-modern.html")]
+#[template(path = "index.html")]
 pub struct IndexTemplate {
     pub title: String,
     pub csrf_token: String,

@@ -8,6 +8,16 @@
     --secondary-color: #6b46c1;
     --secondary-hover: #553c9a;
     --accent-color: #8b5cf6;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+    --background-color: #f8fafc;
+    --surface-color: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     
     /* New modern design tokens */
     --glass-bg: rgba(255, 255, 255, 0.08);

@@ -189,18 +189,75 @@ const ModernUI = {
     },
     
     loadSampleWithFeedback(sampleType) {
-        // Show loading state
-        this.showToast(`Loading ${sampleType} sample...`, 'info');
+        // Show minimal loading state
+        this.showToast(`Loading ${sampleType}...`, 'info', 1500);
+        
+        // Show file info like the original design
+        this.showLoadedModuleInfo(sampleType);
         
         // Integrate with existing sample loading logic
         if (window.loadSample) {
             window.loadSample(sampleType);
         }
         
-        // Simulate loading completion (replace with actual callback)
+        // Show completion with minimal toast
         setTimeout(() => {
-            this.showToast(`${sampleType} sample loaded successfully!`, 'success');
-        }, 1000);
+            this.showToast(`${sampleType} loaded`, 'success', 1500);
+        }, 800);
+    },
+    
+    showLoadedModuleInfo(sampleType) {
+        const uploadZone = document.querySelector('.enhanced-upload-zone');
+        const fileInfo = document.querySelector('#file-info');
+        const fileName = document.querySelector('#file-name');
+        const fileSize = document.querySelector('#file-size');
+        const removeButton = document.querySelector('#remove-file');
+        
+        if (!uploadZone || !fileInfo) return;
+        
+        // Update upload zone to show loaded state
+        uploadZone.classList.add('has-file');
+        
+        // Map sample types to display info
+        const sampleInfo = {
+            'calc_add': { name: 'calc_add.wasm', size: '65.27 KB' },
+            'echo': { name: 'echo.wasm', size: '23.45 KB' },
+            'hello_world': { name: 'hello_world.wasm', size: '18.92 KB' }
+        };
+        
+        const info = sampleInfo[sampleType] || { name: `${sampleType}.wasm`, size: '~25 KB' };
+        
+        // Show file info
+        if (fileName) fileName.textContent = info.name;
+        if (fileSize) fileSize.textContent = info.size;
+        
+        fileInfo.style.display = 'block';
+        
+        // Remove file handler
+        if (removeButton) {
+            removeButton.onclick = () => {
+                this.clearLoadedModule();
+            };
+        }
+    },
+    
+    clearLoadedModule() {
+        const uploadZone = document.querySelector('.enhanced-upload-zone');
+        const fileInfo = document.querySelector('#file-info');
+        const fileInput = document.querySelector('#wasm-file');
+        
+        if (fileInput) fileInput.value = '';
+        if (uploadZone) uploadZone.classList.remove('has-file');
+        if (fileInfo) fileInfo.style.display = 'none';
+        
+        // Clear sample selection
+        document.querySelectorAll('.sample-card-modern').forEach(card => {
+            card.classList.remove('selected');
+            card.style.transform = 'translateY(0) scale(1)';
+        });
+        
+        this.state.selectedSample = null;
+        this.showToast('Module cleared', 'info', 1000);
     },
     
     // Floating Action Button with smart behavior
@@ -286,13 +343,13 @@ const ModernUI = {
     handleFileSelection(file, fileInput, uploadZone, fileInfo) {
         // Validate file type
         if (!file.name.endsWith('.wasm')) {
-            this.showToast('Please select a valid .wasm file', 'error');
+            this.showToast('Please select a .wasm file', 'error', 2000);
             return;
         }
         
         // Validate file size (10MB limit)
         if (file.size > 10 * 1024 * 1024) {
-            this.showToast('File size must be less than 10MB', 'error');
+            this.showToast('File must be <10MB', 'error', 2000);
             return;
         }
         
@@ -312,14 +369,11 @@ const ModernUI = {
         // Remove file handler
         if (removeButton) {
             removeButton.onclick = () => {
-                fileInput.value = '';
-                uploadZone.classList.remove('has-file');
-                fileInfo.style.display = 'none';
-                this.showToast('File removed', 'info');
+                this.clearLoadedModule();
             };
         }
         
-        this.showToast(`File "${file.name}" selected successfully`, 'success');
+        this.showToast('File selected', 'success', 1500);
     },
     
     // Enhanced progress system
@@ -398,7 +452,7 @@ const ModernUI = {
         const fileInput = document.querySelector('#wasm-file');
         
         if (!fileInput.files.length && !this.state.selectedSample) {
-            this.showToast('Please select a WASM file or sample module', 'error');
+            this.showToast('Select a WASM file or sample', 'error', 2000);
             return false;
         }
         
@@ -421,7 +475,7 @@ const ModernUI = {
             this.updateProgress(2, 100);
             this.setExecutingState(false);
             this.hideProgress();
-            this.showToast('Execution completed successfully!', 'success');
+            this.showToast('Execution complete', 'success', 1500);
         }, 3000);
     },
     
@@ -510,35 +564,28 @@ const ModernUI = {
         });
     },
     
-    // Toast notification system
-    showToast(message, type = 'info', duration = 3000) {
+    // Minimal toast notification system
+    showToast(message, type = 'info', duration = 2000) {
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+        toast.className = `toast toast-${type} toast-minimal`;
         toast.innerHTML = `
-            <div class="toast-content">
-                <div class="toast-icon">${this.getToastIcon(type)}</div>
-                <div class="toast-message">${message}</div>
-                <button class="toast-close">×</button>
+            <div class="toast-content-minimal">
+                <div class="toast-message-minimal">${message}</div>
             </div>
         `;
         
         // Add to DOM
         document.body.appendChild(toast);
         
-        // Position toast
+        // Position toast (smaller, top-right corner)
         const toasts = document.querySelectorAll('.toast');
-        const offset = (toasts.length - 1) * 60;
-        toast.style.top = `${20 + offset}px`;
+        const offset = (toasts.length - 1) * 35;
+        toast.style.top = `${15 + offset}px`;
         
-        // Auto-remove
+        // Auto-remove (shorter duration)
         setTimeout(() => {
             this.removeToast(toast);
         }, duration);
-        
-        // Manual close
-        toast.querySelector('.toast-close').addEventListener('click', () => {
-            this.removeToast(toast);
-        });
         
         // Animate in
         setTimeout(() => {
@@ -589,62 +636,38 @@ const ModernUI = {
     }
 };
 
-// Toast styles (injected dynamically)
+// Minimal toast styles (injected dynamically)
 const toastStyles = `
 .toast {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 15px;
+    right: 15px;
     z-index: 10000;
     opacity: 0;
     transform: translateX(100%);
-    transition: all 0.3s ease;
-    min-width: 300px;
-    max-width: 400px;
+    transition: all 0.2s ease;
+    min-width: 200px;
+    max-width: 300px;
 }
 
-.toast-content {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    color: white;
-}
-
-.toast-success .toast-content { background: var(--success-color); }
-.toast-error .toast-content { background: var(--error-color); }
-.toast-warning .toast-content { background: var(--warning-color); }
-.toast-info .toast-content { background: var(--info-color); }
-
-.toast-icon {
-    font-size: 1.25rem;
-    flex-shrink: 0;
-}
-
-.toast-message {
-    flex: 1;
-    font-weight: 500;
-}
-
-.toast-close {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.25rem;
-    cursor: pointer;
-    opacity: 0.8;
-    padding: 0;
-    width: 20px;
-    height: 20px;
+.toast-minimal .toast-content-minimal {
     display: flex;
     align-items: center;
-    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: white;
 }
 
-.toast-close:hover {
-    opacity: 1;
+.toast-success .toast-content-minimal { background: #10b981; }
+.toast-error .toast-content-minimal { background: #ef4444; }
+.toast-warning .toast-content-minimal { background: #f59e0b; }
+.toast-info .toast-content-minimal { background: #3b82f6; }
+
+.toast-message-minimal {
+    flex: 1;
 }
 `;
 
