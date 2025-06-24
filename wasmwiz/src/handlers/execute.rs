@@ -12,6 +12,7 @@ use tokio::time::timeout;
 use tracing::{debug, error, info, warn};
 use wasmer::{Instance, Module, Store};
 use wasmer::imports;
+use wasmer_wasix::{WasiEnv, Pipe};
 
 use crate::app::AppState;
 use crate::errors::ApiError;
@@ -355,83 +356,61 @@ pub struct DebugForm {
 
 /// Debug endpoint to test multipart and urlencoded handling
 pub async fn debug_execute(
-    req: HttpRequest,
-    mut payload: web::Payload,
+    mut payload: Multipart,
 ) -> ActixResult<HttpResponse, ApiError> {
-    let content_type = req.headers().get("content-type").and_then(|v| v.to_str().ok()).unwrap_or("");
     let mut fields = Vec::new();
     let start_time = Instant::now();
 
-    if content_type.starts_with("multipart/form-data") {
-        let mut multipart = Multipart::new(&req.headers(), payload);
-        let parse_timeout = Duration::from_secs(10);
-        let parse_result = timeout(parse_timeout, async {
-            let mut found_field = false;
-            while let Some(field) = multipart.try_next().await.map_err(|e| {
+    // Handle multipart form data using the proper extractor
+    let parse_timeout = Duration::from_secs(10);
+    let parse_result = timeout(parse_timeout, async {
+        let mut found_field = false;
+        while let Some(field_result) = payload.next().await {
+            let field = field_result.map_err(|e| {
                 error!("Failed to parse multipart data: {}", e);
                 ApiError::BadRequest("Failed to parse multipart data".to_string())
-            })? {
-                found_field = true;
-                let field_name = field.name().to_string();
-                info!("DEBUG FIELD NAME: {}", field_name);
-                let field_start = Instant::now();
-                let field_size = field.try_fold(0, |acc, chunk| async move {
-                    Ok(acc + chunk.len())
-                }).await.unwrap_or(0);
-                let field_duration = field_start.elapsed();
-                fields.push(format!("{}: {} bytes ({}ms)", field_name, field_size, field_duration.as_millis()));
-                info!("Received field: {} ({} bytes) in {:?}", field_name, field_size, field_duration);
-            }
-            if !found_field {
-                warn!("No fields found in multipart upload");
-            }
-            Ok::<(), ApiError>(())
-        }).await;
-        let total_duration = start_time.elapsed();
-        match parse_result {
-            Ok(Ok(())) => {
-                let response = serde_json::json!({
-                    "status": "debug_success",
-                    "fields": fields,
-                    "parse_duration_ms": total_duration.as_millis()
-                });
-                return Ok(HttpResponse::Ok().json(response));
-            }
-            Ok(Err(e)) => return Err(e),
-            Err(_) => {
-                let response = serde_json::json!({
-                    "status": "debug_timeout",
-                    "fields": fields,
-                    "parse_duration_ms": total_duration.as_millis()
-                });
-                return Ok(HttpResponse::RequestTimeout().json(response));
-            }
+            })?;
+            
+            found_field = true;
+            let content_disposition = field.content_disposition().clone();
+            let field_name = content_disposition.get_name().unwrap_or("unknown").to_string();
+            info!("DEBUG FIELD NAME: {}", field_name);
+            
+            let field_start = Instant::now();
+            let field_size = field.try_fold(0, |acc, chunk| async move {
+                Ok(acc + chunk.len())
+            }).await.unwrap_or(0);
+            
+            let field_duration = field_start.elapsed();
+            fields.push(format!("{}: {} bytes ({}ms)", field_name, field_size, field_duration.as_millis()));
+            info!("Received field: {} ({} bytes) in {:?}", field_name, field_size, field_duration);
         }
-    } else if content_type.starts_with("application/x-www-form-urlencoded") {
-        let mut body = BytesMut::new();
-        while let Some(chunk) = payload.next().await {
-            let chunk = chunk.map_err(|e| ApiError::BadRequest(format!("Payload error: {}", e)))?;
-            body.extend_from_slice(&chunk);
+        
+        if !found_field {
+            warn!("No fields found in multipart upload");
         }
-        let form: DebugForm = serde_urlencoded::from_bytes(&body).map_err(|e| {
-            error!("Failed to parse urlencoded body: {}", e);
-            ApiError::BadRequest("Failed to parse urlencoded body".to_string())
-        })?;
-        if let Some(wasm) = &form.wasm {
-            fields.push(format!("wasm: {} bytes", wasm.len()));
+        Ok::<(), ApiError>(())
+    }).await;
+    
+    let total_duration = start_time.elapsed();
+    match parse_result {
+        Ok(Ok(())) => {
+            let response = serde_json::json!({
+                "status": "debug_success",
+                "fields": fields,
+                "parse_duration_ms": total_duration.as_millis()
+            });
+            Ok(HttpResponse::Ok().json(response))
         }
-        if let Some(input) = &form.input {
-            fields.push(format!("input: {} bytes", input.len()));
+        Ok(Err(e)) => Err(e),
+        Err(_) => {
+            let response = serde_json::json!({
+                "status": "debug_timeout",
+                "fields": fields,
+                "parse_duration_ms": total_duration.as_millis()
+            });
+            Ok(HttpResponse::RequestTimeout().json(response))
         }
-        let total_duration = start_time.elapsed();
-        let response = serde_json::json!({
-            "status": "debug_success",
-            "fields": fields,
-            "parse_duration_ms": total_duration.as_millis()
-        });
-        return Ok(HttpResponse::Ok().json(response));
-    } else {
-        return Err(ApiError::BadRequest("Unsupported content type for debug endpoint".to_string()));
     }
 }
 
@@ -492,31 +471,10 @@ async fn execute_wasm_file(
         return execute_non_wasi_wasm(&mut store, &module, input, tier).await;
     }
 
-    debug!("Detected WASI module, returning informative message for now");
+    debug!("Detected WASI module, implementing actual execution");
 
-    // For now, return a detailed message about WASI support instead of trying to execute
-    // This prevents hanging and gives useful information
-    let import_details: Vec<String> = wasi_imports.iter()
-        .map(|import| format!("{}::{}", import.module(), import.name()))
-        .collect();
-
-    let export_names: Vec<String> = module.exports().map(|e| e.name().to_string()).collect();
-    
-    Ok(format!(
-        "WASI module detected!\n\
-        Required imports: {}\n\
-        Module exports: {}\n\
-        \n\
-        WASI execution is currently being implemented. \
-        This module appears to be a WASI program that would normally print to stdout.\n\
-        \n\
-        Input received: '{}'\n\
-        Module size: {} bytes",
-        import_details.join(", "),
-        export_names.join(", "),
-        input,
-        wasm_bytes.len()
-    ))
+    // Implement real WASI execution using wasmer-wasix
+    return execute_wasi_module(&mut store, &module, input, &wasm_bytes).await;
 }
 
 // Fallback function for non-WASI WASM modules
@@ -662,4 +620,98 @@ async fn execute_non_wasi_wasm(
     }
     
     Err("No suitable entry point found in non-WASI module and no output detected".into())
+}
+
+// Implement actual WASI execution using wasmer-wasix (simplified approach)
+async fn execute_wasi_module(
+    store: &mut Store,
+    module: &Module,
+    input: &str,
+    _wasm_bytes: &[u8],
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    use std::io::{Read, Write};
+    
+    debug!("Starting WASI module execution with input: '{}'", input);
+    
+    // Clone data for moving into spawn_blocking
+    let input_string = input.to_string();
+    let module_clone = module.clone();
+    
+    // Create input and output pipes for WASI
+    let (stdin_tx, stdin_rx) = Pipe::channel();
+    let (stdout_tx, stdout_rx) = Pipe::channel();
+    
+    // Write input to stdin if provided
+    if !input_string.is_empty() {
+        let input_for_stdin = input_string.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut stdin_writer = stdin_tx;
+            let _ = stdin_writer.write_all(input_for_stdin.as_bytes());
+            let _ = stdin_writer.write_all(b"\n"); // Add newline for programs expecting it
+            drop(stdin_writer); // Close stdin to signal EOF
+        });
+    } else {
+        drop(stdin_tx); // Close stdin immediately if no input
+    }
+    
+    // Try the high-level execution approach first
+    let mut store_clone = Store::default();
+    
+    match tokio::time::timeout(Duration::from_secs(30), async {
+        tokio::task::spawn_blocking(move || -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+            let result = WasiEnv::builder("wasm_module")
+                .args(&["wasm_module"]) // Program name
+                .stdin(Box::new(stdin_rx))
+                .stdout(Box::new(stdout_tx))
+                .run_with_store(module_clone, &mut store_clone);
+            
+            // Handle the execution result
+            match result {
+                Ok(_) => Ok("Execution completed successfully".to_string()),
+                Err(e) => {
+                    debug!("WASI execution error: {}", e);
+                    // Try to extract meaningful error info
+                    Ok(format!("Execution completed with status: {}", e))
+                }
+            }
+        }).await
+    }).await {
+        Ok(Ok(result)) => {
+            // Now try to read the output
+            let mut stdout_output = Vec::new();
+            
+            // Read stdout with timeout
+            if let Ok(Ok(output)) = tokio::time::timeout(Duration::from_secs(5), async {
+                tokio::task::spawn_blocking(move || {
+                    let mut stdout_reader = stdout_rx;
+                    let mut buffer = Vec::new();
+                    let _ = stdout_reader.read_to_end(&mut buffer);
+                    buffer
+                }).await
+            }).await {
+                stdout_output = output;
+            }
+            
+            let stdout_str = String::from_utf8_lossy(&stdout_output);
+            debug!("WASI stdout: '{}'", stdout_str);
+            
+            if !stdout_str.trim().is_empty() {
+                Ok(stdout_str.trim().to_string())
+            } else {
+                // If no stdout, return a success message or the result from execution
+                match result {
+                    Ok(success_msg) => {
+                        if success_msg.contains("successfully") {
+                            Ok("(execution completed, no output)".to_string())
+                        } else {
+                            Ok(success_msg)
+                        }
+                    }
+                    Err(e) => Ok(format!("Execution completed with status: {}", e))
+                }
+            }
+        }
+        Ok(Err(e)) => Err(format!("Task execution error: {}", e).into()),
+        Err(_) => Err("WASI module execution timed out".into()),
+    }
 }
