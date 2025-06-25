@@ -435,14 +435,34 @@ function validateForm() {
     const inputText = document.querySelector('#input-text');
     const apiKeyInput = document.querySelector('#api-key');
     
+    console.log('[DEBUG] validateForm called');
+    console.log('[DEBUG] fileInput:', fileInput);
+    console.log('[DEBUG] fileInput.files:', fileInput.files);
+    console.log('[DEBUG] fileInput.files?.length:', fileInput.files?.length);
+    console.log('[DEBUG] currentSampleFile:', currentSampleFile);
+    
+    // Check if we have a file from either file input or sample loading
+    let selectedFile = null;
+    if (fileInput.files && fileInput.files.length > 0) {
+        selectedFile = fileInput.files[0];
+        console.log('[DEBUG] Using file from input:', selectedFile);
+    } else if (currentSampleFile) {
+        selectedFile = currentSampleFile;
+        console.log('[DEBUG] Using current sample file:', selectedFile);
+    }
+    
     // Validate file is selected
-    if (!fileInput.files || fileInput.files.length === 0) {
+    if (!selectedFile) {
+        console.log('[DEBUG] No files selected, showing error');
         displayAlert('Please select a WebAssembly (.wasm) file', 'error');
         return false;
     }
     
+    console.log('[DEBUG] File selected:', selectedFile);
+    
     // Validate file
-    if (!validateFile(fileInput.files[0])) {
+    if (!validateFile(selectedFile)) {
+        console.log('[DEBUG] File validation failed');
         return false;
     }
     
@@ -479,6 +499,16 @@ async function executeWasm() {
         return;
     }
     
+    // Get the selected file (either from input or sample)
+    let selectedFile = null;
+    if (fileInput.files && fileInput.files.length > 0) {
+        selectedFile = fileInput.files[0];
+    } else if (currentSampleFile) {
+        selectedFile = currentSampleFile;
+    }
+    
+    console.log('[DEBUG] executeWasm - selectedFile:', selectedFile);
+    
     // Update progress steps
     if (progressContainer) {
         progressContainer.style.display = 'flex';
@@ -495,7 +525,7 @@ async function executeWasm() {
         }
         
         const formData = new FormData();
-        formData.append('wasm', fileInput.files[0]);
+        formData.append('wasm', selectedFile);
         formData.append('input', inputText.value);
         formData.append('input_type', inputType);
         formData.append('memory_limit', memoryLimit);
@@ -552,17 +582,20 @@ async function executeWasm() {
         updateProgressStep('step-results', 'completed');
         
         if (response.ok) {
+            console.log('[DEBUG] About to call displayExecutionResult with:', result, response.status);
+            console.log('Execution completed successfully, displaying results:', result);
             displayExecutionResult(result, response.status);
             showToast('Execution completed successfully', 'success');
             
             // Log successful execution
             console.debug('Execution successful:', {
-                fileSize: fileInput.files[0].size,
+                fileSize: selectedFile.size,
                 inputSize: new Blob([inputText.value]).size,
                 executionTime: result.execution_time_ms || 0,
                 memoryUsage: result.memory_usage_mb || 0
             });
         } else {
+            console.log('[DEBUG] Response not OK, showing error alert');
             displayAlert(`Execution failed: ${result.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
@@ -590,35 +623,26 @@ async function executeWasm() {
     }
 }
 
-function updateProgressStep(stepId, status) {
-    const step = document.getElementById(stepId);
-    if (step) {
-        // Remove all status classes first
-        step.classList.remove('active', 'completed', 'error');
-        // Add the new status class
-        step.classList.add(status);
-    }
-}
-
-function setLoadingState(button, loading) {
-    if (!button) return;
-    
-    if (loading) {
-        button.disabled = true;
-        button.classList.add('loading');
-        button.setAttribute('data-original-text', button.textContent);
-        button.innerHTML = '<span class="spinner"></span> Executing...';
-    } else {
-        button.disabled = false;
-        button.classList.remove('loading');
-        button.textContent = button.getAttribute('data-original-text') || 'Execute WASM';
-    }
+// --- DEBUG: Test function to manually trigger result display ---
+function testResultDisplay() {
+    console.log('[DEBUG] testResultDisplay called');
+    const mockResult = {
+        output: "Test output",
+        execution_time_ms: 100,
+        memory_usage_mb: 1.5
+    };
+    displayExecutionResult(mockResult, 200);
+    console.log('[DEBUG] testResultDisplay finished');
 }
 
 // Enhanced execution result display
 function displayExecutionResult(result, statusCode) {
     const resultContainer = document.querySelector('#execution-result');
-    if (!resultContainer) return;
+    console.log('[DEBUG] displayExecutionResult called', { result, statusCode, resultContainer });
+    if (!resultContainer) {
+        console.error('[DEBUG] #execution-result not found in DOM');
+        return;
+    }
     
     const hasOutput = result.output && result.output.trim().length > 0;
     const hasError = result.error && result.error.trim().length > 0;
@@ -686,19 +710,30 @@ function displayExecutionResult(result, statusCode) {
     `;
     
     resultContainer.innerHTML = resultHtml;
+    console.log('[DEBUG] resultHtml injected into #execution-result', resultHtml);
     resultContainer.scrollIntoView({ behavior: 'smooth' });
+    // Check if buttons exist after injection
+    const clearBtn = resultContainer.querySelector('.btn.btn-secondary');
+    const downloadBtn = resultContainer.querySelector('.btn.btn-primary');
+    console.log('[DEBUG] Buttons after injection', { clearBtn, downloadBtn });
 }
 
 function clearResults() {
+    console.log('[DEBUG] clearResults called');
     const resultContainer = document.querySelector('#execution-result');
     if (resultContainer) {
         resultContainer.innerHTML = '';
+        console.log('[DEBUG] #execution-result cleared');
     }
 }
 
 function downloadResults() {
+    console.log('[DEBUG] downloadResults called');
     const resultContainer = document.querySelector('#execution-result');
-    if (!resultContainer) return;
+    if (!resultContainer) {
+        console.error('[DEBUG] Result container not found!');
+        return;
+    }
     
     const outputElement = resultContainer.querySelector('.code-output');
     const errorElement = resultContainer.querySelector('.error-output');
@@ -901,6 +936,9 @@ function initRangeSliders() {
     }
 }
 
+// Global variable to store current sample file
+let currentSampleFile = null;
+
 async function loadSampleModule(sampleName) {
     // Show loading state
     displayAlert(`Loading sample module: ${sampleName}...`, 'info');
@@ -919,12 +957,28 @@ async function loadSampleModule(sampleName) {
         // Create a File object from the blob
         const file = new File([blob], `${sampleName}.wasm`, { type: 'application/wasm' });
         
-        // Set the file input
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
+        console.log('[DEBUG] loadSampleModule - created file:', file);
+        console.log('[DEBUG] loadSampleModule - file.name:', file.name);
+        console.log('[DEBUG] loadSampleModule - file.size:', file.size);
         
-        const fileInput = document.querySelector('#wasm-file');
-        fileInput.files = dataTransfer.files;
+        // Store the file globally so we can access it in validation
+        currentSampleFile = file;
+        
+        // Try to set the file input using DataTransfer
+        try {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            
+            const fileInput = document.querySelector('#wasm-file');
+            fileInput.files = dataTransfer.files;
+            
+            console.log('[DEBUG] loadSampleModule - fileInput after setting:', fileInput);
+            console.log('[DEBUG] loadSampleModule - fileInput.files after setting:', fileInput.files);
+            console.log('[DEBUG] loadSampleModule - fileInput.files.length:', fileInput.files.length);
+        } catch (error) {
+            console.warn('[DEBUG] loadSampleModule - DataTransfer failed:', error);
+            // Continue anyway, we have the file stored globally
+        }
         
         // Update the file display
         updateFileDisplay(file);
@@ -1214,3 +1268,23 @@ window.addEventListener('unhandledrejection', function(event) {
     reportError(event.reason || new Error('Unhandled Promise Rejection'), 'Unhandled Promise Rejection');
     event.preventDefault();
 });
+
+// Missing helper functions for form execution
+function setLoadingState(button, isLoading) {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.disabled = true;
+        button.innerHTML = '⏳ Executing...';
+        button.classList.add('loading');
+    } else {
+        button.disabled = false;
+        button.innerHTML = '🚀 Execute WebAssembly Module';
+        button.classList.remove('loading');
+    }
+}
+
+function updateProgressStep(stepId, state) {
+    // This is a placeholder - implement if you have progress steps in your UI
+    console.log(`[DEBUG] Progress step ${stepId}: ${state}`);
+}
