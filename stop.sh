@@ -15,7 +15,9 @@ fi
 PIDS=$(ps aux | grep wasmwiz | grep -v grep | grep -v stop.sh | awk '{print $2}')
 if [ -n "$PIDS" ]; then
   echo "Killing remaining wasmwiz processes: $PIDS"
-  kill -9 $PIDS
+  for PID in $PIDS; do
+    kill -9 $PID 2>/dev/null
+  done
 fi
 
 # Stop Docker Compose services
