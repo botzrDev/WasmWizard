@@ -1,20 +1,31 @@
 #!/bin/zsh
 
-# Start the backend
+# Start Docker Compose for dev environment
 cd wasmwiz
+docker-compose -f docker-compose.dev.yml up -d
+
+# Wait for the database to be healthy
+DB_HEALTH=1
+for i in {1..20}; do
+  STATUS=$(docker inspect --format='{{.State.Health.Status}}' wasmwiz_dev_db 2>/dev/null)
+  if [[ "$STATUS" == "healthy" ]]; then
+    DB_HEALTH=0
+    break
+  fi
+  echo "Waiting for database to be healthy... ($i)"
+  sleep 2
+done
+if [[ $DB_HEALTH -ne 0 ]]; then
+  echo "Database did not become healthy in time. Exiting."
+  exit 1
+fi
+
+# Start the backend
 cargo run &
 BACKEND_PID=$!
 
-# Start the frontend (if applicable, replace with actual frontend start command)
-cd static
-# Example: npm start or any other command
-# Uncomment and replace the following line with the actual command
-# npm start &
-# FRONTEND_PID=$!
-
-# Save PIDs to a file for stopping later
+# Save backend PID for stopping later
 echo $BACKEND_PID > ../pids.txt
-# echo $FRONTEND_PID >> ../pids.txt
 
 # Notify user
 echo "Application started. Backend PID: $BACKEND_PID"
