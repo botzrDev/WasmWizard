@@ -124,7 +124,7 @@ pub async fn list_api_keys(
             key_hash: format!("{}...", &api_key.key_hash[..8]), // Show only first 8 chars
             is_active: api_key.is_active,
             created_at: api_key.created_at.to_rfc3339(),
-            tier_name: tier_name,
+            tier_name,
         });
     }
 

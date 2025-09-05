@@ -77,17 +77,22 @@ impl ResponseError for ApiError {
         let error_message = self.to_string(); // Uses the #[display] attribute
 
         let mut response = HttpResponse::build(status_code);
-        
+
         // Add rate limit headers for rate limiting errors
         if let ApiError::TooManyRequests(_) = self {
             response
                 .insert_header(("Retry-After", "60"))
-                .insert_header(("X-RateLimit-Reset", (std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs() + 60).to_string()));
+                .insert_header((
+                    "X-RateLimit-Reset",
+                    (std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                        + 60)
+                        .to_string(),
+                ));
         }
-        
+
         response.json(serde_json::json!({
             "error": error_message,
         }))

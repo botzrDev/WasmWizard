@@ -1,17 +1,11 @@
 // src/logging.rs
-use tracing::info;
-use tracing_subscriber::{
-    fmt,
-    layer::SubscriberExt,
-    util::SubscriberInitExt,
-    Layer,
-    EnvFilter,
-};
 use crate::config::{Config, Environment};
+use tracing::info;
+use tracing_subscriber::{EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 pub fn init_logging(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new(&config.log_level));
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(&config.log_level));
 
     match config.environment {
         Environment::Production => {
@@ -24,22 +18,22 @@ pub fn init_logging(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
                         .with_level(true)
                         .with_thread_ids(true)
                         .with_thread_names(true)
-                        .with_filter(env_filter)
+                        .with_filter(env_filter),
                 )
                 .init();
-        },
+        }
         Environment::Staging => {
-            // JSON logging for staging 
+            // JSON logging for staging
             tracing_subscriber::registry()
                 .with(
                     fmt::layer()
                         .json()
                         .with_target(true)
                         .with_level(true)
-                        .with_filter(env_filter)
+                        .with_filter(env_filter),
                 )
                 .init();
-        },
+        }
         Environment::Development => {
             // Pretty logging for development
             tracing_subscriber::registry()
@@ -48,7 +42,7 @@ pub fn init_logging(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
                         .pretty()
                         .with_target(true)
                         .with_level(true)
-                        .with_filter(env_filter)
+                        .with_filter(env_filter),
                 )
                 .init();
         }
@@ -59,7 +53,7 @@ pub fn init_logging(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
         log_level = %config.log_level,
         "Logging initialized successfully"
     );
-    
+
     Ok(())
 }
 

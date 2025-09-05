@@ -1,12 +1,12 @@
 // src/config.rs
-use std::env;
 use serde::{Deserialize, Serialize};
+use std::env;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
-    pub database_url: String,  // Always required, but can be SQLite
+    pub database_url: String, // Always required, but can be SQLite
     pub redis_url: String,
-    pub redis_enabled: bool,   // Enable Redis for rate limiting
+    pub redis_enabled: bool, // Enable Redis for rate limiting
     pub server_host: String,
     pub server_port: u16,
     pub api_salt: String,
@@ -16,7 +16,7 @@ pub struct Config {
     pub memory_limit: usize,
     pub log_level: String,
     pub environment: Environment,
-    pub auth_required: bool,  // Feature flag for auth (off in development)
+    pub auth_required: bool, // Feature flag for auth (off in development)
     pub csp_report_uri: Option<String>, // URI for CSP violation reports
     pub csp_enable_nonce: bool, // Whether to use nonce-based CSP
 }
@@ -45,14 +45,16 @@ impl Config {
 
         // Default to local PostgreSQL for development
         let default_database_url = match environment {
-            Environment::Development => "postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev".to_string(),
-            _ => env::var("DATABASE_URL")
-                .map_err(|_| ConfigError::Missing("DATABASE_URL must be set for production/staging"))?
+            Environment::Development => {
+                "postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev".to_string()
+            }
+            _ => env::var("DATABASE_URL").map_err(|_| {
+                ConfigError::Missing("DATABASE_URL must be set for production/staging")
+            })?,
         };
 
         Ok(Config {
-            database_url: env::var("DATABASE_URL")
-                .unwrap_or(default_database_url),
+            database_url: env::var("DATABASE_URL").unwrap_or(default_database_url),
             redis_url: env::var("REDIS_URL")
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
             redis_enabled: env::var("REDIS_ENABLED")
@@ -63,7 +65,8 @@ impl Config {
                 .unwrap_or_else(|_| "8080".to_string())
                 .parse()
                 .map_err(|_| ConfigError::Invalid("SERVER_PORT must be a valid port number"))?,
-            api_salt: env::var("API_SALT").unwrap_or_else(|_| "dev-salt-please-change-in-production".to_string()),
+            api_salt: env::var("API_SALT")
+                .unwrap_or_else(|_| "dev-salt-please-change-in-production".to_string()),
             max_wasm_size: env::var("MAX_WASM_SIZE")
                 .unwrap_or_else(|_| "10485760".to_string()) // 10MB
                 .parse()
@@ -80,8 +83,7 @@ impl Config {
                 .unwrap_or_else(|_| "134217728".to_string()) // 128MB
                 .parse()
                 .map_err(|_| ConfigError::Invalid("MEMORY_LIMIT must be a valid number"))?,
-            log_level: env::var("LOG_LEVEL")
-                .unwrap_or_else(|_| default_log_level.to_string()),
+            log_level: env::var("LOG_LEVEL").unwrap_or_else(|_| default_log_level.to_string()),
             environment,
             auth_required: env::var("AUTH_REQUIRED")
                 .map(|v| v.parse().unwrap_or(default_auth))

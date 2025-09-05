@@ -12,12 +12,12 @@ use actix_web::HttpServer;
 use dotenvy::dotenv;
 use tracing::{error, info};
 
-use services::{DatabaseService, cleanup};
-use utils::file_system;
 use app::create_app;
 use config::Config;
 use logging::init_logging;
 use services::establish_connection_pool;
+use services::{DatabaseService, cleanup};
+use utils::file_system;
 
 #[actix_web::main] // Marks the main function as the Actix-web entry point
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         eprintln!("Failed to initialize logging: {:?}", e);
         "Failed to initialize logging"
     })?;
-    
+
     info!(
         environment = ?config.environment,
         version = env!("CARGO_PKG_VERSION"),
@@ -80,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server_host = config.server_host.clone();
     let server_port = config.server_port;
     let is_production = config.is_production();
-    
+
     info!(
         host = %server_host,
         port = %server_port,
