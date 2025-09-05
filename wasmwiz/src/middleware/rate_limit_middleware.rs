@@ -1,13 +1,14 @@
 // src/middleware/rate_limit_middleware.rs
 
+use crate::middleware::distributed_rate_limit::RateLimitService;
 use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    web, Error, HttpRequest,
+    Error,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+    web,
 };
 use futures_util::future::LocalBoxFuture;
-use std::future::{ready, Ready};
+use std::future::{Ready, ready};
 use std::rc::Rc;
-use crate::middleware::distributed_rate_limit::RateLimitService;
 
 // Middleware for rate limiting
 pub struct RateLimitMiddleware;
@@ -31,7 +32,9 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(RateLimitMiddlewareService { service: Rc::new(service) }))
+        ready(Ok(RateLimitMiddlewareService {
+            service: Rc::new(service),
+        }))
     }
 }
 
@@ -53,14 +56,14 @@ where
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let service = Rc::clone(&self.service);
-        
+
         // Get rate limit service from app data
         if let Some(rate_limit_service) = req.app_data::<web::Data<RateLimitService>>() {
             let rate_limit_service = rate_limit_service.clone();
             let fut = async move {
                 // Convert ServiceRequest to HttpRequest for rate limit check
                 let http_req = req.request();
-                
+
                 // Check rate limit
                 match rate_limit_service.check_request(http_req).await {
                     Ok(_) => {
@@ -76,9 +79,7 @@ where
             Box::pin(fut)
         } else {
             // No rate limit service found, pass through
-            let fut = async move {
-                service.call(req).await
-            };
+            let fut = async move { service.call(req).await };
             Box::pin(fut)
         }
     }
