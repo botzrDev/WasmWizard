@@ -1,0 +1,245 @@
+groups:
+  - name: wasmwiz.rules
+    rules:
+    # Application Health Alerts
+    - alert: WasmWizDown
+      expr: up{job="wasmwiz"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: application
+      annotations:
+        summary: "WasmWiz application is down"
+        description: "WasmWiz instance {{ $labels.instance }} has been down for more than 1 minute."
+        runbook_url: "https://github.com/your-org/wasmwiz/blob/main/TROUBLESHOOTING.md#application-down"
+
+    - alert: WasmWizHighErrorRate
+      expr: rate(wasmwiz_http_requests_total{status=~"5.."}[5m]) / rate(wasmwiz_http_requests_total[5m]) > 0.05
+      for: 2m
+      labels:
+        severity: warning
+        component: application
+      annotations:
+        summary: "High error rate detected"
+        description: "WasmWiz error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+    - alert: WasmWizSlowResponseTime
+      expr: histogram_quantile(0.95, rate(wasmwiz_http_request_duration_seconds_bucket[5m])) > 1.0
+      for: 3m
+      labels:
+        severity: warning
+        component: application
+      annotations:
+        summary: "Slow response times detected"
+        description: "95th percentile response time is {{ $value }}s over the last 5 minutes."
+
+    # Database Alerts
+    - alert: DatabaseConnectionFailure
+      expr: wasmwiz_database_connections_failed_total > 10
+      for: 1m
+      labels:
+        severity: critical
+        component: database
+      annotations:
+        summary: "Database connection failures"
+        description: "{{ $value }} database connection failures detected."
+
+    - alert: DatabaseHighConnectionUsage
+      expr: wasmwiz_database_connections_active / wasmwiz_database_connections_max > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        component: database
+      annotations:
+        summary: "High database connection usage"
+        description: "Database connection pool is {{ $value | humanizePercentage }} full."
+
+    - alert: PostgreSQLDown
+      expr: up{job="postgres"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: database
+      annotations:
+        summary: "PostgreSQL is down"
+        description: "PostgreSQL instance {{ $labels.instance }} is down."
+
+    # Redis Alerts
+    - alert: RedisDown
+      expr: up{job="redis"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: cache
+      annotations:
+        summary: "Redis is down"
+        description: "Redis instance {{ $labels.instance }} is down."
+
+    - alert: RedisHighMemoryUsage
+      expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        component: cache
+      annotations:
+        summary: "Redis high memory usage"
+        description: "Redis memory usage is {{ $value | humanizePercentage }}."
+
+    # System Resource Alerts
+    - alert: HighMemoryUsage
+      expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        component: system
+      annotations:
+        summary: "High memory usage"
+        description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+
+    - alert: HighCPUUsage
+      expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+      for: 5m
+      labels:
+        severity: warning
+        component: system
+      annotations:
+        summary: "High CPU usage"
+        description: "CPU usage is {{ $value }}% on {{ $labels.instance }}."
+
+    - alert: DiskSpaceLow
+      expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+        component: system
+      annotations:
+        summary: "Low disk space"
+        description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }} at {{ $labels.mountpoint }}."
+
+    # WASM Execution Alerts
+    - alert: WasmExecutionFailureRate
+      expr: rate(wasmwiz_wasm_executions_failed_total[5m]) / rate(wasmwiz_wasm_executions_total[5m]) > 0.1
+      for: 3m
+      labels:
+        severity: warning
+        component: wasm
+      annotations:
+        summary: "High WASM execution failure rate"
+        description: "WASM execution failure rate is {{ $value | humanizePercentage }}."
+
+    - alert: WasmExecutionTimeout
+      expr: rate(wasmwiz_wasm_executions_timeout_total[5m]) > 0.05
+      for: 2m
+      labels:
+        severity: warning
+        component: wasm
+      annotations:
+        summary: "WASM execution timeouts"
+        description: "{{ $value }} WASM executions are timing out per second."
+
+    - alert: WasmHighMemoryUsage
+      expr: wasmwiz_wasm_memory_usage_bytes > 100000000  # 100MB
+      for: 1m
+      labels:
+        severity: warning
+        component: wasm
+      annotations:
+        summary: "High WASM memory usage"
+        description: "WASM execution is using {{ $value | humanizeBytes }} memory."
+
+    # Rate Limiting Alerts
+    - alert: HighRateLimitHits
+      expr: rate(wasmwiz_rate_limit_hits_total[5m]) > 10
+      for: 2m
+      labels:
+        severity: info
+        component: rate_limit
+      annotations:
+        summary: "High rate limit hits"
+        description: "{{ $value }} rate limit hits per second."
+
+    # Security Alerts
+    - alert: UnauthorizedAccessAttempts
+      expr: rate(wasmwiz_http_requests_total{status="401"}[5m]) > 5
+      for: 1m
+      labels:
+        severity: warning
+        component: security
+      annotations:
+        summary: "High unauthorized access attempts"
+        description: "{{ $value }} unauthorized access attempts per second."
+
+    - alert: SuspiciousActivity
+      expr: rate(wasmwiz_http_requests_total{status="403"}[5m]) > 2
+      for: 30s
+      labels:
+        severity: warning
+        component: security
+      annotations:
+        summary: "Suspicious activity detected"
+        description: "{{ $value }} forbidden requests per second - possible attack."
+
+    # Backup Alerts
+    - alert: BackupFailed
+      expr: time() - wasmwiz_last_backup_timestamp > 86400  # 24 hours
+      for: 1m
+      labels:
+        severity: critical
+        component: backup
+      annotations:
+        summary: "Backup has failed or is overdue"
+        description: "Last successful backup was {{ $value | humanizeDuration }} ago."
+
+    # SSL Certificate Alerts
+    - alert: SSLCertificateExpiringSoon
+      expr: (ssl_certificate_expiry_seconds - time()) / 86400 < 30
+      for: 1h
+      labels:
+        severity: warning
+        component: ssl
+      annotations:
+        summary: "SSL certificate expiring soon"
+        description: "SSL certificate for {{ $labels.instance }} expires in {{ $value }} days."
+
+    - alert: SSLCertificateExpired
+      expr: ssl_certificate_expiry_seconds - time() < 0
+      for: 1m
+      labels:
+        severity: critical
+        component: ssl
+      annotations:
+        summary: "SSL certificate has expired"
+        description: "SSL certificate for {{ $labels.instance }} has expired."
+
+  # Custom WasmWiz Business Logic Alerts
+  - name: wasmwiz.business
+    rules:
+    - alert: LowAPIKeyGeneration
+      expr: rate(wasmwiz_api_keys_generated_total[1h]) < 1
+      for: 2h
+      labels:
+        severity: info
+        component: business
+      annotations:
+        summary: "Low API key generation rate"
+        description: "Only {{ $value }} API keys generated per hour in the last 2 hours."
+
+    - alert: UnusualWasmUploadPattern
+      expr: rate(wasmwiz_wasm_uploads_total[10m]) > 50
+      for: 5m
+      labels:
+        severity: warning
+        component: business
+      annotations:
+        summary: "Unusual WASM upload pattern"
+        description: "{{ $value }} WASM modules uploaded per second - possible abuse."
+
+    - alert: UserQuotaExceeded
+      expr: wasmwiz_user_quota_exceeded_total > 0
+      for: 1m
+      labels:
+        severity: info
+        component: business
+      annotations:
+        summary: "User quota exceeded"
+        description: "{{ $value }} users have exceeded their quotas."

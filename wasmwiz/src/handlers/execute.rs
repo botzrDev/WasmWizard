@@ -3,7 +3,6 @@ use actix_multipart::Multipart;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult, web, ResponseError};
 use futures_util::TryStreamExt;
 use serde::Deserialize;
-use serde_urlencoded;
 use bytes::BytesMut;
 use futures_util::StreamExt;
 use std::time::Instant;
@@ -414,28 +413,6 @@ pub async fn debug_execute(
     }
 }
 
-async fn collect_field_data(
-    mut field: actix_multipart::Field,
-    max_size: usize,
-) -> Result<Vec<u8>, ApiError> {
-    let mut data = Vec::new();
-
-    while let Some(chunk) = field.try_next().await.map_err(|e| {
-        error!("Failed to read field data: {}", e);
-        ApiError::BadRequest("Failed to read field data".to_string())
-    })? {
-        if data.len() + chunk.len() > max_size {
-            return Err(ApiError::BadRequest(format!(
-                "Field data exceeds maximum size of {} bytes",
-                max_size
-            )));
-        }
-        data.extend_from_slice(&chunk);
-    }
-
-    Ok(data)
-}
-
 fn is_valid_wasm(data: &[u8]) -> bool {
     // Check for WASM magic bytes: 0x00 0x61 0x73 0x6D
     data.len() >= 4 && data[0..4] == [0x00, 0x61, 0x73, 0x6D]
@@ -624,7 +601,7 @@ async fn execute_non_wasi_wasm(
 
 // Implement actual WASI execution using wasmer-wasix (simplified approach)
 async fn execute_wasi_module(
-    store: &mut Store,
+    _store: &mut Store,
     module: &Module,
     input: &str,
     _wasm_bytes: &[u8],

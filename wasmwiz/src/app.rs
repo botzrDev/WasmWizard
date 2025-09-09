@@ -1,7 +1,7 @@
 // src/app.rs
 use crate::config::Config;
 use crate::handlers::{api_keys, execute, health, web as web_handlers};
-use crate::middleware::{DistributedRateLimitMiddleware, InputValidationMiddleware, SecurityHeadersMiddleware};
+use crate::middleware::{InputValidationMiddleware, SecurityHeadersMiddleware};
 use crate::middleware::pre_auth::PreAuth;
 use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
@@ -47,7 +47,7 @@ pub fn create_app(
     };
     
     // Create rate limit middleware with Redis if available
-    let rate_limit_service = if let Some(redis) = redis_service.clone() {
+    let rate_limit_service = if let Some(_redis) = redis_service.clone() {
         tracing::info!("Using Redis-based rate limiting");
         let redis_limiter = crate::middleware::distributed_rate_limit::RedisRateLimiter::new(&config.redis_url)
             .expect("Failed to create Redis rate limiter");

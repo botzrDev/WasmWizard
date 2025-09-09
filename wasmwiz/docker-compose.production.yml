@@ -1,0 +1,172 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: wasmwiz
+      POSTGRES_USER: wasmwiz
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wasmwiz -d wasmwiz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    secrets:
+      - db_password
+    networks:
+      - wasmwiz-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - wasmwiz-network
+    sysctls:
+      # Redis optimization for production
+      net.core.somaxconn: 1024
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  wasmwiz:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Database configuration
+      DATABASE_URL: postgresql://wasmwiz:${POSTGRES_PASSWORD}@postgres:5432/wasmwiz
+      REDIS_URL: redis://redis:6379
+      
+      # Server configuration
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+      ENVIRONMENT: production
+      
+      # Logging
+      LOG_LEVEL: info
+      RUST_LOG: info,wasmwiz=info
+      
+      # Security - must be set via environment or secrets
+      API_SALT_FILE: /run/secrets/api_salt
+      
+      # Resource limits
+      WASM_TEMP_DIR: /tmp/wasm_modules
+      MAX_WASM_SIZE: 10485760
+      MAX_INPUT_SIZE: 1048576
+      EXECUTION_TIMEOUT: 5
+      MEMORY_LIMIT: 134217728
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - wasm_temp:/tmp/wasm_modules
+    restart: unless-stopped
+    secrets:
+      - api_salt
+    networks:
+      - wasmwiz-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Production monitoring stack
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - wasmwiz-network
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/wasmwiz.json:ro
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_DOMAIN: localhost
+      GF_SMTP_ENABLED: false
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    secrets:
+      - grafana_password
+    networks:
+      - wasmwiz-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  wasm_temp:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  api_salt:
+    file: ./secrets/api_salt.txt
+  grafana_password:
+    file: ./secrets/grafana_password.txt
+
+networks:
+  wasmwiz-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
