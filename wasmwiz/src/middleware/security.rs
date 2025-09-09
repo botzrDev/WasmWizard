@@ -69,7 +69,7 @@ where
 
     forward_ready!(service);
 
-    fn call(&self, mut req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         // Generate nonce and add to request extensions before service call
         let nonce = if self.config.csp_enable_nonce {
             SecurityHeadersMiddleware::generate_nonce()

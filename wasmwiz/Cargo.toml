@@ -3,7 +3,7 @@
 [package]
 name = "wasmwiz"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [lib]
 name = "wasmwiz"
@@ -61,7 +61,7 @@ dotenvy = "0.15"
 
 # For structured logging and tracing
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] } # Enables filtering logs by environment variables and JSON output
+tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] } # Enables filtering logs by environment variables and JSON output
 
 # For HTML templating (Web UI)
 askama = { version = "0.12", features = ["with-actix-web"] }

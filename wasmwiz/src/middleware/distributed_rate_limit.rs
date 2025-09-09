@@ -3,7 +3,7 @@
 
 use actix_web::{HttpMessage, HttpRequest, Result as ActixResult};
 use async_trait::async_trait;
-use redis::{AsyncCommands, Client};
+use redis::Client;
 use std::time::Duration;
 use tracing::{debug, error, warn};
 use crate::errors::ApiError;
@@ -146,7 +146,7 @@ impl RateLimitService {
         if let Some(context) = auth_context {
             // Authenticated request with API key
             let api_key_id = context.api_key.id.to_string();
-            let user_id = context.user.id.to_string();
+            let _user_id = context.user.id.to_string();
             
             // Get tier-specific rate limits
             let minute_limit = context.tier.max_executions_per_minute as u32;
