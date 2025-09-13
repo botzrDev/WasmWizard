@@ -305,26 +305,28 @@ fn test_config_edge_cases() {
 #[test]
 fn test_wasi_version_compatibility() {
     use std::process::{Command, Stdio};
-    
+
     let test_modules: [(&str, Option<&str>); 1] = [
         ("hello_world.wasm", None), // No input needed, should work fine
     ];
-    
+
     for (module, input) in &test_modules {
         let path = format!("tests/wasm_modules/{}", module);
         let mut cmd = Command::new("wasmtime");
         cmd.arg(&path);
-        
+
         if input.is_some() {
             cmd.stdin(Stdio::piped());
         }
-        
+
         let output = cmd.output().expect("Failed to run wasmtime");
-        
-        assert!(output.status.success(), 
-                "WASI version compatibility failed for {}: stderr={}", 
-                module, 
-                String::from_utf8_lossy(&output.stderr));
+
+        assert!(
+            output.status.success(),
+            "WASI version compatibility failed for {}: stderr={}",
+            module,
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 }
 
@@ -383,7 +385,7 @@ fn test_monitoring_endpoints() {
 #[test]
 fn test_prometheus_metrics_format() {
     // Test that we can format metrics in Prometheus format
-    use prometheus::{Opts, register_counter};
+    use prometheus::{register_counter, Opts};
 
     let counter_opts = Opts::new("test_counter", "A test counter for metrics");
     let counter = register_counter!(counter_opts).expect("Failed to register counter");

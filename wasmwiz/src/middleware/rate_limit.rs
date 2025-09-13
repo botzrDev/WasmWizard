@@ -3,11 +3,11 @@ use crate::middleware::pre_auth::AuthContext;
 use crate::middleware::redis_rate_limit::RedisRateLimiter;
 use crate::services::RedisService;
 use actix_web::{
-    Error, HttpMessage, HttpResponse, Result,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{HeaderName, HeaderValue},
+    Error, HttpMessage, HttpResponse, Result,
 };
-use futures_util::future::{LocalBoxFuture, Ready, ready};
+use futures_util::future::{ready, LocalBoxFuture, Ready};
 use std::{
     collections::HashMap,
     rc::Rc,
@@ -113,7 +113,7 @@ impl RateLimitMiddleware {
             use_redis: false,
         }
     }
-    
+
     /// Create a new rate limiter with Redis support
     pub fn with_redis(redis: RedisService) -> Self {
         Self {
@@ -180,12 +180,15 @@ where
         let use_redis = self.use_redis;
 
         Box::pin(async move {
-            // Extract AuthContext - if not present, let the request continue 
+            // Extract AuthContext - if not present, let the request continue
             // so that PreAuth middleware can handle authentication
             let auth_context_opt = req.extensions().get::<AuthContext>().cloned();
             if auth_context_opt.is_none() {
                 tracing::debug!("Rate limit middleware: no auth context found, proceeding without rate limiting");
-                return service.call(req).await.map(ServiceResponse::map_into_right_body);
+                return service
+                    .call(req)
+                    .await
+                    .map(ServiceResponse::map_into_right_body);
             }
             let auth_context = auth_context_opt.unwrap();
 
@@ -193,36 +196,40 @@ where
             let rate_limit = RateLimit::from_tier_name(&auth_context.tier.name);
 
             // Check rate limits - using Redis if enabled, otherwise fallback to in-memory
-            let (allowed, retry_after, remaining_minute, remaining_day) = if use_redis && redis_limiter.is_some() {
-                let limiter = redis_limiter.unwrap();
-                match limiter.check_rate_limit(api_key_id, &rate_limit).await {
-                    Ok((allowed, retry_after)) => {
-                        // Get remaining counts
-                        let (rem_min, rem_day) = match limiter.get_remaining_requests(api_key_id, &rate_limit).await {
-                            Ok((min, day)) => (min, day),
-                            Err(e) => {
-                                tracing::error!("Failed to get remaining requests from Redis: {}", e);
-                                (0, 0) // Default to 0 on error
-                            }
-                        };
-                        (allowed, retry_after, rem_min, rem_day)
-                    },
-                    Err(e) => {
-                        tracing::error!("Redis rate limiter error: {}", e);
-                        // Fallback to in-memory on Redis error
-                        let (allowed, retry_after, rem_min, rem_day) = check_in_memory_rate_limit(
-                            &state, api_key_id, &rate_limit
-                        );
-                        (allowed, retry_after, rem_min, rem_day)
+            let (allowed, retry_after, remaining_minute, remaining_day) =
+                if let (true, Some(limiter)) = (use_redis, redis_limiter) {
+                    match limiter.check_rate_limit(api_key_id, &rate_limit).await {
+                        Ok((allowed, retry_after)) => {
+                            // Get remaining counts
+                            let (rem_min, rem_day) = match limiter
+                                .get_remaining_requests(api_key_id, &rate_limit)
+                                .await
+                            {
+                                Ok((min, day)) => (min, day),
+                                Err(e) => {
+                                    tracing::error!(
+                                        "Failed to get remaining requests from Redis: {}",
+                                        e
+                                    );
+                                    (0, 0) // Default to 0 on error
+                                }
+                            };
+                            (allowed, retry_after, rem_min, rem_day)
+                        }
+                        Err(e) => {
+                            tracing::error!("Redis rate limiter error: {}", e);
+                            // Fallback to in-memory on Redis error
+                            let (allowed, retry_after, rem_min, rem_day) =
+                                check_in_memory_rate_limit(&state, api_key_id, &rate_limit);
+                            (allowed, retry_after, rem_min, rem_day)
+                        }
                     }
-                }
-            } else {
-                // Use in-memory rate limiting
-                let (allowed, retry_after, rem_min, rem_day) = check_in_memory_rate_limit(
-                    &state, api_key_id, &rate_limit
-                );
-                (allowed, retry_after, rem_min, rem_day)
-            };
+                } else {
+                    // Use in-memory rate limiting
+                    let (allowed, retry_after, rem_min, rem_day) =
+                        check_in_memory_rate_limit(&state, api_key_id, &rate_limit);
+                    (allowed, retry_after, rem_min, rem_day)
+                };
 
             if !allowed {
                 let mut response = HttpResponse::TooManyRequests().json(serde_json::json!({
@@ -253,7 +260,7 @@ where
                 HeaderName::from_static("x-ratelimit-limit-day"),
                 HeaderValue::from_str(&rate_limit.requests_per_day.to_string()).unwrap(),
             );
-            
+
             headers.insert(
                 HeaderName::from_static("x-ratelimit-remaining-minute"),
                 HeaderValue::from_str(&remaining_minute.to_string()).unwrap(),

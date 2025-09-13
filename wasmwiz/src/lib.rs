@@ -11,7 +11,7 @@ pub mod monitoring;
 pub mod services;
 pub mod utils;
 
-pub use app::{AppState, create_app};
+pub use app::{create_app, AppState};
 pub use config::{Config, Environment};
 pub use logging::init_logging;
 pub use services::database::establish_connection_pool;

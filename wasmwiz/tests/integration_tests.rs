@@ -1,11 +1,11 @@
 use actix_web::test;
-use serde_json::{Value, json};
-use sqlx::{PgPool, migrate::Migrator};
+use serde_json::{json, Value};
+use sqlx::{migrate::Migrator, PgPool};
 use std::{env, path::Path, sync::Once};
-use testcontainers::{Docker, clients, images::postgres::Postgres};
+use testcontainers::{clients, images::postgres::Postgres, Docker};
 use uuid::Uuid;
 use wasmwiz::app::create_app;
-use wasmwiz::{Config, establish_connection_pool};
+use wasmwiz::{establish_connection_pool, Config};
 
 static INIT: Once = Once::new();
 
@@ -300,12 +300,10 @@ async fn test_wasm_execution_with_valid_auth() {
     assert_eq!(resp.status(), 400); // Bad request due to invalid WASM format
 
     let body: Value = test::read_body_json(resp).await;
-    assert!(
-        body["error"]
-            .as_str()
-            .unwrap()
-            .contains("Invalid WASM file format")
-    );
+    assert!(body["error"]
+        .as_str()
+        .unwrap()
+        .contains("Invalid WASM file format"));
 }
 
 #[actix_web::test]
@@ -328,12 +326,10 @@ async fn test_wasm_invalid_module_handling() {
     assert_eq!(resp.status(), 400);
 
     let body: Value = test::read_body_json(resp).await;
-    assert!(
-        body["error"]
-            .as_str()
-            .unwrap()
-            .contains("Missing 'wasm' field")
-    );
+    assert!(body["error"]
+        .as_str()
+        .unwrap()
+        .contains("Missing 'wasm' field"));
 }
 
 #[actix_web::test]
@@ -523,12 +519,10 @@ async fn test_invalid_tier_handling() {
     assert_eq!(resp.status(), 400);
 
     let body: Value = test::read_body_json(resp).await;
-    assert!(
-        body["error"]
-            .as_str()
-            .unwrap()
-            .contains("Invalid tier name")
-    );
+    assert!(body["error"]
+        .as_str()
+        .unwrap()
+        .contains("Invalid tier name"));
 }
 
 #[actix_web::test]

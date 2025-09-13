@@ -1,14 +1,14 @@
 // src/middleware/security.rs
+use crate::config::Config;
 use actix_web::{
-    Error, HttpMessage,
-    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     http::header,
+    Error, HttpMessage,
 };
 use base64::Engine;
-use crate::config::Config;
 use futures_util::future::LocalBoxFuture;
 use rand::{thread_rng, Rng};
-use std::future::{Ready, ready};
+use std::future::{ready, Ready};
 
 pub struct SecurityHeadersMiddleware {
     config: Config,
@@ -45,7 +45,7 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(SecurityHeadersService { 
+        ready(Ok(SecurityHeadersService {
             service,
             config: self.config.clone(),
         }))
@@ -107,7 +107,8 @@ where
                      font-src 'self'; \
                      connect-src 'self'; \
                      frame-ancestors 'none'; \
-                     base-uri 'self'".to_string()
+                     base-uri 'self'"
+                        .to_string()
                 } else {
                     format!(
                         "default-src 'self'; \
@@ -130,7 +131,8 @@ where
                  font-src 'self'; \
                  connect-src 'self'; \
                  frame-ancestors 'none'; \
-                 base-uri 'self'".to_string()
+                 base-uri 'self'"
+                    .to_string()
             };
 
             if let Some(report_uri) = &config.csp_report_uri {

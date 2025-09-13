@@ -1,17 +1,17 @@
 // src/handlers/execute.rs
 use actix_multipart::Multipart;
-use actix_web::{HttpRequest, HttpResponse, Result as ActixResult, web, ResponseError};
-use futures_util::TryStreamExt;
-use serde::Deserialize;
+use actix_web::{web, HttpRequest, HttpResponse, ResponseError, Result as ActixResult};
 use bytes::BytesMut;
 use futures_util::StreamExt;
-use std::time::Instant;
+use futures_util::TryStreamExt;
+use serde::Deserialize;
 use std::time::Duration;
+use std::time::Instant;
 use tokio::time::timeout;
 use tracing::{debug, error, info, warn};
-use wasmer::{Instance, Module, Store};
 use wasmer::imports;
-use wasmer_wasix::{WasiEnv, Pipe};
+use wasmer::{Instance, Module, Store};
+use wasmer_wasix::{Pipe, WasiEnv};
 
 use crate::app::AppState;
 use crate::errors::ApiError;
@@ -56,7 +56,9 @@ pub async fn execute_wasm(
                     while let Some(chunk) = field.try_next().await? {
                         data_bytes.extend_from_slice(&chunk);
                         if data_bytes.len() > app_state.config.max_wasm_size {
-                            return Err(ApiError::PayloadTooLarge("WASM file size exceeds limit".to_string()));
+                            return Err(ApiError::PayloadTooLarge(
+                                "WASM file size exceeds limit".to_string(),
+                            ));
                         }
                     }
                     let data = data_bytes.to_vec();
@@ -73,7 +75,9 @@ pub async fn execute_wasm(
                     while let Some(chunk) = field.try_next().await? {
                         data_bytes.extend_from_slice(&chunk);
                         if data_bytes.len() > app_state.config.max_input_size {
-                            return Err(ApiError::PayloadTooLarge("Input data size exceeds limit".to_string()));
+                            return Err(ApiError::PayloadTooLarge(
+                                "Input data size exceeds limit".to_string(),
+                            ));
                         }
                     }
                     let data = data_bytes.to_vec();
@@ -89,7 +93,8 @@ pub async fn execute_wasm(
             }
         }
         Ok::<(), ApiError>(())
-    }).await;
+    })
+    .await;
 
     match parse_result {
         Err(_) => {
@@ -108,7 +113,8 @@ pub async fn execute_wasm(
                 .with_execution_duration(start_time.elapsed().as_millis() as i32)
                 .with_file_sizes(wasm_size as i32, input_size as i32);
             let _ = app_state.db_service.create_usage_log(&usage_log).await;
-            return Ok(HttpResponse::build(api_error.status_code()).json(serde_json::json!({"error": error_msg})));
+            return Ok(HttpResponse::build(api_error.status_code())
+                .json(serde_json::json!({"error": error_msg})));
         }
         Ok(Ok(())) => {
             // Parsing succeeded, continue
@@ -135,7 +141,9 @@ pub async fn execute_wasm(
                 .with_execution_duration(start_time.elapsed().as_millis() as i32)
                 .with_file_sizes(wasm_size as i32, input_size as i32);
             let _ = app_state.db_service.create_usage_log(&usage_log).await;
-            return Ok(HttpResponse::InternalServerError().json(serde_json::json!({"error": error_msg})));
+            return Ok(
+                HttpResponse::InternalServerError().json(serde_json::json!({"error": error_msg}))
+            );
         }
     };
 
@@ -145,11 +153,14 @@ pub async fn execute_wasm(
             .with_execution_duration(start_time.elapsed().as_millis() as i32)
             .with_file_sizes(wasm_size as i32, input_size as i32);
         let _ = app_state.db_service.create_usage_log(&usage_log).await;
-        return Ok(HttpResponse::InternalServerError().json(serde_json::json!({"error": error_msg})));
+        return Ok(
+            HttpResponse::InternalServerError().json(serde_json::json!({"error": error_msg}))
+        );
     }
     info!("WASM file saved to: {:?}", temp_path);
 
-    let result = execute_wasm_file(&temp_path, &input_data, &auth_context.tier, &app_state.config).await;
+    let result =
+        execute_wasm_file(&temp_path, &input_data, &auth_context.tier, &app_state.config).await;
     let execution_time_ms = start_time.elapsed().as_millis() as i32;
 
     if let Err(e) = tokio::fs::remove_file(&temp_path).await {
@@ -171,7 +182,11 @@ pub async fn execute_wasm(
         Err(e) => {
             error!("WASM execution failed: {}", e);
             let err_str = e.to_string();
-            let (status, error_msg) = if err_str.contains("Invalid WASM") || err_str.contains("magic header") || err_str.contains("unexpected character") || err_str.contains("translation error") {
+            let (status, error_msg) = if err_str.contains("Invalid WASM")
+                || err_str.contains("magic header")
+                || err_str.contains("unexpected character")
+                || err_str.contains("translation error")
+            {
                 (400, "Invalid WASM file format".to_string())
             } else {
                 (422, format!("Execution failed: {}", err_str))
@@ -179,7 +194,10 @@ pub async fn execute_wasm(
             let usage_log = UsageLog::error(auth_context.api_key.id, error_msg.clone())
                 .with_execution_duration(execution_time_ms)
                 .with_file_sizes(wasm_size as i32, input_size as i32);
-            let response = HttpResponse::build(actix_web::http::StatusCode::from_u16(status).unwrap()).json(ExecuteResponse {
+            let response = HttpResponse::build(
+                actix_web::http::StatusCode::from_u16(status).unwrap(),
+            )
+            .json(ExecuteResponse {
                 output: None,
                 error: Some(error_msg.clone()),
             });
@@ -212,7 +230,7 @@ pub async fn execute_wasm_no_auth(
     // Parse multipart form data
     info!("Starting multipart form parsing");
     let parse_timeout = Duration::from_secs(30);
-    
+
     let parse_result = timeout(parse_timeout, async {
         while let Some(field) = payload.try_next().await.map_err(|e| {
             error!("Failed to parse multipart data: {}", e);
@@ -262,8 +280,9 @@ pub async fn execute_wasm_no_auth(
             }
         }
         Ok::<(), ApiError>(())
-    }).await;
-    
+    })
+    .await;
+
     match parse_result {
         Ok(Ok(())) => {
             info!("Multipart parsing completed successfully");
@@ -279,8 +298,9 @@ pub async fn execute_wasm_no_auth(
     }
 
     // Validate required fields
-    let wasm_data = wasm_data
-        .ok_or_else(|| ApiError::BadRequest("Missing 'wasm_file' field in form data".to_string()))?;
+    let wasm_data = wasm_data.ok_or_else(|| {
+        ApiError::BadRequest("Missing 'wasm_file' field in form data".to_string())
+    })?;
 
     let input_data = input_data.unwrap_or_default();
 
@@ -326,7 +346,7 @@ pub async fn execute_wasm_no_auth(
     match result {
         Ok(output) => {
             info!("WASM execution completed successfully in {:?}", execution_duration);
-            
+
             let response = ExecuteResponse {
                 output: Some(output),
                 error: None,
@@ -336,7 +356,7 @@ pub async fn execute_wasm_no_auth(
         }
         Err(e) => {
             error!("WASM execution failed: {}", e);
-            
+
             let response = ExecuteResponse {
                 output: None,
                 error: Some(e.to_string()),
@@ -354,9 +374,7 @@ pub struct DebugForm {
 }
 
 /// Debug endpoint to test multipart and urlencoded handling
-pub async fn debug_execute(
-    mut payload: Multipart,
-) -> ActixResult<HttpResponse, ApiError> {
+pub async fn debug_execute(mut payload: Multipart) -> ActixResult<HttpResponse, ApiError> {
     let mut fields = Vec::new();
     let start_time = Instant::now();
 
@@ -369,28 +387,38 @@ pub async fn debug_execute(
                 error!("Failed to parse multipart data: {}", e);
                 ApiError::BadRequest("Failed to parse multipart data".to_string())
             })?;
-            
+
             found_field = true;
             let content_disposition = field.content_disposition().clone();
-            let field_name = content_disposition.get_name().unwrap_or("unknown").to_string();
+            let field_name = content_disposition
+                .get_name()
+                .unwrap_or("unknown")
+                .to_string();
             info!("DEBUG FIELD NAME: {}", field_name);
-            
+
             let field_start = Instant::now();
-            let field_size = field.try_fold(0, |acc, chunk| async move {
-                Ok(acc + chunk.len())
-            }).await.unwrap_or(0);
-            
+            let field_size = field
+                .try_fold(0, |acc, chunk| async move { Ok(acc + chunk.len()) })
+                .await
+                .unwrap_or(0);
+
             let field_duration = field_start.elapsed();
-            fields.push(format!("{}: {} bytes ({}ms)", field_name, field_size, field_duration.as_millis()));
+            fields.push(format!(
+                "{}: {} bytes ({}ms)",
+                field_name,
+                field_size,
+                field_duration.as_millis()
+            ));
             info!("Received field: {} ({} bytes) in {:?}", field_name, field_size, field_duration);
         }
-        
+
         if !found_field {
             warn!("No fields found in multipart upload");
         }
         Ok::<(), ApiError>(())
-    }).await;
-    
+    })
+    .await;
+
     let total_duration = start_time.elapsed();
     match parse_result {
         Ok(Ok(())) => {
@@ -436,12 +464,13 @@ async fn execute_wasm_file(
 
     // Check WASI imports to determine module type
     let imports = module.imports().collect::<Vec<_>>();
-    let wasi_imports = imports.iter()
+    let wasi_imports = imports
+        .iter()
         .filter(|import| import.module().starts_with("wasi"))
         .collect::<Vec<_>>();
 
     debug!("WASI imports found: {:?}", wasi_imports);
-    
+
     // Check if this is a non-WASI WASM file first
     if wasi_imports.is_empty() {
         debug!("Module appears to be a non-WASI WASM file, attempting direct execution");
@@ -461,11 +490,11 @@ async fn execute_non_wasi_wasm(
     input: &str,
     tier: &crate::models::subscription_tier::SubscriptionTier,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    use wasmer::imports;
     use tracing::debug;
-    
+    use wasmer::imports;
+
     debug!("Attempting to execute non-WASI WASM module");
-    
+
     // Create a more comprehensive import object for non-WASI modules
     let import_object = imports! {
         "env" => {
@@ -479,13 +508,13 @@ async fn execute_non_wasi_wasm(
         // Empty wasi namespace as fallback
         "wasi" => {}
     };
-    
+
     // Try to create instance with enhanced error reporting
     let instance = match Instance::new(store, module, &import_object) {
         Ok(instance) => {
             debug!("Non-WASI instance created successfully");
             instance
-        },
+        }
         Err(e) => {
             debug!("Failed to create non-WASI instance: {}", e);
             // Try a completely empty import object as a last resort
@@ -493,7 +522,7 @@ async fn execute_non_wasi_wasm(
                 Ok(empty_instance) => {
                     debug!("Created instance with empty imports");
                     empty_instance
-                },
+                }
                 Err(empty_err) => {
                     return Err(format!("Failed to create WASM instance with both custom imports and empty imports: {} / {}", 
                         e, empty_err).into());
@@ -501,26 +530,35 @@ async fn execute_non_wasi_wasm(
             }
         }
     };
-    
+
     // Get all exports to better understand the module
     let exports = instance.exports;
-    debug!("Module has the following exports: {:?}", exports.iter()
-        .map(|(name, _)| name)
-        .collect::<Vec<_>>());
-    
+    debug!(
+        "Module has the following exports: {:?}",
+        exports.iter().map(|(name, _)| name).collect::<Vec<_>>()
+    );
+
     // Try common function names in priority order
     let function_names = [
-        "main", "run", "execute", "start", "_start", 
-        "initialize", "_initialize", "default", "wasmMain", "runWasm"
+        "main",
+        "run",
+        "execute",
+        "start",
+        "_start",
+        "initialize",
+        "_initialize",
+        "default",
+        "wasmMain",
+        "runWasm",
     ];
-    
+
     let exec_timeout = Duration::from_secs(tier.max_execution_time_seconds as u64);
-    
+
     // Try each function and return on first success
     for func_name in &function_names {
         if let Ok(func) = exports.get_function(func_name) {
             debug!("Found and calling function: {}", func_name);
-            
+
             // Create a simpler execution approach that doesn't use spawn_blocking
             // since that can cause issues with store ownership
             match timeout(exec_timeout, async {
@@ -563,28 +601,30 @@ async fn execute_non_wasi_wasm(
             };
         }
     }
-    
+
     // If we get here, we tried all functions and none worked
     // Try to extract any exported strings or memory that might contain output
     if let Ok(memory) = exports.get_memory("memory") {
         debug!("No function executed successfully, looking for output in memory");
         let view = memory.view(store);
-        
+
         // Look for null-terminated string at common output locations
         let potential_offsets = [0, 1024, 4096, 8192];
         for offset in potential_offsets {
             let mut bytes = Vec::new();
-            for i in 0..1024 {  // Read up to 1KB from each offset
+            for i in 0..1024 {
+                // Read up to 1KB from each offset
                 if offset + i >= view.data_size() {
                     break; // Don't read beyond memory bounds
                 }
-                let byte = view.read_u8(offset + i as u64).unwrap_or(0);
-                if byte == 0 {  // Null terminator
+                let byte = view.read_u8(offset + i).unwrap_or(0);
+                if byte == 0 {
+                    // Null terminator
                     break;
                 }
                 bytes.push(byte);
             }
-            
+
             if !bytes.is_empty() {
                 if let Ok(s) = String::from_utf8(bytes) {
                     if !s.trim().is_empty() {
@@ -595,7 +635,7 @@ async fn execute_non_wasi_wasm(
             }
         }
     }
-    
+
     Err("No suitable entry point found in non-WASI module and no output detected".into())
 }
 
@@ -607,17 +647,17 @@ async fn execute_wasi_module(
     _wasm_bytes: &[u8],
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     use std::io::{Read, Write};
-    
+
     debug!("Starting WASI module execution with input: '{}'", input);
-    
+
     // Clone data for moving into spawn_blocking
     let input_string = input.to_string();
     let module_clone = module.clone();
-    
+
     // Create input and output pipes for WASI
     let (stdin_tx, stdin_rx) = Pipe::channel();
     let (stdout_tx, stdout_rx) = Pipe::channel();
-    
+
     // Write input to stdin if provided
     if !input_string.is_empty() {
         let input_for_stdin = input_string.clone();
@@ -630,33 +670,38 @@ async fn execute_wasi_module(
     } else {
         drop(stdin_tx); // Close stdin immediately if no input
     }
-    
+
     // Try the high-level execution approach first
     let mut store_clone = Store::default();
-    
+
     match tokio::time::timeout(Duration::from_secs(30), async {
-        tokio::task::spawn_blocking(move || -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-            let result = WasiEnv::builder("wasm_module")
-                .args(&["wasm_module"]) // Program name
-                .stdin(Box::new(stdin_rx))
-                .stdout(Box::new(stdout_tx))
-                .run_with_store(module_clone, &mut store_clone);
-            
-            // Handle the execution result
-            match result {
-                Ok(_) => Ok("Execution completed successfully".to_string()),
-                Err(e) => {
-                    debug!("WASI execution error: {}", e);
-                    // Try to extract meaningful error info
-                    Ok(format!("Execution completed with status: {}", e))
+        tokio::task::spawn_blocking(
+            move || -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+                let result = WasiEnv::builder("wasm_module")
+                    .args(["wasm_module"]) // Program name
+                    .stdin(Box::new(stdin_rx))
+                    .stdout(Box::new(stdout_tx))
+                    .run_with_store(module_clone, &mut store_clone);
+
+                // Handle the execution result
+                match result {
+                    Ok(_) => Ok("Execution completed successfully".to_string()),
+                    Err(e) => {
+                        debug!("WASI execution error: {}", e);
+                        // Try to extract meaningful error info
+                        Ok(format!("Execution completed with status: {}", e))
+                    }
                 }
-            }
-        }).await
-    }).await {
+            },
+        )
+        .await
+    })
+    .await
+    {
         Ok(Ok(result)) => {
             // Now try to read the output
             let mut stdout_output = Vec::new();
-            
+
             // Read stdout with timeout
             if let Ok(Ok(output)) = tokio::time::timeout(Duration::from_secs(5), async {
                 tokio::task::spawn_blocking(move || {
@@ -664,14 +709,17 @@ async fn execute_wasi_module(
                     let mut buffer = Vec::new();
                     let _ = stdout_reader.read_to_end(&mut buffer);
                     buffer
-                }).await
-            }).await {
+                })
+                .await
+            })
+            .await
+            {
                 stdout_output = output;
             }
-            
+
             let stdout_str = String::from_utf8_lossy(&stdout_output);
             debug!("WASI stdout: '{}'", stdout_str);
-            
+
             if !stdout_str.trim().is_empty() {
                 Ok(stdout_str.trim().to_string())
             } else {
@@ -684,7 +732,7 @@ async fn execute_wasi_module(
                             Ok(success_msg)
                         }
                     }
-                    Err(e) => Ok(format!("Execution completed with status: {}", e))
+                    Err(e) => Ok(format!("Execution completed with status: {}", e)),
                 }
             }
         }

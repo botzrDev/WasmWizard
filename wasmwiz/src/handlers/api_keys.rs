@@ -1,7 +1,7 @@
 // src/handlers/api_keys.rs
-use actix_web::{HttpResponse, Result as ActixResult, web};
+use actix_web::{web, HttpResponse, Result as ActixResult};
 use chrono::Utc;
-use rand::{Rng, distributions::Alphanumeric};
+use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tracing::{error, info};
@@ -124,7 +124,7 @@ pub async fn list_api_keys(
             key_hash: format!("{}...", &api_key.key_hash[..8]), // Show only first 8 chars
             is_active: api_key.is_active,
             created_at: api_key.created_at.to_rfc3339(),
-            tier_name: tier_name,
+            tier_name,
         });
     }
 

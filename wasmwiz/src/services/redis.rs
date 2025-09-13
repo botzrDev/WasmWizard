@@ -1,6 +1,6 @@
 // src/services/redis.rs
 use anyhow::Result;
-use redis::{Client, AsyncCommands};
+use redis::{AsyncCommands, Client};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -60,14 +60,14 @@ impl RedisService {
             end
             return count
         "#;
-        
+
         let mut conn = self.get_connection().await?;
         let result: i64 = redis::Script::new(script)
             .key(key)
             .arg(seconds as i64)
             .invoke_async(&mut conn)
             .await?;
-        
+
         Ok(result)
     }
 
@@ -102,7 +102,7 @@ mod tests {
                 return;
             }
         };
-        
+
         // Ping Redis to make sure it's available
         let mut conn = match service.get_connection().await {
             Ok(conn) => conn,
@@ -111,35 +111,36 @@ mod tests {
                 return;
             }
         };
-        
+
         // Only continue if we can connect to Redis
-        let ping_result: Result<String, redis::RedisError> = redis::cmd("PING").query_async(&mut conn).await;
+        let ping_result: Result<String, redis::RedisError> =
+            redis::cmd("PING").query_async(&mut conn).await;
         if let Err(e) = ping_result {
             println!("Skipping Redis test, server not responding: {}", e);
             return;
         }
-        
+
         println!("Redis server available, running tests");
-        
+
         // Test set and get
         let test_key = "test_key_1";
         service.set_ex(test_key, "test_value", 10).await.unwrap();
         let value = service.get(test_key).await.unwrap();
         assert_eq!(value, Some("test_value".to_string()));
-        
+
         // Test incr
         let counter_key = "test_counter_1";
         let count1 = service.incr(counter_key).await.unwrap();
         let count2 = service.incr(counter_key).await.unwrap();
         assert_eq!(count1, 1);
         assert_eq!(count2, 2);
-        
+
         // Test expire
         service.expire(counter_key, 1).await.unwrap();
         sleep(Duration::from_secs(2)).await;
         let value = service.get(counter_key).await.unwrap();
         assert_eq!(value, None);
-        
+
         // Test incr_and_expire
         let auto_key = "test_auto_expire_1";
         let count = service.incr_and_expire(auto_key, 1).await.unwrap();

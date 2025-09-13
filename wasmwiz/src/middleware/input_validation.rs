@@ -1,11 +1,11 @@
 // src/middleware/input_validation.rs
 use actix_web::{
-    Error,
-    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     http::header,
+    Error,
 };
 use futures_util::future::LocalBoxFuture;
-use std::future::{Ready, ready};
+use std::future::{ready, Ready};
 use tracing::warn;
 
 pub struct InputValidationMiddleware;

@@ -1,7 +1,7 @@
 // src/handlers/health.rs
 use crate::app::AppState;
 use crate::log_info;
-use actix_web::{HttpResponse, Result, web};
+use actix_web::{web, HttpResponse, Result};
 use serde_json::json;
 use sysinfo::System;
 use tracing::error;
@@ -119,7 +119,7 @@ pub async fn readiness_probe(pool: web::Data<AppState>) -> Result<HttpResponse> 
 
 /// Prometheus metrics endpoint
 pub async fn prometheus_metrics() -> Result<HttpResponse> {
-    use prometheus::{Encoder, TextEncoder, gather};
+    use prometheus::{gather, Encoder, TextEncoder};
 
     let encoder = TextEncoder::new();
     let metric_families = gather();

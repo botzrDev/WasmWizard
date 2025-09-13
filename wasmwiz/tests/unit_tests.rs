@@ -1,6 +1,6 @@
 use chrono::Utc;
 use uuid::Uuid;
-use wasmwiz::middleware::auth::{AuthContext, hash_api_key};
+use wasmwiz::middleware::auth::{hash_api_key, AuthContext};
 use wasmwiz::middleware::rate_limit::{RateLimit, TokenBucket};
 use wasmwiz::models::{ApiKey, SubscriptionTier, UsageLog, User};
 

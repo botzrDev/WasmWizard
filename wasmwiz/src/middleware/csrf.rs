@@ -1,13 +1,13 @@
 // src/middleware/csrf.rs
 use actix_web::{
-    Error, HttpResponse,
-    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     http::Method,
+    Error, HttpResponse,
 };
 use futures_util::future::LocalBoxFuture;
-use rand::{Rng, distributions::Alphanumeric};
+use rand::{distributions::Alphanumeric, Rng};
 use sha2::{Digest, Sha256};
-use std::future::{Ready, ready};
+use std::future::{ready, Ready};
 use std::rc::Rc;
 use tracing::warn;
 

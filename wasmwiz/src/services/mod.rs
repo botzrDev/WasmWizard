@@ -3,5 +3,5 @@ pub mod cleanup;
 pub mod database;
 pub mod redis;
 
-pub use database::{DatabaseService, establish_connection_pool};
+pub use database::{establish_connection_pool, DatabaseService};
 pub use redis::RedisService;

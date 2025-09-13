@@ -1,5 +1,9 @@
 // wasmwiz/src/middleware/pre_auth.rs
 
+use crate::models::{ApiKey, SubscriptionTier, User};
+use crate::services::DatabaseService;
+use actix_web::body::EitherBody;
+use actix_web::http::header::HeaderValue;
 use actix_web::{
     body::{BoxBody, MessageBody},
     dev::{Payload, Service, ServiceRequest, ServiceResponse, Transform},
@@ -7,12 +11,8 @@ use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest, Result,
 };
 use futures_util::future::{ready, LocalBoxFuture, Ready};
-use crate::services::DatabaseService;
 use sha2::{Digest, Sha256};
-use crate::models::{ApiKey, User, SubscriptionTier};
 use std::rc::Rc;
-use actix_web::body::EitherBody;
-use actix_web::http::header::HeaderValue;
 
 /// Extract API key from Authorization header
 fn extract_api_key(auth_header: Option<&HeaderValue>) -> Option<String> {
@@ -88,7 +88,6 @@ impl FromRequest for AuthContext {
     }
 }
 
-
 impl<S, B> Service<ServiceRequest> for PreAuthMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
@@ -99,7 +98,10 @@ where
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&self, cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), Self::Error>> {
+    fn poll_ready(
+        &self,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 

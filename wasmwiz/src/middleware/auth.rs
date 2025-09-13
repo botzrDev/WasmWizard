@@ -4,11 +4,11 @@ use crate::{
     services::DatabaseService,
 };
 use actix_web::{
-    Error, HttpMessage, HttpResponse, Result,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{AUTHORIZATION, HeaderValue},
+    http::header::{HeaderValue, AUTHORIZATION},
+    Error, HttpMessage, HttpResponse, Result,
 };
-use futures_util::future::{LocalBoxFuture, Ready, ready};
+use futures_util::future::{ready, LocalBoxFuture, Ready};
 use sha2::{Digest, Sha256};
 use std::{
     rc::Rc,
