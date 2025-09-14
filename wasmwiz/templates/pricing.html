@@ -1,0 +1,882 @@
+{% extends "base.html" %}
+
+{% block title %}Pricing - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="pricing-container">
+    <div class="pricing-header">
+        <h1>Simple, Transparent Pricing</h1>
+        <p class="lead">Choose the perfect plan for your WebAssembly execution needs</p>
+        <p class="pricing-subtitle">All plans include secure sandboxed execution, 99.9% uptime SLA, and enterprise-grade security</p>
+    </div>
+
+    <!-- Billing Toggle -->
+    <div class="billing-toggle">
+        <span class="toggle-label">Monthly</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="annual-toggle">
+            <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Annual <span class="savings-badge">Save 20%</span></span>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="pricing-grid">
+        <!-- Free Tier -->
+        <div class="pricing-card free-tier">
+            <div class="plan-badge">Perfect for testing</div>
+            <div class="plan-header">
+                <h2>Free</h2>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">0</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">Get started with WebAssembly execution</p>
+            </div>
+
+            <div class="plan-features">
+                <div class="feature-section">
+                    <h4>Execution Limits</h4>
+                    <ul>
+                        <li><span class="feature-value">10</span> requests per minute</li>
+                        <li><span class="feature-value">500</span> requests per day</li>
+                        <li><span class="feature-value">128MB</span> memory limit</li>
+                        <li><span class="feature-value">5 seconds</span> execution timeout</li>
+                        <li><span class="feature-value">1</span> concurrent execution</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h4>Features</h4>
+                    <ul>
+                        <li>✅ Secure WASI sandbox</li>
+                        <li>✅ Basic API access</li>
+                        <li>✅ Community support</li>
+                        <li>✅ 10MB module size limit</li>
+                        <li>❌ Execution logs</li>
+                        <li>❌ Custom timeouts</li>
+                        <li>❌ Priority support</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button class="cta-button secondary" onclick="window.location.href='/api-keys'">
+                Get Started Free
+            </button>
+        </div>
+
+        <!-- Basic Tier -->
+        <div class="pricing-card basic-tier">
+            <div class="plan-badge">Most popular</div>
+            <div class="plan-header">
+                <h2>Basic</h2>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount monthly-amount">29</span>
+                    <span class="amount annual-amount" style="display: none;">24</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">Perfect for small to medium applications</p>
+            </div>
+
+            <div class="plan-features">
+                <div class="feature-section">
+                    <h4>Execution Limits</h4>
+                    <ul>
+                        <li><span class="feature-value">100</span> requests per minute</li>
+                        <li><span class="feature-value">10,000</span> requests per day</li>
+                        <li><span class="feature-value">256MB</span> memory limit</li>
+                        <li><span class="feature-value">10 seconds</span> execution timeout</li>
+                        <li><span class="feature-value">5</span> concurrent executions</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h4>Features</h4>
+                    <ul>
+                        <li>✅ Everything in Free</li>
+                        <li>✅ Detailed execution logs</li>
+                        <li>✅ Email support</li>
+                        <li>✅ 25MB module size limit</li>
+                        <li>✅ Custom timeout settings</li>
+                        <li>✅ Usage analytics</li>
+                        <li>✅ 7-day log retention</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button class="cta-button primary" onclick="subscribeToPlan('basic')">
+                Start Basic Plan
+            </button>
+            <p class="trial-text">14-day free trial • Cancel anytime</p>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="pricing-card pro-tier">
+            <div class="plan-badge recommended">Recommended</div>
+            <div class="plan-header">
+                <h2>Pro</h2>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount monthly-amount">99</span>
+                    <span class="amount annual-amount" style="display: none;">79</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">For production applications and teams</p>
+            </div>
+
+            <div class="plan-features">
+                <div class="feature-section">
+                    <h4>Execution Limits</h4>
+                    <ul>
+                        <li><span class="feature-value">500</span> requests per minute</li>
+                        <li><span class="feature-value">50,000</span> requests per day</li>
+                        <li><span class="feature-value">512MB</span> memory limit</li>
+                        <li><span class="feature-value">30 seconds</span> execution timeout</li>
+                        <li><span class="feature-value">20</span> concurrent executions</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h4>Features</h4>
+                    <ul>
+                        <li>✅ Everything in Basic</li>
+                        <li>✅ Priority support</li>
+                        <li>✅ 50MB module size limit</li>
+                        <li>✅ Advanced analytics</li>
+                        <li>✅ Webhook notifications</li>
+                        <li>✅ 30-day log retention</li>
+                        <li>✅ Custom integrations</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button class="cta-button primary" onclick="subscribeToPlan('pro')">
+                Start Pro Plan
+            </button>
+            <p class="trial-text">14-day free trial • Cancel anytime</p>
+        </div>
+
+        <!-- Enterprise Tier -->
+        <div class="pricing-card enterprise-tier">
+            <div class="plan-badge">Custom</div>
+            <div class="plan-header">
+                <h2>Enterprise</h2>
+                <div class="price">
+                    <span class="amount">Custom</span>
+                </div>
+                <p class="plan-description">Tailored solutions for large organizations</p>
+            </div>
+
+            <div class="plan-features">
+                <div class="feature-section">
+                    <h4>Custom Limits</h4>
+                    <ul>
+                        <li><span class="feature-value">Unlimited</span> requests per minute</li>
+                        <li><span class="feature-value">Unlimited</span> daily requests</li>
+                        <li><span class="feature-value">Custom</span> memory limits</li>
+                        <li><span class="feature-value">Custom</span> execution timeouts</li>
+                        <li><span class="feature-value">Unlimited</span> concurrent executions</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h4>Enterprise Features</h4>
+                    <ul>
+                        <li>✅ Everything in Pro</li>
+                        <li>✅ Dedicated support team</li>
+                        <li>✅ Custom module size limits</li>
+                        <li>✅ On-premises deployment</li>
+                        <li>✅ SSO integration</li>
+                        <li>✅ Custom SLA agreements</li>
+                        <li>✅ 24/7 phone support</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button class="cta-button secondary" onclick="contactSales()">
+                Contact Sales
+            </button>
+            <p class="trial-text">Custom pricing • Volume discounts available</p>
+        </div>
+    </div>
+
+    <!-- Feature Comparison Table -->
+    <div class="comparison-section">
+        <h2>Detailed Feature Comparison</h2>
+        <div class="comparison-table-container">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Free</th>
+                        <th>Basic</th>
+                        <th>Pro</th>
+                        <th>Enterprise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Requests per minute</td>
+                        <td>10</td>
+                        <td>100</td>
+                        <td>500</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Daily requests</td>
+                        <td>500</td>
+                        <td>10,000</td>
+                        <td>50,000</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Memory limit</td>
+                        <td>128MB</td>
+                        <td>256MB</td>
+                        <td>512MB</td>
+                        <td>Custom</td>
+                    </tr>
+                    <tr>
+                        <td>Execution timeout</td>
+                        <td>5 seconds</td>
+                        <td>10 seconds</td>
+                        <td>30 seconds</td>
+                        <td>Custom</td>
+                    </tr>
+                    <tr>
+                        <td>Concurrent executions</td>
+                        <td>1</td>
+                        <td>5</td>
+                        <td>20</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Module size limit</td>
+                        <td>10MB</td>
+                        <td>25MB</td>
+                        <td>50MB</td>
+                        <td>Custom</td>
+                    </tr>
+                    <tr>
+                        <td>Execution logs</td>
+                        <td>❌</td>
+                        <td>✅ 7 days</td>
+                        <td>✅ 30 days</td>
+                        <td>✅ Custom retention</td>
+                    </tr>
+                    <tr>
+                        <td>Usage analytics</td>
+                        <td>Basic</td>
+                        <td>✅</td>
+                        <td>✅ Advanced</td>
+                        <td>✅ Custom dashboards</td>
+                    </tr>
+                    <tr>
+                        <td>Support</td>
+                        <td>Community</td>
+                        <td>Email</td>
+                        <td>Priority email</td>
+                        <td>24/7 dedicated</td>
+                    </tr>
+                    <tr>
+                        <td>SLA</td>
+                        <td>99.9%</td>
+                        <td>99.9%</td>
+                        <td>99.95%</td>
+                        <td>Custom SLA</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="pricing-faq">
+        <h2>Frequently Asked Questions</h2>
+
+        <div class="faq-grid">
+            <div class="faq-item">
+                <h4>Can I change plans at any time?</h4>
+                <p>Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and you'll be charged or credited on a pro-rata basis.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>What happens if I exceed my plan limits?</h4>
+                <p>When you exceed rate limits, requests will be temporarily throttled. For memory or timeout limits, executions will fail gracefully. We'll send notifications to help you upgrade if needed.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>Is there a free trial for paid plans?</h4>
+                <p>Yes! Both Basic and Pro plans include a 14-day free trial. No credit card required to start. You can cancel anytime during the trial period.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>What payment methods do you accept?</h4>
+                <p>We accept all major credit cards, PayPal, and wire transfers for Enterprise customers. All payments are processed securely through Stripe.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>Do you offer discounts for non-profits or education?</h4>
+                <p>Yes! We offer 50% discounts for qualified educational institutions and registered non-profit organizations. Contact our sales team for details.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>What's included in Enterprise support?</h4>
+                <p>Enterprise plans include dedicated account management, 24/7 phone support, custom SLA agreements, priority bug fixes, and architectural consulting.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trust Section -->
+    <div class="trust-section">
+        <div class="trust-grid">
+            <div class="trust-item">
+                <div class="trust-icon">🔒</div>
+                <h4>SOC 2 Compliant</h4>
+                <p>Independently audited security controls and processes</p>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon">🛡️</div>
+                <h4>GDPR Compliant</h4>
+                <p>Full compliance with European data protection regulations</p>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon">⚡</div>
+                <h4>99.9% Uptime SLA</h4>
+                <p>Guaranteed availability with service level agreements</p>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon">💳</div>
+                <h4>Secure Payments</h4>
+                <p>PCI DSS compliant payment processing via Stripe</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="pricing-cta">
+        <div class="cta-content">
+            <h2>Ready to get started?</h2>
+            <p>Join thousands of developers already using WasmWiz to power their applications</p>
+            <div class="cta-buttons">
+                <button class="cta-button primary" onclick="window.location.href='/api-keys'">
+                    Start Free Trial
+                </button>
+                <button class="cta-button secondary" onclick="contactSales()">
+                    Contact Sales
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pricing-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.pricing-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.pricing-header h1 {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.pricing-header .lead {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.pricing-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+/* Billing Toggle */
+.billing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0 3rem 0;
+}
+
+.toggle-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.savings-badge {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+/* Pricing Grid */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.pricing-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 2px solid var(--border-color);
+    padding: 2rem;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pricing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.pricing-card.basic-tier,
+.pricing-card.pro-tier {
+    border-color: var(--primary-color);
+}
+
+.pricing-card.pro-tier {
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.plan-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.plan-badge.recommended {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.plan-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+}
+
+.plan-header h2 {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.currency {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.plan-description {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+/* Plan Features */
+.plan-features {
+    margin-bottom: 2rem;
+}
+
+.feature-section {
+    margin-bottom: 2rem;
+}
+
+.feature-section h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+}
+
+.feature-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.feature-section li {
+    padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.feature-section li:last-child {
+    border-bottom: none;
+}
+
+.feature-value {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.cta-button {
+    width: 100%;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 1.125rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.cta-button.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.cta-button.primary:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-2px);
+}
+
+.cta-button.secondary {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.cta-button.secondary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.trial-text {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+/* Comparison Table */
+.comparison-section {
+    margin: 4rem 0;
+    text-align: center;
+}
+
+.comparison-section h2 {
+    font-size: 2rem;
+    color: var(--secondary-color);
+    margin-bottom: 2rem;
+}
+
+.comparison-table-container {
+    overflow-x: auto;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.comparison-table th {
+    background: var(--background-color);
+    font-weight: 600;
+    text-align: center;
+}
+
+.comparison-table th:first-child {
+    text-align: left;
+}
+
+.comparison-table td:not(:first-child) {
+    text-align: center;
+}
+
+.comparison-table tr:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+/* FAQ Section */
+.pricing-faq {
+    margin: 4rem 0;
+}
+
+.pricing-faq h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: var(--secondary-color);
+    margin-bottom: 3rem;
+}
+
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.faq-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.faq-item h4 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.faq-item p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Trust Section */
+.trust-section {
+    background: var(--background-color);
+    padding: 3rem 2rem;
+    border-radius: var(--border-radius);
+    margin: 4rem 0;
+}
+
+.trust-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.trust-item {
+    text-align: center;
+}
+
+.trust-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.trust-item h4 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.trust-item p {
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+}
+
+/* CTA Section */
+.pricing-cta {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 4rem 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    margin: 4rem 0;
+}
+
+.cta-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.cta-content p {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-buttons .cta-button {
+    width: auto;
+    min-width: 200px;
+}
+
+.cta-buttons .cta-button.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.cta-buttons .cta-button.secondary:hover {
+    background: white;
+    color: var(--primary-color);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .pricing-header h1 {
+        font-size: 2rem;
+    }
+
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pricing-card.pro-tier {
+        transform: none;
+    }
+
+    .faq-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .trust-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cta-buttons .cta-button {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-container {
+        padding: 1rem;
+    }
+
+    .comparison-table {
+        font-size: 0.875rem;
+    }
+
+    .trust-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Annual/Monthly toggle functionality
+document.getElementById('annual-toggle').addEventListener('change', function() {
+    const monthlyAmounts = document.querySelectorAll('.monthly-amount');
+    const annualAmounts = document.querySelectorAll('.annual-amount');
+
+    if (this.checked) {
+        monthlyAmounts.forEach(amount => amount.style.display = 'none');
+        annualAmounts.forEach(amount => amount.style.display = 'inline');
+    } else {
+        monthlyAmounts.forEach(amount => amount.style.display = 'inline');
+        annualAmounts.forEach(amount => amount.style.display = 'none');
+    }
+});
+
+function subscribeToPlan(planName) {
+    // In a real implementation, this would redirect to your payment processor
+    alert(`Redirecting to subscription flow for ${planName} plan...`);
+    // Example: window.location.href = `/subscribe/${planName}`;
+}
+
+function contactSales() {
+    // In a real implementation, this would open a contact form or redirect to sales page
+    alert('Redirecting to sales contact form...');
+    // Example: window.location.href = '/contact-sales';
+}
+</script>
+{% endblock %}

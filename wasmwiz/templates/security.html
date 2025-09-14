@@ -1,0 +1,979 @@
+{% extends "base.html" %}
+
+{% block title %}Security - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="security-container">
+    <div class="security-header">
+        <h1>Security & Compliance</h1>
+        <p class="lead">Built with enterprise-grade security from the ground up</p>
+        <p class="security-subtitle">Your code, data, and infrastructure are protected by industry-leading security measures</p>
+    </div>
+
+    <!-- Security Overview -->
+    <div class="security-overview">
+        <div class="overview-grid">
+            <div class="overview-item">
+                <div class="overview-icon">🛡️</div>
+                <h3>Defense in Depth</h3>
+                <p>Multiple layers of security protection at every level</p>
+            </div>
+            <div class="overview-item">
+                <div class="overview-icon">🔐</div>
+                <h3>Zero Trust Architecture</h3>
+                <p>Never trust, always verify - every request is authenticated and authorized</p>
+            </div>
+            <div class="overview-item">
+                <div class="overview-icon">🏢</div>
+                <h3>Enterprise Grade</h3>
+                <p>SOC 2 Type II certified with continuous compliance monitoring</p>
+            </div>
+            <div class="overview-item">
+                <div class="overview-icon">🌐</div>
+                <h3>Global Compliance</h3>
+                <p>GDPR, CCPA, and other international privacy regulations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Features -->
+    <div class="security-section">
+        <h2>Platform Security</h2>
+
+        <div class="feature-grid">
+            <!-- Execution Security -->
+            <div class="security-feature">
+                <div class="feature-header">
+                    <div class="feature-icon">🏗️</div>
+                    <h3>Sandboxed Execution</h3>
+                </div>
+                <div class="feature-content">
+                    <p>WebAssembly modules run in completely isolated environments with no access to the host system.</p>
+                    <h4>Security Controls:</h4>
+                    <ul>
+                        <li><strong>Memory Isolation</strong> - Each execution has its own memory space</li>
+                        <li><strong>Resource Limits</strong> - CPU, memory, and time constraints prevent abuse</li>
+                        <li><strong>Network Isolation</strong> - No external network access allowed</li>
+                        <li><strong>File System Restriction</strong> - Only stdin/stdout access permitted</li>
+                        <li><strong>System Call Filtering</strong> - Only safe WASI subset allowed</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Data Protection -->
+            <div class="security-feature">
+                <div class="feature-header">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Data Protection</h3>
+                </div>
+                <div class="feature-content">
+                    <p>Your code and data are protected with enterprise-grade encryption and access controls.</p>
+                    <h4>Protection Measures:</h4>
+                    <ul>
+                        <li><strong>Encryption at Rest</strong> - AES-256 encryption for stored modules</li>
+                        <li><strong>Encryption in Transit</strong> - TLS 1.3 for all API communications</li>
+                        <li><strong>Automatic Cleanup</strong> - Temporary data deleted after execution</li>
+                        <li><strong>No Persistent Storage</strong> - Execution data not retained</li>
+                        <li><strong>Access Logging</strong> - All data access is monitored and logged</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Authentication & Authorization -->
+            <div class="security-feature">
+                <div class="feature-header">
+                    <div class="feature-icon">🔑</div>
+                    <h3>Authentication & Authorization</h3>
+                </div>
+                <div class="feature-content">
+                    <p>Secure API key management with role-based access controls and comprehensive audit trails.</p>
+                    <h4>Security Features:</h4>
+                    <ul>
+                        <li><strong>SHA-256 Key Hashing</strong> - API keys are cryptographically hashed</li>
+                        <li><strong>Salt + Hash Storage</strong> - Keys never stored in plaintext</li>
+                        <li><strong>Role-Based Access</strong> - Permissions based on subscription tier</li>
+                        <li><strong>Rate Limiting</strong> - Per-key request throttling</li>
+                        <li><strong>Audit Logging</strong> - Complete access and usage tracking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Infrastructure Security -->
+            <div class="security-feature">
+                <div class="feature-header">
+                    <div class="feature-icon">🏛️</div>
+                    <h3>Infrastructure Security</h3>
+                </div>
+                <div class="feature-content">
+                    <p>Secure cloud infrastructure with multiple availability zones and automated security monitoring.</p>
+                    <h4>Infrastructure Controls:</h4>
+                    <ul>
+                        <li><strong>Private Networks</strong> - Isolated VPCs with no public access</li>
+                        <li><strong>Firewall Rules</strong> - Strict ingress/egress controls</li>
+                        <li><strong>Intrusion Detection</strong> - Real-time threat monitoring</li>
+                        <li><strong>Automated Patching</strong> - Regular security updates</li>
+                        <li><strong>Container Security</strong> - Hardened container images</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Monitoring & Incident Response -->
+            <div class="security-feature">
+                <div class="feature-header">
+                    <div class="feature-icon">📡</div>
+                    <h3>Security Monitoring</h3>
+                </div>
+                <div class="feature-content">
+                    <p>24/7 security monitoring with automated threat detection and incident response procedures.</p>
+                    <h4>Monitoring Capabilities:</h4>
+                    <ul>
+                        <li><strong>SIEM Integration</strong> - Centralized security event management</li>
+                        <li><strong>Anomaly Detection</strong> - ML-powered threat identification</li>
+                        <li><strong>Real-time Alerts</strong> - Instant notification of security events</li>
+                        <li><strong>Incident Response</strong> - 24/7 security team on standby</li>
+                        <li><strong>Forensic Analysis</strong> - Detailed investigation capabilities</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Compliance & Auditing -->
+            <div class="security-feature">
+                <div class="feature-header">
+                    <div class="feature-icon">📋</div>
+                    <h3>Compliance & Auditing</h3>
+                </div>
+                <div class="feature-content">
+                    <p>Comprehensive audit trails and compliance reporting for regulatory requirements.</p>
+                    <h4>Audit Features:</h4>
+                    <ul>
+                        <li><strong>Complete Audit Trails</strong> - Every action is logged and timestamped</li>
+                        <li><strong>Immutable Logs</strong> - Tamper-proof audit records</li>
+                        <li><strong>Compliance Reporting</strong> - Automated compliance reports</li>
+                        <li><strong>Data Retention Policies</strong> - Configurable retention periods</li>
+                        <li><strong>Export Capabilities</strong> - Audit data can be exported</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compliance Certifications -->
+    <div class="compliance-section">
+        <h2>Compliance & Certifications</h2>
+
+        <div class="compliance-grid">
+            <div class="compliance-card">
+                <div class="compliance-logo">🏆</div>
+                <h3>SOC 2 Type II</h3>
+                <p>Independently audited security controls and operational effectiveness</p>
+                <div class="compliance-status">
+                    <span class="status-badge verified">Certified</span>
+                    <span class="status-date">Valid through Dec 2025</span>
+                </div>
+                <a href="/compliance/soc2" class="compliance-link">View Certificate</a>
+            </div>
+
+            <div class="compliance-card">
+                <div class="compliance-logo">🇪🇺</div>
+                <h3>GDPR Compliant</h3>
+                <p>Full compliance with European General Data Protection Regulation</p>
+                <div class="compliance-status">
+                    <span class="status-badge verified">Compliant</span>
+                    <span class="status-date">Continuously monitored</span>
+                </div>
+                <a href="/privacy" class="compliance-link">Privacy Policy</a>
+            </div>
+
+            <div class="compliance-card">
+                <div class="compliance-logo">🇺🇸</div>
+                <h3>CCPA Compliant</h3>
+                <p>California Consumer Privacy Act compliance for US customers</p>
+                <div class="compliance-status">
+                    <span class="status-badge verified">Compliant</span>
+                    <span class="status-date">Continuously monitored</span>
+                </div>
+                <a href="/privacy#ccpa" class="compliance-link">Learn More</a>
+            </div>
+
+            <div class="compliance-card">
+                <div class="compliance-logo">💳</div>
+                <h3>PCI DSS</h3>
+                <p>Payment Card Industry Data Security Standard for payment processing</p>
+                <div class="compliance-status">
+                    <span class="status-badge verified">Level 1</span>
+                    <span class="status-date">Via Stripe</span>
+                </div>
+                <a href="#payment-security" class="compliance-link">Payment Security</a>
+            </div>
+
+            <div class="compliance-card">
+                <div class="compliance-logo">🛡️</div>
+                <h3>ISO 27001</h3>
+                <p>International standard for information security management systems</p>
+                <div class="compliance-status">
+                    <span class="status-badge in-progress">In Progress</span>
+                    <span class="status-date">Certification Q2 2025</span>
+                </div>
+                <a href="/roadmap#iso27001" class="compliance-link">Roadmap</a>
+            </div>
+
+            <div class="compliance-card">
+                <div class="compliance-logo">⚖️</div>
+                <h3>HIPAA Ready</h3>
+                <p>Architecture supports HIPAA compliance for healthcare applications</p>
+                <div class="compliance-status">
+                    <span class="status-badge available">Available</span>
+                    <span class="status-date">Enterprise plans</span>
+                </div>
+                <a href="/enterprise/hipaa" class="compliance-link">Enterprise Info</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Best Practices -->
+    <div class="best-practices-section">
+        <h2>Security Best Practices</h2>
+        <p>Follow these guidelines to maximize the security of your WasmWiz integration:</p>
+
+        <div class="practices-grid">
+            <div class="practice-card">
+                <div class="practice-icon">🔐</div>
+                <h3>API Key Management</h3>
+                <div class="practice-content">
+                    <h4>✅ Do:</h4>
+                    <ul>
+                        <li>Store API keys as environment variables</li>
+                        <li>Rotate keys regularly (monthly recommended)</li>
+                        <li>Use different keys for development and production</li>
+                        <li>Monitor key usage patterns</li>
+                        <li>Revoke unused or compromised keys immediately</li>
+                    </ul>
+                    <h4>❌ Don't:</h4>
+                    <ul>
+                        <li>Hardcode keys in source code</li>
+                        <li>Expose keys in client-side JavaScript</li>
+                        <li>Share keys via email or chat</li>
+                        <li>Use the same key across multiple environments</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="practice-card">
+                <div class="practice-icon">📝</div>
+                <h3>Code Security</h3>
+                <div class="practice-content">
+                    <h4>✅ Do:</h4>
+                    <ul>
+                        <li>Validate all input data before processing</li>
+                        <li>Use bounds checking for arrays and buffers</li>
+                        <li>Implement proper error handling</li>
+                        <li>Avoid memory leaks in WASM modules</li>
+                        <li>Test modules locally before deployment</li>
+                    </ul>
+                    <h4>❌ Don't:</h4>
+                    <ul>
+                        <li>Include sensitive data in WASM modules</li>
+                        <li>Use unsafe memory operations</li>
+                        <li>Implement custom crypto without expertise</li>
+                        <li>Trust user input without validation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="practice-card">
+                <div class="practice-icon">🌐</div>
+                <h3>Network Security</h3>
+                <div class="practice-content">
+                    <h4>✅ Do:</h4>
+                    <ul>
+                        <li>Always use HTTPS for API calls</li>
+                        <li>Validate SSL certificates</li>
+                        <li>Implement request signing where possible</li>
+                        <li>Use IP whitelisting for sensitive operations</li>
+                        <li>Monitor for unusual traffic patterns</li>
+                    </ul>
+                    <h4>❌ Don't:</h4>
+                    <ul>
+                        <li>Make API calls over HTTP</li>
+                        <li>Ignore certificate validation errors</li>
+                        <li>Log sensitive data in request logs</li>
+                        <li>Allow unrestricted API access</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vulnerability Disclosure -->
+    <div class="disclosure-section">
+        <h2>Responsible Disclosure</h2>
+
+        <div class="disclosure-content">
+            <div class="disclosure-info">
+                <h3>Security Researcher Program</h3>
+                <p>We value the security research community and welcome responsible disclosure of potential vulnerabilities.</p>
+
+                <h4>Scope:</h4>
+                <ul>
+                    <li>WasmWiz API endpoints (api.wasmwiz.io)</li>
+                    <li>Web application (wasmwiz.io)</li>
+                    <li>Documentation site (docs.wasmwiz.io)</li>
+                    <li>WebAssembly execution environment</li>
+                </ul>
+
+                <h4>Out of Scope:</h4>
+                <ul>
+                    <li>Social engineering attacks</li>
+                    <li>Physical security issues</li>
+                    <li>Denial of service attacks</li>
+                    <li>Rate limiting bypass (expected behavior)</li>
+                </ul>
+
+                <h4>Reporting Process:</h4>
+                <ol>
+                    <li>Email detailed findings to <a href="mailto:security@wasmwiz.io">security@wasmwiz.io</a></li>
+                    <li>Include steps to reproduce the vulnerability</li>
+                    <li>Allow up to 90 days for investigation and remediation</li>
+                    <li>Do not publicly disclose until we provide confirmation</li>
+                </ol>
+            </div>
+
+            <div class="disclosure-rewards">
+                <h3>Bug Bounty Program</h3>
+                <p>We offer rewards for qualifying security vulnerabilities:</p>
+
+                <div class="bounty-tiers">
+                    <div class="bounty-tier critical">
+                        <h4>Critical</h4>
+                        <div class="bounty-amount">$1,000 - $5,000</div>
+                        <p>Remote code execution, privilege escalation, data breaches</p>
+                    </div>
+                    <div class="bounty-tier high">
+                        <h4>High</h4>
+                        <div class="bounty-amount">$500 - $1,000</div>
+                        <p>Authentication bypass, significant data exposure</p>
+                    </div>
+                    <div class="bounty-tier medium">
+                        <h4>Medium</h4>
+                        <div class="bounty-amount">$100 - $500</div>
+                        <p>XSS, CSRF, information disclosure</p>
+                    </div>
+                    <div class="bounty-tier low">
+                        <h4>Low</h4>
+                        <div class="bounty-amount">$50 - $100</div>
+                        <p>Security misconfigurations, minor information leaks</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Contact -->
+    <div class="security-contact-section">
+        <div class="contact-card">
+            <div class="contact-icon">🛡️</div>
+            <h2>Security Contact</h2>
+            <p>Have a security concern or question? Our security team is here to help.</p>
+
+            <div class="contact-methods">
+                <div class="contact-method">
+                    <h4>General Security Inquiries</h4>
+                    <p>📧 <a href="mailto:security@wasmwiz.io">security@wasmwiz.io</a></p>
+                    <p>Response time: 24 hours</p>
+                </div>
+
+                <div class="contact-method">
+                    <h4>Vulnerability Reports</h4>
+                    <p>🔒 Use our <a href="/security/pgp">PGP key</a> for sensitive reports</p>
+                    <p>Response time: 4 hours for critical issues</p>
+                </div>
+
+                <div class="contact-method">
+                    <h4>Enterprise Security</h4>
+                    <p>📞 24/7 security hotline for Enterprise customers</p>
+                    <p>Contact your account manager for details</p>
+                </div>
+            </div>
+
+            <div class="security-resources">
+                <h3>Additional Resources</h3>
+                <div class="resource-links">
+                    <a href="/security/advisories">Security Advisories</a>
+                    <a href="/security/changelog">Security Changelog</a>
+                    <a href="/compliance/reports">Compliance Reports</a>
+                    <a href="/security/pgp">PGP Public Key</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.security-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.security-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.security-header h1 {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.security-header .lead {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.security-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+/* Security Overview */
+.security-overview {
+    margin-bottom: 4rem;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.overview-item {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.overview-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.overview-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.overview-item h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.overview-item p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Security Features */
+.security-section {
+    margin: 4rem 0;
+}
+
+.security-section h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 3rem;
+    font-size: 2rem;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.security-feature {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.security-feature:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.feature-header {
+    background: var(--background-color);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.feature-icon {
+    font-size: 2rem;
+}
+
+.feature-header h3 {
+    color: var(--secondary-color);
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.feature-content {
+    padding: 1.5rem;
+}
+
+.feature-content p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.feature-content h4 {
+    color: var(--text-primary);
+    margin: 1.5rem 0 1rem 0;
+    font-size: 1rem;
+}
+
+.feature-content ul {
+    color: var(--text-secondary);
+    padding-left: 1.5rem;
+}
+
+.feature-content li {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+}
+
+/* Compliance Section */
+.compliance-section {
+    margin: 4rem 0;
+    background: var(--background-color);
+    padding: 3rem 2rem;
+    border-radius: var(--border-radius);
+}
+
+.compliance-section h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 3rem;
+    font-size: 2rem;
+}
+
+.compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.compliance-card {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.compliance-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.compliance-logo {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.compliance-card h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.compliance-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.compliance-status {
+    margin-bottom: 1.5rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.status-badge.verified {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.in-progress {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.status-badge.available {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-date {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.compliance-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.compliance-link:hover {
+    text-decoration: underline;
+}
+
+/* Best Practices */
+.best-practices-section {
+    margin: 4rem 0;
+}
+
+.best-practices-section h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.best-practices-section > p {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 3rem;
+    font-size: 1.125rem;
+}
+
+.practices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.practice-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.practice-icon {
+    font-size: 3rem;
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.practice-card h3 {
+    text-align: center;
+    color: var(--secondary-color);
+    margin: 1rem 0;
+    font-size: 1.25rem;
+}
+
+.practice-content {
+    padding: 1.5rem;
+}
+
+.practice-content h4 {
+    color: var(--text-primary);
+    margin: 1.5rem 0 1rem 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.practice-content ul {
+    color: var(--text-secondary);
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.practice-content li {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+}
+
+/* Vulnerability Disclosure */
+.disclosure-section {
+    margin: 4rem 0;
+}
+
+.disclosure-section h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 3rem;
+    font-size: 2rem;
+}
+
+.disclosure-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+.disclosure-info,
+.disclosure-rewards {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.disclosure-info h3,
+.disclosure-rewards h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.disclosure-info p,
+.disclosure-rewards p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.disclosure-info h4 {
+    color: var(--text-primary);
+    margin: 1.5rem 0 1rem 0;
+}
+
+.disclosure-info ul,
+.disclosure-info ol {
+    color: var(--text-secondary);
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.disclosure-info li {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+}
+
+.disclosure-info a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.disclosure-info a:hover {
+    text-decoration: underline;
+}
+
+.bounty-tiers {
+    display: grid;
+    gap: 1rem;
+}
+
+.bounty-tier {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bounty-tier.critical {
+    border-left: 4px solid #ef4444;
+}
+
+.bounty-tier.high {
+    border-left: 4px solid #f59e0b;
+}
+
+.bounty-tier.medium {
+    border-left: 4px solid #3b82f6;
+}
+
+.bounty-tier.low {
+    border-left: 4px solid #10b981;
+}
+
+.bounty-tier h4 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.bounty-amount {
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 1.125rem;
+}
+
+.bounty-tier p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Security Contact */
+.security-contact-section {
+    margin: 4rem 0;
+    background: var(--gradient-primary);
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.contact-card .contact-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.contact-card h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.contact-card p {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+.contact-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+    text-align: left;
+}
+
+.contact-method {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+}
+
+.contact-method h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1.125rem;
+}
+
+.contact-method p {
+    margin: 0.5rem 0;
+    font-size: 0.925rem;
+}
+
+.contact-method a {
+    color: white;
+    text-decoration: none;
+}
+
+.contact-method a:hover {
+    text-decoration: underline;
+}
+
+.security-resources {
+    text-align: center;
+}
+
+.security-resources h3 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.resource-links {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.resource-links a {
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius);
+    transition: all 0.2s;
+}
+
+.resource-links a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .security-container {
+        padding: 1rem;
+    }
+
+    .security-header h1 {
+        font-size: 2rem;
+    }
+
+    .overview-grid,
+    .compliance-grid,
+    .practices-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .disclosure-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .contact-methods {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .resource-links {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .bounty-tier {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .compliance-section,
+    .security-contact-section {
+        padding: 2rem 1rem;
+    }
+}
+</style>
+{% endblock %}

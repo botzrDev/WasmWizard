@@ -1,0 +1,641 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="privacy-container">
+    <div class="privacy-header">
+        <h1>Privacy Policy</h1>
+        <p class="last-updated">Last updated: January 15, 2025</p>
+        <p class="lead">We respect your privacy and are committed to protecting your personal data.</p>
+    </div>
+
+    <div class="privacy-content">
+        <nav class="privacy-nav">
+            <h3>Quick Navigation</h3>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#information-collect">Information We Collect</a></li>
+                <li><a href="#how-we-use">How We Use Information</a></li>
+                <li><a href="#sharing">Information Sharing</a></li>
+                <li><a href="#data-retention">Data Retention</a></li>
+                <li><a href="#security">Data Security</a></li>
+                <li><a href="#your-rights">Your Rights</a></li>
+                <li><a href="#cookies">Cookies</a></li>
+                <li><a href="#ccpa">California Privacy Rights</a></li>
+                <li><a href="#gdpr">European Privacy Rights</a></li>
+                <li><a href="#children">Children's Privacy</a></li>
+                <li><a href="#international">International Transfers</a></li>
+                <li><a href="#changes">Changes to Policy</a></li>
+                <li><a href="#contact">Contact Us</a></li>
+            </ul>
+        </nav>
+
+        <div class="privacy-sections">
+            <section id="overview" class="privacy-section">
+                <h2>1. Overview</h2>
+                <p>This Privacy Policy describes how WasmWiz ("we", "us", or "our") collects, uses, and protects your personal information when you use our WebAssembly execution platform.</p>
+
+                <div class="key-points">
+                    <h3>Key Points:</h3>
+                    <ul>
+                        <li>We collect minimal personal information necessary to provide our service</li>
+                        <li>Your WebAssembly modules are processed temporarily and not permanently stored</li>
+                        <li>We use industry-standard security measures to protect your data</li>
+                        <li>You have control over your personal information and can delete your account at any time</li>
+                        <li>We comply with GDPR, CCPA, and other applicable privacy regulations</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="information-collect" class="privacy-section">
+                <h2>2. Information We Collect</h2>
+
+                <h3>2.1 Account Information</h3>
+                <p>When you create an account, we collect:</p>
+                <ul>
+                    <li><strong>Email address:</strong> Used for account identification and communication</li>
+                    <li><strong>Password:</strong> Stored as a cryptographic hash for security</li>
+                    <li><strong>Account preferences:</strong> Settings and configuration choices</li>
+                    <li><strong>Subscription information:</strong> Billing plan and payment status</li>
+                </ul>
+
+                <h3>2.2 Usage Information</h3>
+                <p>We automatically collect information about your use of the service:</p>
+                <ul>
+                    <li><strong>API usage:</strong> Request patterns, response times, and error rates</li>
+                    <li><strong>Execution metrics:</strong> Module size, memory usage, execution time</li>
+                    <li><strong>IP addresses:</strong> For security monitoring and rate limiting</li>
+                    <li><strong>User agent:</strong> Browser and device information for compatibility</li>
+                    <li><strong>Timestamps:</strong> When actions are performed</li>
+                </ul>
+
+                <h3>2.3 WebAssembly Modules</h3>
+                <p>When you upload WASM modules:</p>
+                <ul>
+                    <li><strong>Module binaries:</strong> Temporarily stored for execution (automatically deleted)</li>
+                    <li><strong>Input data:</strong> Data provided for module execution (not permanently stored)</li>
+                    <li><strong>Output data:</strong> Results from module execution (not permanently stored)</li>
+                    <li><strong>Execution logs:</strong> Error messages and debug information (retained briefly)</li>
+                </ul>
+
+                <h3>2.4 Payment Information</h3>
+                <p>For paid subscriptions (processed by Stripe):</p>
+                <ul>
+                    <li><strong>Billing information:</strong> Name, address, and tax information</li>
+                    <li><strong>Payment methods:</strong> Credit card information (stored securely by Stripe)</li>
+                    <li><strong>Transaction history:</strong> Payment records and invoices</li>
+                </ul>
+                <p><em>Note: We never directly handle or store credit card information.</em></p>
+
+                <h3>2.5 Communications</h3>
+                <p>When you contact us:</p>
+                <ul>
+                    <li><strong>Support messages:</strong> Your questions and our responses</li>
+                    <li><strong>Feedback:</strong> Suggestions and feature requests</li>
+                    <li><strong>Survey responses:</strong> Optional feedback about our service</li>
+                </ul>
+            </section>
+
+            <section id="how-we-use" class="privacy-section">
+                <h2>3. How We Use Your Information</h2>
+
+                <h3>3.1 Service Provision</h3>
+                <ul>
+                    <li>Execute WebAssembly modules securely</li>
+                    <li>Provide API access and web interface</li>
+                    <li>Manage your account and subscription</li>
+                    <li>Process payments and billing</li>
+                    <li>Provide customer support</li>
+                </ul>
+
+                <h3>3.2 Service Improvement</h3>
+                <ul>
+                    <li>Monitor service performance and reliability</li>
+                    <li>Analyze usage patterns to optimize performance</li>
+                    <li>Identify and fix bugs or security issues</li>
+                    <li>Develop new features and improvements</li>
+                </ul>
+
+                <h3>3.3 Security and Compliance</h3>
+                <ul>
+                    <li>Detect and prevent fraudulent activity</li>
+                    <li>Monitor for security threats and abuse</li>
+                    <li>Enforce rate limits and usage policies</li>
+                    <li>Comply with legal obligations</li>
+                </ul>
+
+                <h3>3.4 Communication</h3>
+                <ul>
+                    <li>Send service-related notifications</li>
+                    <li>Respond to your inquiries and support requests</li>
+                    <li>Notify you of important changes to the service</li>
+                    <li>Send billing and account information</li>
+                </ul>
+
+                <div class="legal-basis">
+                    <h3>Legal Basis for Processing (GDPR)</h3>
+                    <p>We process your personal data based on:</p>
+                    <ul>
+                        <li><strong>Contract:</strong> To provide the services you've requested</li>
+                        <li><strong>Legitimate Interest:</strong> To improve our service and ensure security</li>
+                        <li><strong>Consent:</strong> For marketing communications (where applicable)</li>
+                        <li><strong>Legal Obligation:</strong> To comply with applicable laws and regulations</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="sharing" class="privacy-section">
+                <h2>4. Information Sharing and Disclosure</h2>
+
+                <h3>4.1 We Do Not Sell Your Data</h3>
+                <p>We do not sell, rent, or trade your personal information to third parties for marketing purposes.</p>
+
+                <h3>4.2 Service Providers</h3>
+                <p>We may share information with trusted service providers who help us operate our service:</p>
+                <ul>
+                    <li><strong>Payment Processing:</strong> Stripe for payment processing</li>
+                    <li><strong>Cloud Infrastructure:</strong> AWS/Google Cloud for hosting and storage</li>
+                    <li><strong>Monitoring:</strong> Error tracking and performance monitoring services</li>
+                    <li><strong>Email:</strong> Transactional email service providers</li>
+                </ul>
+                <p>All service providers are bound by strict data protection agreements.</p>
+
+                <h3>4.3 Legal Requirements</h3>
+                <p>We may disclose information when required by law:</p>
+                <ul>
+                    <li>To comply with legal processes or court orders</li>
+                    <li>To protect our rights and property</li>
+                    <li>To investigate potential violations of our terms</li>
+                    <li>To protect the safety of our users or the public</li>
+                </ul>
+
+                <h3>4.4 Business Transfers</h3>
+                <p>In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction. We will provide notice of any such change in ownership.</p>
+            </section>
+
+            <section id="data-retention" class="privacy-section">
+                <h2>5. Data Retention</h2>
+
+                <h3>5.1 Account Data</h3>
+                <ul>
+                    <li><strong>Active accounts:</strong> Retained while your account is active</li>
+                    <li><strong>Deleted accounts:</strong> Removed within 30 days of deletion request</li>
+                    <li><strong>Billing records:</strong> Retained for 7 years for tax and legal purposes</li>
+                </ul>
+
+                <h3>5.2 WASM Execution Data</h3>
+                <ul>
+                    <li><strong>Module binaries:</strong> Deleted immediately after execution</li>
+                    <li><strong>Input/output data:</strong> Not permanently stored</li>
+                    <li><strong>Execution logs:</strong> Retained for 7 days for debugging</li>
+                    <li><strong>Usage metrics:</strong> Aggregated data retained for analytics</li>
+                </ul>
+
+                <h3>5.3 Communications</h3>
+                <ul>
+                    <li><strong>Support tickets:</strong> Retained for 2 years for service quality</li>
+                    <li><strong>Marketing emails:</strong> Retained until you unsubscribe</li>
+                </ul>
+            </section>
+
+            <section id="security" class="privacy-section">
+                <h2>6. Data Security</h2>
+
+                <h3>6.1 Technical Safeguards</h3>
+                <ul>
+                    <li><strong>Encryption:</strong> Data encrypted in transit (TLS 1.3) and at rest (AES-256)</li>
+                    <li><strong>Access Controls:</strong> Role-based access with multi-factor authentication</li>
+                    <li><strong>Network Security:</strong> Private networks, firewalls, and intrusion detection</li>
+                    <li><strong>Regular Updates:</strong> Automated security patches and updates</li>
+                </ul>
+
+                <h3>6.2 Organizational Safeguards</h3>
+                <ul>
+                    <li><strong>Employee Training:</strong> Regular security awareness training</li>
+                    <li><strong>Access Limitation:</strong> Need-to-know basis for data access</li>
+                    <li><strong>Background Checks:</strong> For employees with data access</li>
+                    <li><strong>Incident Response:</strong> Documented procedures for security incidents</li>
+                </ul>
+
+                <h3>6.3 Compliance</h3>
+                <ul>
+                    <li><strong>SOC 2 Type II:</strong> Independently audited security controls</li>
+                    <li><strong>Regular Assessments:</strong> Penetration testing and vulnerability scans</li>
+                    <li><strong>Industry Standards:</strong> Follow OWASP and NIST security frameworks</li>
+                </ul>
+
+                <div class="security-notice">
+                    <h4>Data Breach Notification</h4>
+                    <p>In the unlikely event of a data breach affecting your personal information, we will notify you and relevant authorities within 72 hours as required by law.</p>
+                </div>
+            </section>
+
+            <section id="your-rights" class="privacy-section">
+                <h2>7. Your Privacy Rights</h2>
+
+                <h3>7.1 Access and Portability</h3>
+                <ul>
+                    <li><strong>Access:</strong> Request a copy of your personal data</li>
+                    <li><strong>Portability:</strong> Receive your data in a machine-readable format</li>
+                    <li><strong>Account Dashboard:</strong> View and manage your information online</li>
+                </ul>
+
+                <h3>7.2 Correction and Updates</h3>
+                <ul>
+                    <li><strong>Correction:</strong> Update incorrect or incomplete information</li>
+                    <li><strong>Self-service:</strong> Modify most information through your account</li>
+                    <li><strong>Support:</strong> Contact us for help with corrections</li>
+                </ul>
+
+                <h3>7.3 Deletion and Restriction</h3>
+                <ul>
+                    <li><strong>Deletion:</strong> Request deletion of your personal data</li>
+                    <li><strong>Account Closure:</strong> Delete your entire account and associated data</li>
+                    <li><strong>Restriction:</strong> Limit how we process your data</li>
+                </ul>
+
+                <h3>7.4 Objection and Withdrawal</h3>
+                <ul>
+                    <li><strong>Processing Objection:</strong> Object to certain types of data processing</li>
+                    <li><strong>Consent Withdrawal:</strong> Withdraw consent for processing based on consent</li>
+                    <li><strong>Marketing Opt-out:</strong> Unsubscribe from marketing communications</li>
+                </ul>
+
+                <div class="rights-exercise">
+                    <h4>How to Exercise Your Rights</h4>
+                    <p>To exercise any of these rights:</p>
+                    <ul>
+                        <li>Email us at <strong>privacy@wasmwiz.io</strong></li>
+                        <li>Use the privacy controls in your account dashboard</li>
+                        <li>Contact our support team at <a href="/support">/support</a></li>
+                    </ul>
+                    <p>We will respond to your request within 30 days.</p>
+                </div>
+            </section>
+
+            <section id="cookies" class="privacy-section">
+                <h2>8. Cookies and Tracking</h2>
+
+                <h3>8.1 Essential Cookies</h3>
+                <p>We use essential cookies that are necessary for the service to function:</p>
+                <ul>
+                    <li><strong>Session cookies:</strong> To maintain your login state</li>
+                    <li><strong>Security cookies:</strong> To protect against CSRF attacks</li>
+                    <li><strong>Preference cookies:</strong> To remember your settings</li>
+                </ul>
+
+                <h3>8.2 Analytics Cookies</h3>
+                <p>With your consent, we use analytics cookies to understand how you use our service:</p>
+                <ul>
+                    <li><strong>Usage patterns:</strong> Which features are most popular</li>
+                    <li><strong>Performance:</strong> Page load times and error rates</li>
+                    <li><strong>User experience:</strong> How to improve our interface</li>
+                </ul>
+
+                <h3>8.3 Cookie Management</h3>
+                <ul>
+                    <li><strong>Browser settings:</strong> Configure cookie preferences in your browser</li>
+                    <li><strong>Opt-out:</strong> Disable non-essential cookies</li>
+                    <li><strong>Third-party cookies:</strong> We don't use third-party advertising cookies</li>
+                </ul>
+            </section>
+
+            <section id="ccpa" class="privacy-section">
+                <h2>9. California Privacy Rights (CCPA)</h2>
+                <p>If you are a California resident, you have additional rights under the California Consumer Privacy Act:</p>
+
+                <h3>9.1 Right to Know</h3>
+                <ul>
+                    <li>Categories of personal information we collect</li>
+                    <li>Sources of personal information</li>
+                    <li>Business purposes for collection</li>
+                    <li>Categories of third parties we share with</li>
+                </ul>
+
+                <h3>9.2 Right to Delete</h3>
+                <ul>
+                    <li>Request deletion of your personal information</li>
+                    <li>Exceptions for legal obligations and legitimate business purposes</li>
+                </ul>
+
+                <h3>9.3 Right to Opt-Out</h3>
+                <ul>
+                    <li>We do not sell personal information to third parties</li>
+                    <li>We do not discriminate against users who exercise their rights</li>
+                </ul>
+
+                <h3>9.4 Authorized Agents</h3>
+                <p>You may designate an authorized agent to make requests on your behalf. The agent must provide proof of authorization.</p>
+            </section>
+
+            <section id="gdpr" class="privacy-section">
+                <h2>10. European Privacy Rights (GDPR)</h2>
+                <p>If you are in the European Union, you have rights under the General Data Protection Regulation:</p>
+
+                <h3>10.1 Lawful Basis</h3>
+                <p>We process your data based on:</p>
+                <ul>
+                    <li><strong>Contractual necessity:</strong> To provide our services</li>
+                    <li><strong>Legitimate interest:</strong> For security and service improvement</li>
+                    <li><strong>Consent:</strong> For marketing and non-essential features</li>
+                    <li><strong>Legal obligation:</strong> To comply with laws</li>
+                </ul>
+
+                <h3>10.2 Data Protection Officer</h3>
+                <p>For privacy-related inquiries, contact our Data Protection Officer at <strong>dpo@wasmwiz.io</strong></p>
+
+                <h3>10.3 Supervisory Authority</h3>
+                <p>You have the right to lodge a complaint with your local data protection supervisory authority.</p>
+            </section>
+
+            <section id="children" class="privacy-section">
+                <h2>11. Children's Privacy</h2>
+                <p>Our service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.</p>
+                <p>If we learn that we have collected personal information from a child under 13, we will delete that information immediately.</p>
+                <p>If you believe a child has provided personal information to us, please contact us at <strong>privacy@wasmwiz.io</strong>.</p>
+            </section>
+
+            <section id="international" class="privacy-section">
+                <h2>12. International Data Transfers</h2>
+                <p>Your information may be transferred to and processed in countries other than your own. We ensure adequate protection through:</p>
+
+                <h3>12.1 Adequacy Decisions</h3>
+                <ul>
+                    <li>Transfers to countries with EU adequacy decisions</li>
+                    <li>Use of approved transfer mechanisms</li>
+                </ul>
+
+                <h3>12.2 Standard Contractual Clauses</h3>
+                <ul>
+                    <li>EU Standard Contractual Clauses for data transfers</li>
+                    <li>Additional safeguards where required</li>
+                </ul>
+
+                <h3>12.3 US-EU Data Flows</h3>
+                <ul>
+                    <li>We comply with applicable data transfer regulations</li>
+                    <li>We monitor regulatory developments and adjust practices accordingly</li>
+                </ul>
+            </section>
+
+            <section id="changes" class="privacy-section">
+                <h2>13. Changes to This Privacy Policy</h2>
+                <p>We may update this Privacy Policy from time to time. When we make changes:</p>
+                <ul>
+                    <li><strong>Notice:</strong> We'll notify you via email and service notifications</li>
+                    <li><strong>Advance Notice:</strong> Material changes will have at least 30 days notice</li>
+                    <li><strong>Updated Date:</strong> The "Last updated" date will be revised</li>
+                    <li><strong>Archive:</strong> Previous versions are available upon request</li>
+                </ul>
+                <p>Continued use of the service after changes indicates acceptance of the updated policy.</p>
+            </section>
+
+            <section id="contact" class="privacy-section">
+                <h2>14. Contact Information</h2>
+                <p>For privacy-related questions or to exercise your rights, contact us:</p>
+
+                <div class="contact-info">
+                    <div class="contact-method">
+                        <strong>Privacy Team:</strong> privacy@wasmwiz.io
+                    </div>
+                    <div class="contact-method">
+                        <strong>Data Protection Officer:</strong> dpo@wasmwiz.io
+                    </div>
+                    <div class="contact-method">
+                        <strong>Support:</strong> <a href="/support">Visit our support page</a>
+                    </div>
+                    <div class="contact-method">
+                        <strong>Mailing Address:</strong><br>
+                        WasmWiz, Inc.<br>
+                        Attn: Privacy Team<br>
+                        1234 Technology Drive<br>
+                        San Francisco, CA 94105<br>
+                        United States
+                    </div>
+                </div>
+
+                <div class="response-time">
+                    <p><strong>Response Time:</strong> We will respond to privacy requests within 30 days (or sooner as required by applicable law).</p>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<style>
+.privacy-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.privacy-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.privacy-header h1 {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.last-updated {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.privacy-header .lead {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.privacy-content {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 3rem;
+}
+
+.privacy-nav {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.privacy-nav h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.privacy-nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.privacy-nav li {
+    margin: 0.5rem 0;
+}
+
+.privacy-nav a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.925rem;
+    display: block;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.privacy-nav a:hover {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.privacy-sections {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.privacy-section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 120px;
+}
+
+.privacy-section:last-child {
+    margin-bottom: 0;
+}
+
+.privacy-section h2 {
+    color: var(--secondary-color);
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.privacy-section h3 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    margin: 2rem 0 1rem 0;
+}
+
+.privacy-section h4 {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    margin: 1.5rem 0 1rem 0;
+}
+
+.privacy-section p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.privacy-section ul {
+    color: var(--text-secondary);
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.privacy-section li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.privacy-section a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.privacy-section a:hover {
+    text-decoration: underline;
+}
+
+.key-points {
+    background: var(--background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+    margin: 1.5rem 0;
+}
+
+.legal-basis,
+.security-notice,
+.rights-exercise,
+.response-time {
+    background: var(--background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin: 1.5rem 0;
+}
+
+.security-notice {
+    border-left: 4px solid var(--warning-color);
+}
+
+.rights-exercise {
+    border-left: 4px solid var(--success-color);
+}
+
+.contact-info {
+    background: var(--background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-top: 1rem;
+}
+
+.contact-method {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.contact-method:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 968px) {
+    .privacy-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .privacy-nav {
+        position: static;
+        order: 2;
+    }
+
+    .privacy-sections {
+        order: 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .privacy-container {
+        padding: 1rem;
+    }
+
+    .privacy-header h1 {
+        font-size: 2rem;
+    }
+
+    .privacy-nav,
+    .privacy-sections {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}

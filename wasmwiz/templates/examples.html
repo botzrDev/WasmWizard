@@ -1,0 +1,1372 @@
+{% extends "base.html" %}
+
+{% block title %}Examples - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="examples-container">
+    <div class="examples-header">
+        <h1>WebAssembly Examples</h1>
+        <p class="lead">Ready-to-use WASM modules and comprehensive tutorials</p>
+        <p class="examples-subtitle">Learn by example with practical WebAssembly modules you can run immediately</p>
+    </div>
+
+    <!-- Quick Try Section -->
+    <div class="quick-try-section">
+        <h2>Try Examples Instantly</h2>
+        <p>Click any example below to load and run it directly in your browser:</p>
+
+        <div class="examples-grid">
+            <!-- Hello World Example -->
+            <div class="example-card" data-example="hello_world">
+                <div class="example-header">
+                    <div class="example-icon">👋</div>
+                    <div class="example-info">
+                        <h3>Hello World</h3>
+                        <div class="example-meta">
+                            <span class="language-tag rust">Rust</span>
+                            <span class="complexity beginner">Beginner</span>
+                            <span class="size">2.1 KB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="example-description">
+                    Classic "Hello, World!" program compiled to WebAssembly. Perfect for testing basic WASM functionality and understanding the execution flow.
+                </p>
+
+                <div class="example-details">
+                    <div class="feature-list">
+                        <span class="feature-item">✅ No input required</span>
+                        <span class="feature-item">✅ Simple output to stdout</span>
+                        <span class="feature-item">✅ < 1ms execution time</span>
+                    </div>
+                </div>
+
+                <div class="example-actions">
+                    <button class="btn-try-example primary" onclick="loadExample('hello_world')">
+                        Try Now
+                    </button>
+                    <button class="btn-view-source secondary" onclick="viewSource('hello_world')">
+                        View Source
+                    </button>
+                    <button class="btn-download secondary" onclick="downloadExample('hello_world')">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calculator Example -->
+            <div class="example-card" data-example="calc_add">
+                <div class="example-header">
+                    <div class="example-icon">🧮</div>
+                    <div class="example-info">
+                        <h3>Calculator - Addition</h3>
+                        <div class="example-meta">
+                            <span class="language-tag c">C</span>
+                            <span class="complexity beginner">Beginner</span>
+                            <span class="size">3.4 KB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="example-description">
+                    Simple calculator that adds two numbers. Demonstrates reading JSON input, parsing data, and returning structured output.
+                </p>
+
+                <div class="example-details">
+                    <div class="feature-list">
+                        <span class="feature-item">📥 JSON input: {"a": 5, "b": 3}</span>
+                        <span class="feature-item">📤 JSON output: {"result": 8}</span>
+                        <span class="feature-item">✅ Error handling for invalid input</span>
+                    </div>
+                </div>
+
+                <div class="example-actions">
+                    <button class="btn-try-example primary" onclick="loadExample('calc_add')">
+                        Try Now
+                    </button>
+                    <button class="btn-view-source secondary" onclick="viewSource('calc_add')">
+                        View Source
+                    </button>
+                    <button class="btn-download secondary" onclick="downloadExample('calc_add')">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Echo Example -->
+            <div class="example-card" data-example="echo">
+                <div class="example-header">
+                    <div class="example-icon">🔄</div>
+                    <div class="example-info">
+                        <h3>Echo Module</h3>
+                        <div class="example-meta">
+                            <span class="language-tag rust">Rust</span>
+                            <span class="complexity beginner">Beginner</span>
+                            <span class="size">2.8 KB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="example-description">
+                    Echoes input data back to output. Perfect for testing input/output functionality and understanding WASM I/O patterns.
+                </p>
+
+                <div class="example-details">
+                    <div class="feature-list">
+                        <span class="feature-item">📥 Any text input</span>
+                        <span class="feature-item">📤 Echoed output with timestamp</span>
+                        <span class="feature-item">✅ Handles any input size</span>
+                    </div>
+                </div>
+
+                <div class="example-actions">
+                    <button class="btn-try-example primary" onclick="loadExample('echo')">
+                        Try Now
+                    </button>
+                    <button class="btn-view-source secondary" onclick="viewSource('echo')">
+                        View Source
+                    </button>
+                    <button class="btn-download secondary" onclick="downloadExample('echo')">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Text Processing Example -->
+            <div class="example-card" data-example="text_processing">
+                <div class="example-header">
+                    <div class="example-icon">📝</div>
+                    <div class="example-info">
+                        <h3>Text Processor</h3>
+                        <div class="example-meta">
+                            <span class="language-tag rust">Rust</span>
+                            <span class="complexity intermediate">Intermediate</span>
+                            <span class="size">8.7 KB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="example-description">
+                    Advanced text processing with word count, character analysis, and text transformations. Shows complex string operations in WASM.
+                </p>
+
+                <div class="example-details">
+                    <div class="feature-list">
+                        <span class="feature-item">📊 Word and character statistics</span>
+                        <span class="feature-item">🔄 Text transformations (uppercase, reverse)</span>
+                        <span class="feature-item">📈 Performance metrics included</span>
+                    </div>
+                </div>
+
+                <div class="example-actions">
+                    <button class="btn-try-example primary" onclick="loadExample('text_processing')">
+                        Try Now
+                    </button>
+                    <button class="btn-view-source secondary" onclick="viewSource('text_processing')">
+                        View Source
+                    </button>
+                    <button class="btn-download secondary" onclick="downloadExample('text_processing')">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Image Processing Example -->
+            <div class="example-card" data-example="image_filter">
+                <div class="example-header">
+                    <div class="example-icon">🖼️</div>
+                    <div class="example-info">
+                        <h3>Image Filter</h3>
+                        <div class="example-meta">
+                            <span class="language-tag c">C++</span>
+                            <span class="complexity advanced">Advanced</span>
+                            <span class="size">15.2 KB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="example-description">
+                    Apply grayscale and blur filters to images. Demonstrates binary data processing and memory management in WebAssembly.
+                </p>
+
+                <div class="example-details">
+                    <div class="feature-list">
+                        <span class="feature-item">🖼️ Base64 image input</span>
+                        <span class="feature-item">🎨 Grayscale and blur filters</span>
+                        <span class="feature-item">⚡ Optimized memory usage</span>
+                    </div>
+                </div>
+
+                <div class="example-actions">
+                    <button class="btn-try-example primary" onclick="loadExample('image_filter')">
+                        Try Now
+                    </button>
+                    <button class="btn-view-source secondary" onclick="viewSource('image_filter')">
+                        View Source
+                    </button>
+                    <button class="btn-download secondary" onclick="downloadExample('image_filter')">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Crypto Example -->
+            <div class="example-card" data-example="crypto_hash">
+                <div class="example-header">
+                    <div class="example-icon">🔐</div>
+                    <div class="example-info">
+                        <h3>Crypto Hasher</h3>
+                        <div class="example-meta">
+                            <span class="language-tag rust">Rust</span>
+                            <span class="complexity intermediate">Intermediate</span>
+                            <span class="size">12.1 KB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="example-description">
+                    Generate SHA-256, MD5, and Blake2 hashes for text input. Shows cryptographic operations and multiple output formats.
+                </p>
+
+                <div class="example-details">
+                    <div class="feature-list">
+                        <span class="feature-item">🔐 Multiple hash algorithms</span>
+                        <span class="feature-item">💾 Hex and Base64 output</span>
+                        <span class="feature-item">⚡ High-performance crypto</span>
+                    </div>
+                </div>
+
+                <div class="example-actions">
+                    <button class="btn-try-example primary" onclick="loadExample('crypto_hash')">
+                        Try Now
+                    </button>
+                    <button class="btn-view-source secondary" onclick="viewSource('crypto_hash')">
+                        View Source
+                    </button>
+                    <button class="btn-download secondary" onclick="downloadExample('crypto_hash')">
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Demo Section -->
+    <div class="demo-section">
+        <div class="demo-container">
+            <div class="demo-header">
+                <h2>Interactive Demo</h2>
+                <p>Try the selected example with custom input:</p>
+            </div>
+
+            <div class="demo-controls">
+                <div class="demo-input">
+                    <label for="demo-input-text">Input Data:</label>
+                    <textarea
+                        id="demo-input-text"
+                        placeholder="Enter input data for the WASM module..."
+                        rows="4"
+                    ></textarea>
+                    <div class="input-hint" id="input-hint">
+                        Select an example above to see suggested input format
+                    </div>
+                </div>
+
+                <div class="demo-actions">
+                    <button id="run-demo" class="btn-run-demo primary" disabled>
+                        Run Example
+                    </button>
+                    <button id="clear-demo" class="btn-clear secondary">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <div class="demo-results" id="demo-results" style="display: none;">
+                <div class="result-header">
+                    <h4>Execution Result</h4>
+                    <div class="result-meta">
+                        <span class="execution-time">Time: <span id="exec-time">--</span>ms</span>
+                        <span class="memory-used">Memory: <span id="memory-used">--</span>KB</span>
+                    </div>
+                </div>
+
+                <div class="result-output">
+                    <h5>Output:</h5>
+                    <pre id="demo-output"></pre>
+                </div>
+
+                <div class="result-logs" id="result-logs" style="display: none;">
+                    <h5>Execution Logs:</h5>
+                    <pre id="demo-logs"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorials Section -->
+    <div class="tutorials-section">
+        <h2>Step-by-Step Tutorials</h2>
+
+        <div class="tutorials-grid">
+            <div class="tutorial-card">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🦀</div>
+                    <h3>Rust to WASM</h3>
+                    <span class="tutorial-duration">15 min read</span>
+                </div>
+
+                <p>Learn how to compile Rust code to WebAssembly and optimize for size and performance.</p>
+
+                <div class="tutorial-topics">
+                    <span class="topic">wasm-pack setup</span>
+                    <span class="topic">Memory management</span>
+                    <span class="topic">Performance optimization</span>
+                </div>
+
+                <a href="/tutorials/rust-to-wasm" class="tutorial-link">
+                    Read Tutorial →
+                </a>
+            </div>
+
+            <div class="tutorial-card">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">⚡</div>
+                    <h3>C/C++ with Emscripten</h3>
+                    <span class="tutorial-duration">20 min read</span>
+                </div>
+
+                <p>Compile existing C/C++ projects to WebAssembly using Emscripten toolchain.</p>
+
+                <div class="tutorial-topics">
+                    <span class="topic">Emscripten setup</span>
+                    <span class="topic">Porting existing code</span>
+                    <span class="topic">File system integration</span>
+                </div>
+
+                <a href="/tutorials/cpp-emscripten" class="tutorial-link">
+                    Read Tutorial →
+                </a>
+            </div>
+
+            <div class="tutorial-card">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">📊</div>
+                    <h3>AssemblyScript Basics</h3>
+                    <span class="tutorial-duration">12 min read</span>
+                </div>
+
+                <p>Write WebAssembly using TypeScript-like syntax with AssemblyScript.</p>
+
+                <div class="tutorial-topics">
+                    <span class="topic">TypeScript to WASM</span>
+                    <span class="topic">Type system</span>
+                    <span class="topic">JavaScript interop</span>
+                </div>
+
+                <a href="/tutorials/assemblyscript-basics" class="tutorial-link">
+                    Read Tutorial →
+                </a>
+            </div>
+
+            <div class="tutorial-card">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🔧</div>
+                    <h3>Performance Optimization</h3>
+                    <span class="tutorial-duration">25 min read</span>
+                </div>
+
+                <p>Advanced techniques for optimizing WebAssembly module size and execution speed.</p>
+
+                <div class="tutorial-topics">
+                    <span class="topic">Size optimization</span>
+                    <span class="topic">Memory layout</span>
+                    <span class="topic">SIMD operations</span>
+                </div>
+
+                <a href="/tutorials/performance-optimization" class="tutorial-link">
+                    Read Tutorial →
+                </a>
+            </div>
+
+            <div class="tutorial-card">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🌐</div>
+                    <h3>WASI and System Integration</h3>
+                    <span class="tutorial-duration">18 min read</span>
+                </div>
+
+                <p>Understanding WASI (WebAssembly System Interface) and system call integration.</p>
+
+                <div class="tutorial-topics">
+                    <span class="topic">WASI capabilities</span>
+                    <span class="topic">File system access</span>
+                    <span class="topic">Environment variables</span>
+                </div>
+
+                <a href="/tutorials/wasi-integration" class="tutorial-link">
+                    Read Tutorial →
+                </a>
+            </div>
+
+            <div class="tutorial-card">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🚀</div>
+                    <h3>Production Deployment</h3>
+                    <span class="tutorial-duration">22 min read</span>
+                </div>
+
+                <p>Best practices for deploying WebAssembly applications in production environments.</p>
+
+                <div class="tutorial-topics">
+                    <span class="topic">CI/CD integration</span>
+                    <span class="topic">Monitoring & logging</span>
+                    <span class="topic">Error handling</span>
+                </div>
+
+                <a href="/tutorials/production-deployment" class="tutorial-link">
+                    Read Tutorial →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Snippets Section -->
+    <div class="snippets-section">
+        <h2>Useful Code Snippets</h2>
+
+        <div class="snippets-grid">
+            <div class="snippet-card">
+                <div class="snippet-header">
+                    <h4>Reading JSON Input (Rust)</h4>
+                    <button class="copy-snippet" onclick="copyCode('json-rust')">Copy</button>
+                </div>
+                <pre><code id="json-rust" class="language-rust">use serde::{Deserialize, Serialize};
+use std::io::{self, Read};
+
+#[derive(Deserialize)]
+struct Input {
+    message: String,
+    count: u32,
+}
+
+#[derive(Serialize)]
+struct Output {
+    result: String,
+}
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+
+    let data: Input = serde_json::from_str(&input).unwrap();
+    let output = Output {
+        result: data.message.repeat(data.count as usize),
+    };
+
+    println!("{}", serde_json::to_string(&output).unwrap());
+}</code></pre>
+            </div>
+
+            <div class="snippet-card">
+                <div class="snippet-header">
+                    <h4>Error Handling (C)</h4>
+                    <button class="copy-snippet" onclick="copyCode('error-c')">Copy</button>
+                </div>
+                <pre><code id="error-c" class="language-c">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+    char buffer[1024];
+    if (!fgets(buffer, sizeof(buffer), stdin)) {
+        fprintf(stderr, "Error: Failed to read input\n");
+        return 1;
+    }
+
+    // Remove trailing newline
+    buffer[strcspn(buffer, "\n")] = 0;
+
+    if (strlen(buffer) == 0) {
+        fprintf(stderr, "Error: Empty input provided\n");
+        return 1;
+    }
+
+    printf("Processed: %s\n", buffer);
+    return 0;
+}</code></pre>
+            </div>
+
+            <div class="snippet-card">
+                <div class="snippet-header">
+                    <h4>Memory Management (C++)</h4>
+                    <button class="copy-snippet" onclick="copyCode('memory-cpp')">Copy</button>
+                </div>
+                <pre><code id="memory-cpp" class="language-cpp">#include <iostream>
+#include <memory>
+#include <vector>
+
+class DataProcessor {
+private:
+    std::vector<uint8_t> buffer;
+
+public:
+    DataProcessor(size_t size) : buffer(size) {}
+
+    void processData(const std::string& input) {
+        // Copy input to buffer with bounds checking
+        size_t copy_size = std::min(input.size(), buffer.size() - 1);
+        std::copy(input.begin(), input.begin() + copy_size, buffer.begin());
+        buffer[copy_size] = '\0';
+
+        // Process data...
+        std::cout << "Processed " << copy_size << " bytes" << std::endl;
+    }
+};
+
+int main() {
+    auto processor = std::make_unique<DataProcessor>(1024);
+
+    std::string input;
+    std::getline(std::cin, input);
+
+    processor->processData(input);
+    return 0;
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resources Section -->
+    <div class="resources-section">
+        <h2>Additional Resources</h2>
+
+        <div class="resources-grid">
+            <div class="resource-card">
+                <h4>📚 Documentation</h4>
+                <ul>
+                    <li><a href="/docs">WasmWiz API Reference</a></li>
+                    <li><a href="https://webassembly.org/" target="_blank">WebAssembly.org</a></li>
+                    <li><a href="https://wasi.dev/" target="_blank">WASI Specification</a></li>
+                </ul>
+            </div>
+
+            <div class="resource-card">
+                <h4>🛠️ Tools & Compilers</h4>
+                <ul>
+                    <li><a href="https://rustwasm.github.io/wasm-pack/" target="_blank">wasm-pack (Rust)</a></li>
+                    <li><a href="https://emscripten.org/" target="_blank">Emscripten (C/C++)</a></li>
+                    <li><a href="https://www.assemblyscript.org/" target="_blank">AssemblyScript</a></li>
+                </ul>
+            </div>
+
+            <div class="resource-card">
+                <h4>🔧 Development Tools</h4>
+                <ul>
+                    <li><a href="https://wasmtime.dev/" target="_blank">Wasmtime Runtime</a></li>
+                    <li><a href="https://github.com/WebAssembly/binaryen" target="_blank">Binaryen Optimizer</a></li>
+                    <li><a href="https://webassembly.studio/" target="_blank">WebAssembly Studio</a></li>
+                </ul>
+            </div>
+
+            <div class="resource-card">
+                <h4>🎓 Learning Materials</h4>
+                <ul>
+                    <li><a href="https://wasmbyexample.dev/" target="_blank">WASM by Example</a></li>
+                    <li><a href="https://rustwasm.github.io/book/" target="_blank">Rust and WebAssembly Book</a></li>
+                    <li><a href="https://hacks.mozilla.org/category/webassembly/" target="_blank">Mozilla WebAssembly Articles</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.examples-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.examples-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.examples-header h1 {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.examples-header .lead {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.examples-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+/* Quick Try Section */
+.quick-try-section h2 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.examples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0 4rem 0;
+}
+
+.example-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.example-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.example-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.example-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.example-info {
+    flex: 1;
+}
+
+.example-info h3 {
+    font-size: 1.25rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.example-meta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.language-tag {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.language-tag.rust { background: #ddd6fe; color: #7c3aed; }
+.language-tag.c { background: #dbeafe; color: #1e40af; }
+.language-tag.cpp { background: #fef3c7; color: #d97706; }
+
+.complexity {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.complexity.beginner { background: #dcfce7; color: #166534; }
+.complexity.intermediate { background: #ffedd5; color: #9a3412; }
+.complexity.advanced { background: #fee2e2; color: #991b1b; }
+
+.size {
+    padding: 0.25rem 0.5rem;
+    background: #f3f4f6;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.example-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.example-details {
+    margin-bottom: 1.5rem;
+}
+
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.feature-item {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    display: block;
+}
+
+.example-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-try-example,
+.btn-view-source,
+.btn-download {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    flex: 1;
+    min-width: 80px;
+}
+
+.btn-try-example.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.btn-try-example.primary:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-1px);
+}
+
+.btn-view-source.secondary,
+.btn-download.secondary {
+    background: white;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.btn-view-source.secondary:hover,
+.btn-download.secondary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Demo Section */
+.demo-section {
+    background: var(--background-color);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    margin: 4rem 0;
+}
+
+.demo-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.demo-header h2 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.demo-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
+}
+
+.demo-input label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.demo-input textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.925rem;
+    resize: vertical;
+    min-height: 120px;
+}
+
+.demo-input textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.input-hint {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.demo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.btn-run-demo,
+.btn-clear {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-run-demo.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.btn-run-demo.primary:hover:not(:disabled) {
+    background: var(--gradient-hover);
+    transform: translateY(-1px);
+}
+
+.btn-run-demo:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-clear.secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-clear.secondary:hover {
+    background: var(--background-color);
+}
+
+.demo-results {
+    margin-top: 2rem;
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.result-header h4 {
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+.result-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.result-output,
+.result-logs {
+    margin: 1.5rem 0;
+}
+
+.result-output h5,
+.result-logs h5 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.result-output pre,
+.result-logs pre {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Tutorials Section */
+.tutorials-section {
+    margin: 4rem 0;
+}
+
+.tutorials-section h2 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.tutorials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.tutorial-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tutorial-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.tutorial-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.tutorial-icon {
+    font-size: 2rem;
+}
+
+.tutorial-header h3 {
+    flex: 1;
+    color: var(--secondary-color);
+    margin: 0;
+    font-size: 1.125rem;
+}
+
+.tutorial-duration {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    background: var(--background-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.tutorial-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.tutorial-topics {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.topic {
+    background: var(--background-color);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.tutorial-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.tutorial-link:hover {
+    color: var(--primary-hover);
+}
+
+/* Code Snippets Section */
+.snippets-section {
+    margin: 4rem 0;
+}
+
+.snippets-section h2 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.snippets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.snippet-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.snippet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.snippet-header h4 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.copy-snippet {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.copy-snippet:hover {
+    background: var(--primary-hover);
+}
+
+.snippet-card pre {
+    margin: 0;
+    padding: 1.5rem;
+    background: #1f2937;
+    color: #e5e7eb;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.825rem;
+    line-height: 1.4;
+    overflow-x: auto;
+}
+
+/* Resources Section */
+.resources-section {
+    margin: 4rem 0;
+    background: var(--background-color);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+}
+
+.resources-section h2 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.resource-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.resource-card h4 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.resource-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.resource-card li {
+    margin: 0.75rem 0;
+}
+
+.resource-card a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.resource-card a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .examples-container {
+        padding: 1rem;
+    }
+
+    .examples-header h1 {
+        font-size: 2rem;
+    }
+
+    .examples-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .demo-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .demo-actions {
+        flex-direction: row;
+    }
+
+    .tutorials-grid,
+    .snippets-grid,
+    .resources-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .example-actions {
+        flex-direction: column;
+    }
+
+    .btn-try-example,
+    .btn-view-source,
+    .btn-download {
+        flex: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .snippets-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .snippet-card pre {
+        font-size: 0.75rem;
+        padding: 1rem;
+    }
+}
+</style>
+
+<script>
+let currentExample = null;
+let exampleData = {
+    hello_world: {
+        name: "Hello World",
+        input: "",
+        hint: "No input required - this module prints a greeting message"
+    },
+    calc_add: {
+        name: "Calculator - Addition",
+        input: '{"a": 5, "b": 3}',
+        hint: 'JSON format: {"a": number, "b": number}'
+    },
+    echo: {
+        name: "Echo Module",
+        input: "Hello, WebAssembly!",
+        hint: "Any text input will be echoed back with a timestamp"
+    },
+    text_processing: {
+        name: "Text Processor",
+        input: "The quick brown fox jumps over the lazy dog",
+        hint: "Any text input for word count, analysis, and transformations"
+    },
+    image_filter: {
+        name: "Image Filter",
+        input: "data:image/png;base64,iVBORw0KGgo...",
+        hint: "Base64 encoded image data"
+    },
+    crypto_hash: {
+        name: "Crypto Hasher",
+        input: "Hello, World!",
+        hint: "Any text to generate SHA-256, MD5, and Blake2 hashes"
+    }
+};
+
+function loadExample(exampleName) {
+    currentExample = exampleName;
+    const data = exampleData[exampleName];
+
+    // Update demo section
+    document.getElementById('demo-input-text').value = data.input;
+    document.getElementById('input-hint').textContent = data.hint;
+    document.getElementById('run-demo').disabled = false;
+
+    // Hide previous results
+    document.getElementById('demo-results').style.display = 'none';
+
+    // Highlight selected card
+    document.querySelectorAll('.example-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.querySelector(`[data-example="${exampleName}"]`).classList.add('selected');
+
+    // Scroll to demo section
+    document.querySelector('.demo-section').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+
+function viewSource(exampleName) {
+    // In a real implementation, this would show the source code
+    alert(`Viewing source code for ${exampleName}...`);
+    // window.open(`/examples/${exampleName}/source`, '_blank');
+}
+
+function downloadExample(exampleName) {
+    // In a real implementation, this would trigger download
+    alert(`Downloading ${exampleName}.wasm...`);
+    // window.location.href = `/static/wasm_modules/${exampleName}.wasm`;
+}
+
+document.getElementById('run-demo').addEventListener('click', async function() {
+    if (!currentExample) return;
+
+    const input = document.getElementById('demo-input-text').value;
+    const resultsDiv = document.getElementById('demo-results');
+    const outputPre = document.getElementById('demo-output');
+    const logsPre = document.getElementById('demo-logs');
+    const execTimeSpan = document.getElementById('exec-time');
+    const memoryUsedSpan = document.getElementById('memory-used');
+
+    // Show loading state
+    this.disabled = true;
+    this.textContent = 'Running...';
+
+    try {
+        // Simulate API call (in real implementation, call your WASM execution API)
+        const startTime = performance.now();
+
+        // Simulate execution
+        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+
+        const endTime = performance.now();
+        const executionTime = Math.round(endTime - startTime);
+
+        // Mock results based on example type
+        let output, logs;
+        switch (currentExample) {
+            case 'hello_world':
+                output = "Hello, World! from WebAssembly!";
+                logs = "WASM module initialized\nExecuting main function\nOutput generated";
+                break;
+            case 'calc_add':
+                try {
+                    const data = JSON.parse(input);
+                    output = JSON.stringify({ result: (data.a || 0) + (data.b || 0) }, null, 2);
+                    logs = "Parsing JSON input\nPerforming addition\nFormatting output";
+                } catch (e) {
+                    output = JSON.stringify({ error: "Invalid JSON input" }, null, 2);
+                    logs = "Error: Failed to parse JSON input";
+                }
+                break;
+            case 'echo':
+                output = `Echo: ${input}\nTimestamp: ${new Date().toISOString()}`;
+                logs = "Reading input from stdin\nProcessing echo request\nWriting to stdout";
+                break;
+            case 'text_processing':
+                const words = input.trim().split(/\s+/);
+                output = JSON.stringify({
+                    word_count: words.length,
+                    character_count: input.length,
+                    uppercase: input.toUpperCase(),
+                    reversed: input.split('').reverse().join('')
+                }, null, 2);
+                logs = "Analyzing text input\nCounting words and characters\nApplying transformations";
+                break;
+            default:
+                output = `Processed: ${input}`;
+                logs = "WASM execution completed";
+        }
+
+        // Display results
+        outputPre.textContent = output;
+        logsPre.textContent = logs;
+        execTimeSpan.textContent = executionTime;
+        memoryUsedSpan.textContent = Math.round(50 + Math.random() * 200);
+
+        resultsDiv.style.display = 'block';
+        document.getElementById('result-logs').style.display = logs ? 'block' : 'none';
+
+    } catch (error) {
+        outputPre.textContent = `Error: ${error.message}`;
+        logsPre.textContent = "Execution failed";
+        execTimeSpan.textContent = "N/A";
+        memoryUsedSpan.textContent = "N/A";
+        resultsDiv.style.display = 'block';
+    } finally {
+        this.disabled = false;
+        this.textContent = 'Run Example';
+    }
+});
+
+document.getElementById('clear-demo').addEventListener('click', function() {
+    document.getElementById('demo-input-text').value = '';
+    document.getElementById('demo-results').style.display = 'none';
+    document.getElementById('run-demo').disabled = true;
+    currentExample = null;
+
+    document.querySelectorAll('.example-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+});
+
+function copyCode(elementId) {
+    const code = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.background = '#10b981';
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '';
+        }, 2000);
+    });
+}
+
+// Add selected style
+const style = document.createElement('style');
+style.textContent = `
+.example-card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    transform: translateY(-2px);
+}
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

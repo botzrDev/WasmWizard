@@ -68,6 +68,70 @@ pub struct ApiKeysTemplate {
     pub active_page: &'static str,
 }
 
+/// Template for the documentation page.
+#[derive(Template)]
+#[template(path = "docs.html")]
+pub struct DocsTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
+/// Template for the examples page.
+#[derive(Template)]
+#[template(path = "examples.html")]
+pub struct ExamplesTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
+/// Template for the pricing page.
+#[derive(Template)]
+#[template(path = "pricing.html")]
+pub struct PricingTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
+/// Template for the FAQ page.
+#[derive(Template)]
+#[template(path = "faq.html")]
+pub struct FaqTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
+/// Template for the support page.
+#[derive(Template)]
+#[template(path = "support.html")]
+pub struct SupportTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
+/// Template for the security page.
+#[derive(Template)]
+#[template(path = "security.html")]
+pub struct SecurityTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
+/// Template for the terms of service page.
+#[derive(Template)]
+#[template(path = "terms.html")]
+pub struct TermsTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
+/// Template for the privacy policy page.
+#[derive(Template)]
+#[template(path = "privacy.html")]
+pub struct PrivacyTemplate {
+    pub title: String,
+    pub active_page: &'static str,
+}
+
 /// Serve the main WASM execution interface.
 ///
 /// This is the home page of the application, providing the primary interface
@@ -119,6 +183,78 @@ pub async fn api_keys(app_state: web::Data<AppState>) -> ActixResult<HttpRespons
         title: "API Key Management".to_string(),
         csrf_token,
         active_page: "api-keys",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the documentation page.
+pub async fn docs(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = DocsTemplate {
+        title: "API Documentation".to_string(),
+        active_page: "docs",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the examples page.
+pub async fn examples(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = ExamplesTemplate {
+        title: "WebAssembly Examples".to_string(),
+        active_page: "examples",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the pricing page.
+pub async fn pricing(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = PricingTemplate {
+        title: "Pricing Plans".to_string(),
+        active_page: "pricing",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the FAQ page.
+pub async fn faq(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = FaqTemplate {
+        title: "Frequently Asked Questions".to_string(),
+        active_page: "faq",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the support page.
+pub async fn support(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = SupportTemplate {
+        title: "Get Support".to_string(),
+        active_page: "support",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the security page.
+pub async fn security(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = SecurityTemplate {
+        title: "Security & Compliance".to_string(),
+        active_page: "security",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the terms of service page.
+pub async fn terms(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = TermsTemplate {
+        title: "Terms of Service".to_string(),
+        active_page: "terms",
+    };
+    Ok(template.to_response())
+}
+
+/// Serve the privacy policy page.
+pub async fn privacy(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let template = PrivacyTemplate {
+        title: "Privacy Policy".to_string(),
+        active_page: "privacy",
     };
     Ok(template.to_response())
 }

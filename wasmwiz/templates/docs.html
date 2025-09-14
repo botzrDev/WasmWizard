@@ -1,0 +1,1135 @@
+{% extends "base.html" %}
+
+{% block title %}API Documentation - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="docs-container">
+    <!-- Sidebar Navigation -->
+    <aside class="docs-sidebar">
+        <nav class="docs-nav">
+            <h3>Getting Started</h3>
+            <ul>
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#quickstart">Quick Start</a></li>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#rate-limits">Rate Limits</a></li>
+            </ul>
+
+            <h3>API Reference</h3>
+            <ul>
+                <li><a href="#upload-wasm">Upload WASM Module</a></li>
+                <li><a href="#execute-wasm">Execute WASM</a></li>
+                <li><a href="#list-modules">List Modules</a></li>
+                <li><a href="#delete-module">Delete Module</a></li>
+            </ul>
+
+            <h3>Code Examples</h3>
+            <ul>
+                <li><a href="#example-curl">cURL</a></li>
+                <li><a href="#example-javascript">JavaScript</a></li>
+                <li><a href="#example-python">Python</a></li>
+                <li><a href="#example-rust">Rust</a></li>
+            </ul>
+
+            <h3>Resources</h3>
+            <ul>
+                <li><a href="#wasm-compilation">WASM Compilation</a></li>
+                <li><a href="#limitations">Limitations</a></li>
+                <li><a href="#best-practices">Best Practices</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Documentation Content -->
+    <main class="docs-content">
+        <div class="docs-header">
+            <h1>WasmWiz API Documentation</h1>
+            <p class="lead">Complete reference for integrating WebAssembly execution into your applications</p>
+        </div>
+
+        <!-- Introduction -->
+        <section id="introduction" class="docs-section">
+            <h2>Introduction</h2>
+            <p>WasmWiz provides a secure, scalable platform for executing WebAssembly modules in the cloud. Our API allows you to upload WASM modules and execute them with custom inputs, all within a sandboxed environment.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h4>Secure Execution</h4>
+                    <p>Sandboxed environment with WASI support and strict resource limits</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h4>High Performance</h4>
+                    <p>Optimized Wasmer runtime with sub-second execution times</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h4>Scalable</h4>
+                    <p>Handles thousands of concurrent executions with horizontal scaling</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h4>Enterprise Ready</h4>
+                    <p>99.9% uptime SLA, comprehensive monitoring, and audit logging</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Start -->
+        <section id="quickstart" class="docs-section">
+            <h2>Quick Start</h2>
+            <p>Get up and running with WasmWiz in minutes:</p>
+
+            <ol class="quickstart-steps">
+                <li>
+                    <h4>Get an API Key</h4>
+                    <p>Generate your API key from the <a href="/api-keys">API Keys page</a></p>
+                    <div class="code-block">
+                        <pre><code>curl -X POST https://api.wasmwiz.io/api/auth/keys \
+  -H "Content-Type: application/json" \
+  -d '{"user_email": "you@example.com", "tier_name": "Free"}'</code></pre>
+                    </div>
+                </li>
+
+                <li>
+                    <h4>Upload a WASM Module</h4>
+                    <p>Upload your compiled WebAssembly module:</p>
+                    <div class="code-block">
+                        <pre><code>curl -X POST https://api.wasmwiz.io/api/wasm/upload \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "wasm=@your_module.wasm"</code></pre>
+                    </div>
+                </li>
+
+                <li>
+                    <h4>Execute the Module</h4>
+                    <p>Run your WASM module with input data:</p>
+                    <div class="code-block">
+                        <pre><code>curl -X POST https://api.wasmwiz.io/api/wasm/execute \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module_id": "550e8400-e29b-41d4-a716-446655440000",
+    "input": "Hello, WebAssembly!"
+  }'</code></pre>
+                    </div>
+                </li>
+            </ol>
+        </section>
+
+        <!-- Authentication -->
+        <section id="authentication" class="docs-section">
+            <h2>Authentication</h2>
+            <p>All API requests require authentication using a Bearer token in the Authorization header:</p>
+
+            <div class="code-block">
+                <pre><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Security Best Practices:</strong>
+                <ul>
+                    <li>Never expose API keys in client-side code</li>
+                    <li>Rotate keys regularly</li>
+                    <li>Use environment variables for key storage</li>
+                    <li>Implement key-specific rate limiting</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Rate Limits -->
+        <section id="rate-limits" class="docs-section">
+            <h2>Rate Limits</h2>
+            <p>Rate limits are enforced per API key based on your subscription tier:</p>
+
+            <table class="rate-limits-table">
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Requests/Minute</th>
+                        <th>Requests/Day</th>
+                        <th>Memory Limit</th>
+                        <th>Execution Time</th>
+                        <th>Concurrent Executions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Free</strong></td>
+                        <td>10</td>
+                        <td>500</td>
+                        <td>128MB</td>
+                        <td>5 seconds</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Basic</strong></td>
+                        <td>100</td>
+                        <td>10,000</td>
+                        <td>256MB</td>
+                        <td>10 seconds</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pro</strong></td>
+                        <td>500</td>
+                        <td>50,000</td>
+                        <td>512MB</td>
+                        <td>30 seconds</td>
+                        <td>20</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Enterprise</strong></td>
+                        <td>Custom</td>
+                        <td>Unlimited</td>
+                        <td>Custom</td>
+                        <td>Custom</td>
+                        <td>Unlimited</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>Rate limit headers are included in all API responses:</p>
+            <div class="code-block">
+                <pre><code>X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1640995200</code></pre>
+            </div>
+        </section>
+
+        <!-- API Endpoints -->
+        <section id="upload-wasm" class="docs-section">
+            <h2>Upload WASM Module</h2>
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <code class="endpoint">/api/wasm/upload</code>
+            </div>
+
+            <p>Upload a WebAssembly module for execution.</p>
+
+            <h4>Request</h4>
+            <div class="code-block">
+                <pre><code>POST /api/wasm/upload
+Content-Type: multipart/form-data
+Authorization: Bearer YOUR_API_KEY
+
+wasm: [binary .wasm file]
+name: "my_module" (optional)
+description: "Module description" (optional)</code></pre>
+            </div>
+
+            <h4>Response</h4>
+            <div class="code-block">
+                <pre><code>{
+  "module_id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "my_module",
+  "size_bytes": 1024576,
+  "uploaded_at": "2024-01-15T10:30:00Z",
+  "checksum": "sha256:abcdef..."
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="execute-wasm" class="docs-section">
+            <h2>Execute WASM Module</h2>
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <code class="endpoint">/api/wasm/execute</code>
+            </div>
+
+            <p>Execute a previously uploaded WASM module with input data.</p>
+
+            <h4>Request</h4>
+            <div class="code-block">
+                <pre><code>POST /api/wasm/execute
+Content-Type: application/json
+Authorization: Bearer YOUR_API_KEY
+
+{
+  "module_id": "550e8400-e29b-41d4-a716-446655440000",
+  "input": "Hello, World!",
+  "input_type": "text",  // "text" | "json" | "binary"
+  "memory_limit_mb": 128,
+  "timeout_seconds": 5
+}</code></pre>
+            </div>
+
+            <h4>Response</h4>
+            <div class="code-block">
+                <pre><code>{
+  "execution_id": "660e8400-e29b-41d4-a716-446655440001",
+  "status": "success",
+  "output": "Hello, World! processed",
+  "stdout": "Processing input...\n",
+  "stderr": "",
+  "execution_time_ms": 125,
+  "memory_used_bytes": 4194304,
+  "gas_used": 1000000
+}</code></pre>
+            </div>
+
+            <h4>Error Response</h4>
+            <div class="code-block">
+                <pre><code>{
+  "error": "execution_timeout",
+  "message": "Execution exceeded 5 second timeout",
+  "details": {
+    "partial_output": "Partial result...",
+    "execution_time_ms": 5001
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="list-modules" class="docs-section">
+            <h2>List Modules</h2>
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <code class="endpoint">/api/wasm/modules</code>
+            </div>
+
+            <p>List all uploaded WASM modules for the authenticated user.</p>
+
+            <h4>Request</h4>
+            <div class="code-block">
+                <pre><code>GET /api/wasm/modules?page=1&limit=20
+Authorization: Bearer YOUR_API_KEY</code></pre>
+            </div>
+
+            <h4>Response</h4>
+            <div class="code-block">
+                <pre><code>{
+  "modules": [
+    {
+      "module_id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "my_module",
+      "size_bytes": 1024576,
+      "uploaded_at": "2024-01-15T10:30:00Z",
+      "last_executed": "2024-01-15T11:00:00Z",
+      "execution_count": 42
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 42,
+    "pages": 3
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="delete-module" class="docs-section">
+            <h2>Delete Module</h2>
+            <div class="endpoint-header">
+                <span class="method delete">DELETE</span>
+                <code class="endpoint">/api/wasm/modules/{module_id}</code>
+            </div>
+
+            <p>Delete a previously uploaded WASM module.</p>
+
+            <h4>Request</h4>
+            <div class="code-block">
+                <pre><code>DELETE /api/wasm/modules/550e8400-e29b-41d4-a716-446655440000
+Authorization: Bearer YOUR_API_KEY</code></pre>
+            </div>
+
+            <h4>Response</h4>
+            <div class="code-block">
+                <pre><code>{
+  "message": "Module deleted successfully",
+  "module_id": "550e8400-e29b-41d4-a716-446655440000"
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Code Examples -->
+        <section id="example-javascript" class="docs-section">
+            <h2>JavaScript Example</h2>
+            <div class="code-block">
+                <pre><code class="language-javascript">// WasmWiz JavaScript SDK Example
+const WasmWiz = {
+  apiKey: 'YOUR_API_KEY',
+  baseUrl: 'https://api.wasmwiz.io',
+
+  async uploadModule(wasmFile) {
+    const formData = new FormData();
+    formData.append('wasm', wasmFile);
+
+    const response = await fetch(`${this.baseUrl}/api/wasm/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`
+      },
+      body: formData
+    });
+
+    return response.json();
+  },
+
+  async executeModule(moduleId, input) {
+    const response = await fetch(`${this.baseUrl}/api/wasm/execute`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        module_id: moduleId,
+        input: input
+      })
+    });
+
+    return response.json();
+  }
+};
+
+// Usage example
+async function runWasmModule() {
+  try {
+    // Upload module
+    const fileInput = document.getElementById('wasm-file');
+    const uploadResult = await WasmWiz.uploadModule(fileInput.files[0]);
+    console.log('Module uploaded:', uploadResult.module_id);
+
+    // Execute module
+    const execResult = await WasmWiz.executeModule(
+      uploadResult.module_id,
+      'Hello, WebAssembly!'
+    );
+    console.log('Execution result:', execResult.output);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="example-python" class="docs-section">
+            <h2>Python Example</h2>
+            <div class="code-block">
+                <pre><code class="language-python">import requests
+import json
+
+class WasmWizClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = "https://api.wasmwiz.io"
+        self.headers = {
+            "Authorization": f"Bearer {api_key}"
+        }
+
+    def upload_module(self, wasm_path, name=None):
+        """Upload a WASM module from file path"""
+        with open(wasm_path, 'rb') as f:
+            files = {'wasm': f}
+            data = {'name': name} if name else {}
+
+            response = requests.post(
+                f"{self.base_url}/api/wasm/upload",
+                headers=self.headers,
+                files=files,
+                data=data
+            )
+            response.raise_for_status()
+            return response.json()
+
+    def execute_module(self, module_id, input_data, **kwargs):
+        """Execute a WASM module with input"""
+        payload = {
+            "module_id": module_id,
+            "input": input_data,
+            **kwargs
+        }
+
+        response = requests.post(
+            f"{self.base_url}/api/wasm/execute",
+            headers={**self.headers, "Content-Type": "application/json"},
+            json=payload
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def list_modules(self, page=1, limit=20):
+        """List all uploaded modules"""
+        response = requests.get(
+            f"{self.base_url}/api/wasm/modules",
+            headers=self.headers,
+            params={"page": page, "limit": limit}
+        )
+        response.raise_for_status()
+        return response.json()
+
+# Usage example
+if __name__ == "__main__":
+    client = WasmWizClient("YOUR_API_KEY")
+
+    # Upload a module
+    upload_result = client.upload_module("./my_module.wasm", name="My Module")
+    print(f"Module uploaded: {upload_result['module_id']}")
+
+    # Execute the module
+    exec_result = client.execute_module(
+        upload_result['module_id'],
+        "Hello from Python!",
+        memory_limit_mb=128,
+        timeout_seconds=5
+    )
+    print(f"Output: {exec_result['output']}")
+    print(f"Execution time: {exec_result['execution_time_ms']}ms")</code></pre>
+            </div>
+        </section>
+
+        <section id="example-rust" class="docs-section">
+            <h2>Rust Example</h2>
+            <div class="code-block">
+                <pre><code class="language-rust">use reqwest::{Client, multipart};
+use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::Read;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct UploadResponse {
+    module_id: String,
+    name: Option<String>,
+    size_bytes: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct ExecuteRequest {
+    module_id: String,
+    input: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    memory_limit_mb: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timeout_seconds: Option<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ExecuteResponse {
+    execution_id: String,
+    status: String,
+    output: String,
+    execution_time_ms: u64,
+}
+
+struct WasmWizClient {
+    client: Client,
+    api_key: String,
+    base_url: String,
+}
+
+impl WasmWizClient {
+    fn new(api_key: String) -> Self {
+        Self {
+            client: Client::new(),
+            api_key,
+            base_url: "https://api.wasmwiz.io".to_string(),
+        }
+    }
+
+    async fn upload_module(&self, wasm_path: &str) -> Result<UploadResponse, Box<dyn std::error::Error>> {
+        let mut file = File::open(wasm_path)?;
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer)?;
+
+        let part = multipart::Part::bytes(buffer)
+            .file_name(wasm_path.to_string());
+
+        let form = multipart::Form::new()
+            .part("wasm", part);
+
+        let response = self.client
+            .post(format!("{}/api/wasm/upload", self.base_url))
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .multipart(form)
+            .send()
+            .await?;
+
+        let upload_response = response.json::<UploadResponse>().await?;
+        Ok(upload_response)
+    }
+
+    async fn execute_module(&self, module_id: &str, input: &str) -> Result<ExecuteResponse, Box<dyn std::error::Error>> {
+        let request = ExecuteRequest {
+            module_id: module_id.to_string(),
+            input: input.to_string(),
+            memory_limit_mb: Some(128),
+            timeout_seconds: Some(5),
+        };
+
+        let response = self.client
+            .post(format!("{}/api/wasm/execute", self.base_url))
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .json(&request)
+            .send()
+            .await?;
+
+        let exec_response = response.json::<ExecuteResponse>().await?;
+        Ok(exec_response)
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = WasmWizClient::new("YOUR_API_KEY".to_string());
+
+    // Upload module
+    let upload_result = client.upload_module("./my_module.wasm").await?;
+    println!("Module uploaded: {}", upload_result.module_id);
+
+    // Execute module
+    let exec_result = client.execute_module(
+        &upload_result.module_id,
+        "Hello from Rust!"
+    ).await?;
+
+    println!("Output: {}", exec_result.output);
+    println!("Execution time: {}ms", exec_result.execution_time_ms);
+
+    Ok(())
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- WASM Compilation -->
+        <section id="wasm-compilation" class="docs-section">
+            <h2>Compiling to WebAssembly</h2>
+            <p>WasmWiz supports WASM modules compiled from various languages:</p>
+
+            <h4>Rust to WASM</h4>
+            <div class="code-block">
+                <pre><code class="language-bash"># Install wasm-pack
+curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+# Create a new Rust project
+cargo new --lib my_wasm_module
+cd my_wasm_module
+
+# Add wasm-bindgen to Cargo.toml
+# [dependencies]
+# wasm-bindgen = "0.2"
+
+# Build the WASM module
+wasm-pack build --target web</code></pre>
+            </div>
+
+            <h4>C/C++ to WASM (Emscripten)</h4>
+            <div class="code-block">
+                <pre><code class="language-bash"># Install Emscripten
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install latest
+./emsdk activate latest
+source ./emsdk_env.sh
+
+# Compile C code to WASM
+emcc hello.c -o hello.wasm -s STANDALONE_WASM=1 -s EXPORTED_FUNCTIONS="['_main']"</code></pre>
+            </div>
+
+            <h4>AssemblyScript to WASM</h4>
+            <div class="code-block">
+                <pre><code class="language-bash"># Install AssemblyScript
+npm install -g assemblyscript
+
+# Initialize a new project
+npx asinit .
+
+# Write your AssemblyScript code in assembly/index.ts
+# Build the WASM module
+npm run asbuild</code></pre>
+            </div>
+        </section>
+
+        <!-- Limitations -->
+        <section id="limitations" class="docs-section">
+            <h2>Limitations</h2>
+            <div class="alert alert-warning">
+                <strong>Execution Environment Restrictions:</strong>
+                <ul>
+                    <li><strong>No File System Access:</strong> WASM modules cannot read or write files (except stdin/stdout)</li>
+                    <li><strong>No Network Access:</strong> Network operations are blocked for security</li>
+                    <li><strong>No System Calls:</strong> Direct system calls are not permitted</li>
+                    <li><strong>Memory Limits:</strong> Enforced based on tier (128MB - 512MB)</li>
+                    <li><strong>Execution Time:</strong> Maximum 5-30 seconds depending on tier</li>
+                    <li><strong>No Threading:</strong> Multi-threading is currently not supported</li>
+                    <li><strong>WASI Subset:</strong> Only a subset of WASI APIs are available</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Best Practices -->
+        <section id="best-practices" class="docs-section">
+            <h2>Best Practices</h2>
+
+            <div class="best-practice">
+                <h4>1. Optimize Module Size</h4>
+                <p>Keep WASM modules small for faster upload and execution:</p>
+                <ul>
+                    <li>Use release builds with optimizations enabled</li>
+                    <li>Strip debug symbols from production modules</li>
+                    <li>Use wasm-opt for additional size reduction</li>
+                </ul>
+            </div>
+
+            <div class="best-practice">
+                <h4>2. Handle Errors Gracefully</h4>
+                <p>Implement proper error handling in your WASM code:</p>
+                <ul>
+                    <li>Return meaningful error codes</li>
+                    <li>Use stderr for error messages</li>
+                    <li>Validate inputs before processing</li>
+                </ul>
+            </div>
+
+            <div class="best-practice">
+                <h4>3. Efficient Memory Usage</h4>
+                <p>Manage memory efficiently to avoid hitting limits:</p>
+                <ul>
+                    <li>Free allocated memory when done</li>
+                    <li>Use streaming for large data processing</li>
+                    <li>Monitor memory usage during development</li>
+                </ul>
+            </div>
+
+            <div class="best-practice">
+                <h4>4. Input/Output Format</h4>
+                <p>Use consistent I/O formats for better interoperability:</p>
+                <ul>
+                    <li>Prefer JSON for structured data</li>
+                    <li>Use base64 for binary data</li>
+                    <li>Document expected input formats</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section id="troubleshooting" class="docs-section">
+            <h2>Troubleshooting</h2>
+
+            <div class="troubleshooting-item">
+                <h4>Module fails to upload</h4>
+                <p><strong>Possible causes:</strong></p>
+                <ul>
+                    <li>File size exceeds 10MB limit</li>
+                    <li>Invalid WASM binary format</li>
+                    <li>Authentication token expired</li>
+                </ul>
+                <p><strong>Solution:</strong> Verify file size, check WASM validity with wasmtime, refresh API key</p>
+            </div>
+
+            <div class="troubleshooting-item">
+                <h4>Execution timeout errors</h4>
+                <p><strong>Possible causes:</strong></p>
+                <ul>
+                    <li>Infinite loops in code</li>
+                    <li>Processing too much data</li>
+                    <li>Inefficient algorithms</li>
+                </ul>
+                <p><strong>Solution:</strong> Optimize algorithms, process data in chunks, increase tier for longer timeout</p>
+            </div>
+
+            <div class="troubleshooting-item">
+                <h4>Memory limit exceeded</h4>
+                <p><strong>Possible causes:</strong></p>
+                <ul>
+                    <li>Memory leaks in WASM code</li>
+                    <li>Large data structures</li>
+                    <li>Insufficient tier limits</li>
+                </ul>
+                <p><strong>Solution:</strong> Profile memory usage, optimize data structures, upgrade to higher tier</p>
+            </div>
+
+            <div class="troubleshooting-item">
+                <h4>Unexpected output or errors</h4>
+                <p><strong>Possible causes:</strong></p>
+                <ul>
+                    <li>WASI API incompatibility</li>
+                    <li>Missing WASM imports</li>
+                    <li>Incorrect input format</li>
+                </ul>
+                <p><strong>Solution:</strong> Test locally with wasmtime, verify WASI compatibility, check input formatting</p>
+            </div>
+        </section>
+
+        <!-- API Status -->
+        <section class="docs-section">
+            <div class="api-status-card">
+                <h3>API Status</h3>
+                <div class="status-indicator">
+                    <span class="status-dot operational"></span>
+                    <span>All Systems Operational</span>
+                </div>
+                <p>Current API Version: <strong>v1.0.0</strong></p>
+                <p>Last Updated: <strong>January 2025</strong></p>
+                <div class="status-links">
+                    <a href="https://status.wasmwiz.io" target="_blank">Status Page</a>
+                    <a href="https://github.com/wasmwiz/api-docs" target="_blank">GitHub</a>
+                    <a href="/support">Contact Support</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<style>
+.docs-container {
+    display: flex;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.docs-sidebar {
+    width: 250px;
+    position: sticky;
+    top: 80px;
+    height: fit-content;
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.docs-nav h3 {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 1.5rem 0 0.75rem 0;
+    font-weight: 600;
+}
+
+.docs-nav h3:first-child {
+    margin-top: 0;
+}
+
+.docs-nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.docs-nav li {
+    margin: 0.5rem 0;
+}
+
+.docs-nav a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.925rem;
+    display: block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.docs-nav a:hover {
+    background: var(--background-color);
+    color: var(--primary-color);
+    padding-left: 1rem;
+}
+
+.docs-content {
+    flex: 1;
+    max-width: 900px;
+}
+
+.docs-header {
+    margin-bottom: 3rem;
+}
+
+.docs-header h1 {
+    font-size: 2.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.docs-header .lead {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.docs-section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 100px;
+}
+
+.docs-section h2 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.docs-section h4 {
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    margin: 1.5rem 0 1rem 0;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.feature-card {
+    background: var(--background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.quickstart-steps {
+    counter-reset: step;
+    padding-left: 0;
+}
+
+.quickstart-steps li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 3rem;
+    margin: 2rem 0;
+    list-style: none;
+}
+
+.quickstart-steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: var(--gradient-primary);
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.code-block {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.code-block pre {
+    margin: 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.code-block code {
+    background: transparent;
+    padding: 0;
+}
+
+.endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+}
+
+.method {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.method.get { background: #dcfce7; color: #166534; }
+.method.post { background: #dbeafe; color: #1e40af; }
+.method.delete { background: #fee2e2; color: #991b1b; }
+
+.endpoint {
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.best-practice {
+    background: var(--background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin: 1.5rem 0;
+    border-left: 4px solid var(--primary-color);
+}
+
+.troubleshooting-item {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin: 1.5rem 0;
+}
+
+.troubleshooting-item h4 {
+    color: var(--error-color);
+    margin-top: 0;
+}
+
+.api-status-card {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-links {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.status-links a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: var(--border-radius);
+    transition: all 0.2s;
+}
+
+.status-links a:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-1px);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 968px) {
+    .docs-container {
+        flex-direction: column;
+    }
+
+    .docs-sidebar {
+        width: 100%;
+        position: static;
+        margin-bottom: 2rem;
+    }
+
+    .docs-content {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .docs-header h1 {
+        font-size: 2rem;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quickstart-steps li {
+        padding-left: 2.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Smooth scroll to sections
+document.querySelectorAll('.docs-nav a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href.startsWith('#')) {
+            e.preventDefault();
+            const target = document.querySelector(href);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Update active state
+                document.querySelectorAll('.docs-nav a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+            }
+        }
+    });
+});
+
+// Highlight current section on scroll
+const sections = document.querySelectorAll('.docs-section');
+const navLinks = document.querySelectorAll('.docs-nav a');
+
+window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (scrollY >= (sectionTop - 150)) {
+            current = section.getAttribute('id');
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
+});
+
+// Copy code blocks on click
+document.querySelectorAll('.code-block').forEach(block => {
+    block.style.cursor = 'pointer';
+    block.title = 'Click to copy';
+
+    block.addEventListener('click', function() {
+        const code = this.querySelector('code').innerText;
+        navigator.clipboard.writeText(code).then(() => {
+            // Show feedback
+            const original = this.style.background;
+            this.style.background = '#059669';
+            setTimeout(() => {
+                this.style.background = original;
+            }, 200);
+        });
+    });
+});
+</script>
+{% endblock %}

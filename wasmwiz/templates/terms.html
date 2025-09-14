@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="legal-container">
+    <div class="legal-header">
+        <h1>Terms of Service</h1>
+        <p class="last-updated">Last updated: January 15, 2025</p>
+        <p class="lead">Please read these Terms of Service carefully before using WasmWiz.</p>
+    </div>
+
+    <div class="legal-content">
+        <nav class="legal-nav">
+            <h3>Quick Navigation</h3>
+            <ul>
+                <li><a href="#acceptance">Acceptance of Terms</a></li>
+                <li><a href="#description">Service Description</a></li>
+                <li><a href="#account">Account Registration</a></li>
+                <li><a href="#usage">Acceptable Use</a></li>
+                <li><a href="#api-terms">API Terms</a></li>
+                <li><a href="#payment">Payment Terms</a></li>
+                <li><a href="#privacy">Privacy</a></li>
+                <li><a href="#content">Content and Ownership</a></li>
+                <li><a href="#availability">Service Availability</a></li>
+                <li><a href="#limitations">Limitations of Liability</a></li>
+                <li><a href="#termination">Termination</a></li>
+                <li><a href="#changes">Changes to Terms</a></li>
+                <li><a href="#contact">Contact Information</a></li>
+            </ul>
+        </nav>
+
+        <div class="legal-sections">
+            <section id="acceptance" class="legal-section">
+                <h2>1. Acceptance of Terms</h2>
+                <p>By accessing or using WasmWiz ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service.</p>
+                <p>These Terms apply to all visitors, users, and others who access or use the Service.</p>
+            </section>
+
+            <section id="description" class="legal-section">
+                <h2>2. Service Description</h2>
+                <p>WasmWiz is a cloud-based platform that provides WebAssembly (WASM) module execution services. The Service includes:</p>
+                <ul>
+                    <li>Secure, sandboxed execution of WebAssembly modules</li>
+                    <li>API access for programmatic integration</li>
+                    <li>Web interface for direct module upload and execution</li>
+                    <li>Monitoring, logging, and analytics capabilities</li>
+                    <li>Developer documentation and support resources</li>
+                </ul>
+            </section>
+
+            <section id="account" class="legal-section">
+                <h2>3. Account Registration and Security</h2>
+                <h3>3.1 Account Creation</h3>
+                <p>To access certain features of the Service, you must register for an account. You agree to:</p>
+                <ul>
+                    <li>Provide accurate, current, and complete information during registration</li>
+                    <li>Maintain and promptly update your account information</li>
+                    <li>Maintain the security of your account credentials</li>
+                    <li>Accept responsibility for all activities under your account</li>
+                </ul>
+
+                <h3>3.2 API Keys</h3>
+                <p>API keys provide access to the Service and must be:</p>
+                <ul>
+                    <li>Kept confidential and secure</li>
+                    <li>Not shared with unauthorized parties</li>
+                    <li>Rotated regularly for security</li>
+                    <li>Immediately revoked if compromised</li>
+                </ul>
+            </section>
+
+            <section id="usage" class="legal-section">
+                <h2>4. Acceptable Use Policy</h2>
+                <h3>4.1 Permitted Use</h3>
+                <p>You may use the Service for lawful purposes in accordance with these Terms. Permitted uses include:</p>
+                <ul>
+                    <li>Developing and testing WebAssembly applications</li>
+                    <li>Educational and research purposes</li>
+                    <li>Commercial applications that comply with these Terms</li>
+                    <li>Integration into your own applications and services</li>
+                </ul>
+
+                <h3>4.2 Prohibited Use</h3>
+                <p>You agree not to use the Service for:</p>
+                <ul>
+                    <li>Any unlawful purpose or in violation of any applicable regulations</li>
+                    <li>Transmitting malware, viruses, or harmful code</li>
+                    <li>Attempting to gain unauthorized access to the Service or other users' accounts</li>
+                    <li>Circumventing rate limits or security measures</li>
+                    <li>Mining cryptocurrency or other computationally intensive tasks not related to WebAssembly development</li>
+                    <li>Storing or processing illegal content</li>
+                    <li>Reverse engineering, decompiling, or attempting to derive source code</li>
+                    <li>Reselling or redistributing the Service without authorization</li>
+                </ul>
+            </section>
+
+            <section id="api-terms" class="legal-section">
+                <h2>5. API Terms and Rate Limits</h2>
+                <h3>5.1 API Usage</h3>
+                <p>Access to our API is provided subject to usage limits based on your subscription tier:</p>
+                <ul>
+                    <li><strong>Free Tier:</strong> 10 requests/minute, 500 requests/day</li>
+                    <li><strong>Basic Tier:</strong> 100 requests/minute, 10,000 requests/day</li>
+                    <li><strong>Pro Tier:</strong> 500 requests/minute, 50,000 requests/day</li>
+                    <li><strong>Enterprise:</strong> Custom limits as specified in your agreement</li>
+                </ul>
+
+                <h3>5.2 Execution Limits</h3>
+                <p>WebAssembly modules are subject to execution constraints:</p>
+                <ul>
+                    <li><strong>Memory limits:</strong> 128MB - 512MB depending on tier</li>
+                    <li><strong>Execution time:</strong> 5 - 30 seconds depending on tier</li>
+                    <li><strong>Module size:</strong> 10MB - 50MB depending on tier</li>
+                    <li><strong>No network access:</strong> Modules cannot access external networks</li>
+                    <li><strong>No file system access:</strong> Limited to stdin/stdout operations</li>
+                </ul>
+            </section>
+
+            <section id="payment" class="legal-section">
+                <h2>6. Payment Terms</h2>
+                <h3>6.1 Subscription Plans</h3>
+                <p>Paid plans are billed monthly or annually in advance. You agree to:</p>
+                <ul>
+                    <li>Pay all fees associated with your chosen plan</li>
+                    <li>Provide valid payment information</li>
+                    <li>Update payment information as needed</li>
+                    <li>Pay any applicable taxes</li>
+                </ul>
+
+                <h3>6.2 Billing and Refunds</h3>
+                <ul>
+                    <li><strong>Automatic Renewal:</strong> Subscriptions automatically renew unless cancelled</li>
+                    <li><strong>Cancellation:</strong> You may cancel at any time; service continues until period end</li>
+                    <li><strong>Refunds:</strong> Generally not provided except as required by law or in our sole discretion</li>
+                    <li><strong>Price Changes:</strong> We reserve the right to modify pricing with 30 days' notice</li>
+                </ul>
+
+                <h3>6.3 Overages</h3>
+                <p>Usage exceeding plan limits may result in:</p>
+                <ul>
+                    <li>Temporary throttling of requests</li>
+                    <li>Service suspension until next billing period</li>
+                    <li>Additional charges as specified in your plan</li>
+                </ul>
+            </section>
+
+            <section id="privacy" class="legal-section">
+                <h2>7. Privacy</h2>
+                <p>Your privacy is important to us. Please review our <a href="/privacy">Privacy Policy</a>, which also governs your use of the Service, to understand our practices.</p>
+
+                <h3>7.1 Data Processing</h3>
+                <ul>
+                    <li>WebAssembly modules are processed temporarily and not permanently stored</li>
+                    <li>Execution logs may be retained for debugging and monitoring purposes</li>
+                    <li>Usage metrics are collected for billing and analytics</li>
+                    <li>Account information is stored securely and used only as described in our Privacy Policy</li>
+                </ul>
+            </section>
+
+            <section id="content" class="legal-section">
+                <h2>8. Content and Intellectual Property</h2>
+                <h3>8.1 Your Content</h3>
+                <p>You retain ownership of WebAssembly modules and data you upload to the Service. By using the Service, you grant us a limited license to:</p>
+                <ul>
+                    <li>Execute your WebAssembly modules as requested</li>
+                    <li>Store modules temporarily for execution purposes</li>
+                    <li>Provide technical support related to your modules</li>
+                </ul>
+
+                <h3>8.2 Our Content</h3>
+                <p>The Service, including its software, documentation, and design, is owned by WasmWiz and protected by copyright, trademark, and other intellectual property laws.</p>
+
+                <h3>8.3 Feedback</h3>
+                <p>Any feedback, suggestions, or improvements you provide may be used by us without any obligation to you.</p>
+            </section>
+
+            <section id="availability" class="legal-section">
+                <h2>9. Service Availability and Support</h2>
+                <h3>9.1 Uptime</h3>
+                <p>We strive to maintain high availability but do not guarantee uninterrupted service. Our target uptime is:</p>
+                <ul>
+                    <li><strong>All Tiers:</strong> 99.9% monthly uptime</li>
+                    <li><strong>Enterprise:</strong> Custom SLA agreements available</li>
+                </ul>
+
+                <h3>9.2 Maintenance</h3>
+                <p>We may perform scheduled maintenance with reasonable advance notice. Emergency maintenance may occur without notice.</p>
+
+                <h3>9.3 Support</h3>
+                <ul>
+                    <li><strong>Free:</strong> Community support and documentation</li>
+                    <li><strong>Basic/Pro:</strong> Email support with 24-hour response time</li>
+                    <li><strong>Enterprise:</strong> Priority support with guaranteed response times</li>
+                </ul>
+            </section>
+
+            <section id="limitations" class="legal-section">
+                <h2>10. Disclaimers and Limitations of Liability</h2>
+                <h3>10.1 Service Disclaimer</h3>
+                <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
+
+                <h3>10.2 Limitation of Liability</h3>
+                <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, WASMWIZ SHALL NOT BE LIABLE FOR:</p>
+                <ul>
+                    <li>INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES</li>
+                    <li>LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES</li>
+                    <li>DAMAGES RESULTING FROM SERVICE INTERRUPTIONS</li>
+                    <li>DAMAGES EXCEEDING THE AMOUNT PAID FOR THE SERVICE IN THE PRECEDING 12 MONTHS</li>
+                </ul>
+
+                <h3>10.3 Indemnification</h3>
+                <p>You agree to indemnify and hold harmless WasmWiz from claims arising from your use of the Service, violation of these Terms, or infringement of any rights.</p>
+            </section>
+
+            <section id="termination" class="legal-section">
+                <h2>11. Termination</h2>
+                <h3>11.1 Termination by You</h3>
+                <p>You may terminate your account at any time by:</p>
+                <ul>
+                    <li>Canceling your subscription through the account dashboard</li>
+                    <li>Contacting our support team</li>
+                    <li>Following account closure procedures</li>
+                </ul>
+
+                <h3>11.2 Termination by Us</h3>
+                <p>We may suspend or terminate your account if you:</p>
+                <ul>
+                    <li>Violate these Terms or our policies</li>
+                    <li>Use the Service in a manner that could harm our systems or other users</li>
+                    <li>Fail to pay required fees</li>
+                    <li>Provide false or misleading information</li>
+                </ul>
+
+                <h3>11.3 Effect of Termination</h3>
+                <p>Upon termination:</p>
+                <ul>
+                    <li>Your access to the Service will cease</li>
+                    <li>Your data may be deleted according to our retention policies</li>
+                    <li>Outstanding fees remain due</li>
+                    <li>Certain provisions of these Terms survive termination</li>
+                </ul>
+            </section>
+
+            <section id="changes" class="legal-section">
+                <h2>12. Changes to Terms</h2>
+                <p>We reserve the right to modify these Terms at any time. When we make changes, we will:</p>
+                <ul>
+                    <li>Post the revised Terms on this page</li>
+                    <li>Update the "Last updated" date</li>
+                    <li>Notify users of material changes via email or Service notifications</li>
+                    <li>Provide at least 30 days' notice for material changes</li>
+                </ul>
+                <p>Continued use of the Service after changes constitutes acceptance of the new Terms.</p>
+            </section>
+
+            <section id="contact" class="legal-section">
+                <h2>13. Contact Information</h2>
+                <p>If you have questions about these Terms, please contact us:</p>
+
+                <div class="contact-info">
+                    <div class="contact-method">
+                        <strong>Email:</strong> legal@wasmwiz.io
+                    </div>
+                    <div class="contact-method">
+                        <strong>Support:</strong> <a href="/support">Visit our support page</a>
+                    </div>
+                    <div class="contact-method">
+                        <strong>Address:</strong><br>
+                        WasmWiz, Inc.<br>
+                        1234 Technology Drive<br>
+                        San Francisco, CA 94105<br>
+                        United States
+                    </div>
+                </div>
+            </section>
+
+            <section class="legal-section">
+                <h2>14. Additional Provisions</h2>
+                <h3>14.1 Governing Law</h3>
+                <p>These Terms are governed by the laws of the State of California, without regard to conflict of law principles.</p>
+
+                <h3>14.2 Severability</h3>
+                <p>If any provision of these Terms is found to be unenforceable, the remaining provisions will remain in full force and effect.</p>
+
+                <h3>14.3 Entire Agreement</h3>
+                <p>These Terms, together with our Privacy Policy, constitute the entire agreement between you and WasmWiz regarding the Service.</p>
+
+                <h3>14.4 Assignment</h3>
+                <p>You may not assign these Terms without our prior written consent. We may assign these Terms without restriction.</p>
+
+                <h3>14.5 Waiver</h3>
+                <p>Our failure to enforce any provision of these Terms does not constitute a waiver of that provision.</p>
+            </section>
+        </div>
+    </div>
+</div>
+
+<style>
+.legal-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.legal-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.legal-header h1 {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.last-updated {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.legal-header .lead {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.legal-content {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 3rem;
+}
+
+.legal-nav {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.legal-nav h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.legal-nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.legal-nav li {
+    margin: 0.5rem 0;
+}
+
+.legal-nav a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.925rem;
+    display: block;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.legal-nav a:hover {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.legal-sections {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.legal-section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 120px;
+}
+
+.legal-section:last-child {
+    margin-bottom: 0;
+}
+
+.legal-section h2 {
+    color: var(--secondary-color);
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.legal-section h3 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    margin: 2rem 0 1rem 0;
+}
+
+.legal-section p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.legal-section ul {
+    color: var(--text-secondary);
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.legal-section li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.legal-section a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.legal-section a:hover {
+    text-decoration: underline;
+}
+
+.contact-info {
+    background: var(--background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-top: 1rem;
+}
+
+.contact-method {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.contact-method:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 968px) {
+    .legal-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .legal-nav {
+        position: static;
+        order: 2;
+    }
+
+    .legal-sections {
+        order: 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .legal-container {
+        padding: 1rem;
+    }
+
+    .legal-header h1 {
+        font-size: 2rem;
+    }
+
+    .legal-nav,
+    .legal-sections {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}

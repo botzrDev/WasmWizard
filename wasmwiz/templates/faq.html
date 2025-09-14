@@ -1,0 +1,904 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="faq-container">
+    <div class="faq-header">
+        <h1>Frequently Asked Questions</h1>
+        <p class="lead">Find answers to common questions about WasmWiz</p>
+        <div class="faq-search">
+            <input type="text" id="faq-search" placeholder="Search FAQ..." />
+            <span class="search-icon">🔍</span>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="faq-categories">
+        <button class="category-btn active" data-category="all">All Topics</button>
+        <button class="category-btn" data-category="getting-started">Getting Started</button>
+        <button class="category-btn" data-category="technical">Technical</button>
+        <button class="category-btn" data-category="pricing">Pricing & Plans</button>
+        <button class="category-btn" data-category="security">Security</button>
+        <button class="category-btn" data-category="troubleshooting">Troubleshooting</button>
+    </div>
+
+    <!-- FAQ Items -->
+    <div class="faq-content">
+        <!-- Getting Started -->
+        <div class="faq-item" data-category="getting-started">
+            <div class="faq-question">
+                <h3>What is WasmWiz and how does it work?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>WasmWiz is a cloud-based platform for executing WebAssembly (WASM) modules securely in a sandboxed environment. You upload your compiled WASM modules, provide input data, and receive the execution results instantly.</p>
+                <p>Our platform handles the complexity of WASM runtime management, security sandboxing, resource limits, and scaling automatically, so you can focus on your application logic.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="getting-started">
+            <div class="faq-question">
+                <h3>How do I get started with WasmWiz?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Getting started is simple:</p>
+                <ol>
+                    <li><strong>Create an API key</strong> - Visit our <a href="/api-keys">API Keys page</a> to generate your first key</li>
+                    <li><strong>Compile your code</strong> - Use tools like wasm-pack (Rust), Emscripten (C/C++), or AssemblyScript</li>
+                    <li><strong>Upload your WASM module</strong> - Either through our web interface or API</li>
+                    <li><strong>Execute with input</strong> - Send your input data and get results back</li>
+                </ol>
+                <p>Try our <a href="/examples">example modules</a> to see it in action!</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="getting-started">
+            <div class="faq-question">
+                <h3>Do I need to know WebAssembly to use WasmWiz?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>While basic WebAssembly knowledge is helpful, it's not required to get started. You can:</p>
+                <ul>
+                    <li>Use our <a href="/examples">pre-built example modules</a> to understand the workflow</li>
+                    <li>Follow our step-by-step <a href="/docs">tutorials</a> for different programming languages</li>
+                    <li>Start with simple programs and gradually work up to more complex applications</li>
+                </ul>
+                <p>We provide comprehensive documentation and examples to help you learn WASM development.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="getting-started">
+            <div class="faq-question">
+                <h3>What programming languages can I use?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>WasmWiz supports WebAssembly modules compiled from many languages:</p>
+                <ul>
+                    <li><strong>Rust</strong> - Using wasm-pack or cargo with wasm32-wasi target</li>
+                    <li><strong>C/C++</strong> - Using Emscripten or clang with WASI</li>
+                    <li><strong>AssemblyScript</strong> - TypeScript-like syntax that compiles to WASM</li>
+                    <li><strong>Go</strong> - Using TinyGo compiler for WASM output</li>
+                    <li><strong>Zig</strong> - Native WebAssembly support</li>
+                    <li><strong>Other languages</strong> - Any language with WASM compilation support</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Technical -->
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <h3>What are the execution limits and constraints?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Execution limits vary by subscription tier:</p>
+                <table class="limits-table">
+                    <tr>
+                        <th>Limit</th>
+                        <th>Free</th>
+                        <th>Basic</th>
+                        <th>Pro</th>
+                        <th>Enterprise</th>
+                    </tr>
+                    <tr>
+                        <td>Memory</td>
+                        <td>128MB</td>
+                        <td>256MB</td>
+                        <td>512MB</td>
+                        <td>Custom</td>
+                    </tr>
+                    <tr>
+                        <td>Timeout</td>
+                        <td>5 seconds</td>
+                        <td>10 seconds</td>
+                        <td>30 seconds</td>
+                        <td>Custom</td>
+                    </tr>
+                    <tr>
+                        <td>Module Size</td>
+                        <td>10MB</td>
+                        <td>25MB</td>
+                        <td>50MB</td>
+                        <td>Custom</td>
+                    </tr>
+                </table>
+                <p><strong>Security constraints:</strong> No file system access, no network access, no system calls outside WASI.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <h3>What WASI features are supported?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>WasmWiz supports a subset of WASI (WebAssembly System Interface) APIs:</p>
+                <h4>✅ Supported:</h4>
+                <ul>
+                    <li>Standard input/output (stdin, stdout, stderr)</li>
+                    <li>Memory management</li>
+                    <li>Basic math operations</li>
+                    <li>String and data processing</li>
+                    <li>Environment variable access (limited)</li>
+                    <li>Clock and time functions</li>
+                </ul>
+                <h4>❌ Not Supported:</h4>
+                <ul>
+                    <li>File system operations (except stdin/stdout)</li>
+                    <li>Network operations</li>
+                    <li>Process spawning</li>
+                    <li>Raw system calls</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <h3>How does input/output work?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>WasmWiz supports multiple input/output formats:</p>
+                <h4>Input Options:</h4>
+                <ul>
+                    <li><strong>Text</strong> - Plain text passed to stdin</li>
+                    <li><strong>JSON</strong> - Structured data for complex applications</li>
+                    <li><strong>Binary</strong> - Base64-encoded binary data</li>
+                </ul>
+                <h4>Output Capture:</h4>
+                <ul>
+                    <li><strong>stdout</strong> - Main program output</li>
+                    <li><strong>stderr</strong> - Error messages and logs</li>
+                    <li><strong>Return code</strong> - Program exit status</li>
+                </ul>
+                <p>Your WASM module receives input via standard input and should write results to standard output.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <h3>Can I use external libraries in my WASM modules?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Yes, you can include external libraries, but with limitations:</p>
+                <h4>✅ Supported Libraries:</h4>
+                <ul>
+                    <li>Pure computation libraries (math, crypto, text processing)</li>
+                    <li>Data structure and algorithm libraries</li>
+                    <li>Serialization libraries (JSON, MessagePack, etc.)</li>
+                    <li>Image/audio processing libraries (that don't require system calls)</li>
+                </ul>
+                <h4>❌ Not Supported:</h4>
+                <ul>
+                    <li>Libraries requiring file system access</li>
+                    <li>Network libraries</li>
+                    <li>Threading libraries</li>
+                    <li>System-dependent libraries</li>
+                </ul>
+                <p>Make sure all dependencies are compiled into your WASM module or available as WASI-compatible libraries.</p>
+            </div>
+        </div>
+
+        <!-- Pricing & Plans -->
+        <div class="faq-item" data-category="pricing">
+            <div class="faq-question">
+                <h3>Is there a free tier?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Yes! Our Free tier includes:</p>
+                <ul>
+                    <li>10 requests per minute</li>
+                    <li>500 requests per day</li>
+                    <li>128MB memory limit</li>
+                    <li>5 second execution timeout</li>
+                    <li>10MB module size limit</li>
+                    <li>Community support</li>
+                </ul>
+                <p>Perfect for learning, prototyping, and small personal projects. No credit card required!</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="pricing">
+            <div class="faq-question">
+                <h3>Can I change my plan at any time?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Absolutely! You can upgrade or downgrade your plan at any time:</p>
+                <ul>
+                    <li><strong>Upgrades</strong> - Take effect immediately with pro-rata billing</li>
+                    <li><strong>Downgrades</strong> - Take effect at the end of your current billing period</li>
+                    <li><strong>Cancellation</strong> - Cancel anytime, no long-term contracts</li>
+                </ul>
+                <p>If you exceed your plan's limits, we'll send notifications to help you upgrade before any service interruption.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="pricing">
+            <div class="faq-question">
+                <h3>What happens if I exceed my rate limits?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>When you exceed rate limits:</p>
+                <ul>
+                    <li><strong>Temporary throttling</strong> - Additional requests are queued or rejected with HTTP 429</li>
+                    <li><strong>Graceful degradation</strong> - No data loss, just slower response times</li>
+                    <li><strong>Notifications</strong> - Email alerts when approaching limits</li>
+                    <li><strong>Automatic suggestions</strong> - Recommended plan upgrades based on usage</li>
+                </ul>
+                <p>Rate limits reset based on your tier (per minute and daily limits).</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="pricing">
+            <div class="faq-question">
+                <h3>Do you offer discounts for students or non-profits?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Yes! We offer special pricing for:</p>
+                <ul>
+                    <li><strong>Educational institutions</strong> - 50% off all paid plans with .edu email verification</li>
+                    <li><strong>Non-profit organizations</strong> - 50% off with 501(c)(3) verification</li>
+                    <li><strong>Open source projects</strong> - Free Pro tier for qualifying projects</li>
+                    <li><strong>Startups</strong> - Contact us for startup credits and special rates</li>
+                </ul>
+                <p>Contact our <a href="/support">support team</a> with verification documents to apply.</p>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="faq-item" data-category="security">
+            <div class="faq-question">
+                <h3>How secure is my code and data?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Security is our top priority:</p>
+                <h4>🔒 Code Protection:</h4>
+                <ul>
+                    <li>WASM modules are stored encrypted at rest</li>
+                    <li>Temporary execution environments are isolated</li>
+                    <li>No persistent storage of execution data</li>
+                    <li>Code is automatically deleted after configurable TTL</li>
+                </ul>
+                <h4>🛡️ Execution Security:</h4>
+                <ul>
+                    <li>Complete sandboxing with no host system access</li>
+                    <li>Resource limits prevent DoS attacks</li>
+                    <li>Memory isolation between executions</li>
+                    <li>Network isolation - no external connections</li>
+                </ul>
+                <h4>📋 Compliance:</h4>
+                <ul>
+                    <li>SOC 2 Type II certified</li>
+                    <li>GDPR compliant</li>
+                    <li>Regular security audits</li>
+                    <li>Penetration testing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="security">
+            <div class="faq-question">
+                <h3>Can my WASM module access the internet or files?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>No, for security reasons, WASM modules run in a completely isolated environment:</p>
+                <h4>❌ Blocked Operations:</h4>
+                <ul>
+                    <li>Network access (HTTP, TCP, UDP, etc.)</li>
+                    <li>File system access (read/write files)</li>
+                    <li>System calls outside WASI subset</li>
+                    <li>Process spawning</li>
+                    <li>Hardware access</li>
+                </ul>
+                <h4>✅ Available Operations:</h4>
+                <ul>
+                    <li>Read from stdin (your input)</li>
+                    <li>Write to stdout/stderr</li>
+                    <li>Memory allocation and management</li>
+                    <li>CPU-intensive computations</li>
+                    <li>Math and crypto operations</li>
+                </ul>
+                <p>This ensures your modules can't accidentally or maliciously affect our infrastructure or other users.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="security">
+            <div class="faq-question">
+                <h3>How do you handle API keys and authentication?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>We use industry-standard security practices for API key management:</p>
+                <ul>
+                    <li><strong>SHA-256 hashing</strong> - API keys are hashed and salted before storage</li>
+                    <li><strong>Secure transmission</strong> - All API calls require HTTPS/TLS</li>
+                    <li><strong>Key rotation</strong> - Generate new keys anytime, old keys can be revoked</li>
+                    <li><strong>Rate limiting</strong> - Per-key rate limiting prevents abuse</li>
+                    <li><strong>Audit logging</strong> - All API usage is logged for security monitoring</li>
+                    <li><strong>Role-based access</strong> - Keys are tied to specific subscription tiers</li>
+                </ul>
+                <p><strong>Best practices:</strong> Never expose API keys in client-side code, store them as environment variables, and rotate them regularly.</p>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="faq-item" data-category="troubleshooting">
+            <div class="faq-question">
+                <h3>My WASM module is failing to execute. What should I check?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Common issues and solutions:</p>
+                <h4>🔍 Module Validation:</h4>
+                <ul>
+                    <li><strong>Test locally first</strong> - Use wasmtime or wasmer to verify your module works</li>
+                    <li><strong>Check file size</strong> - Ensure module is under your tier's size limit</li>
+                    <li><strong>Verify WASM format</strong> - Make sure file is valid WebAssembly binary</li>
+                </ul>
+                <h4>💾 Memory Issues:</h4>
+                <ul>
+                    <li><strong>Check memory usage</strong> - Profile locally to ensure you're under limits</li>
+                    <li><strong>Optimize data structures</strong> - Use efficient memory layout</li>
+                    <li><strong>Consider streaming</strong> - Process large data in chunks</li>
+                </ul>
+                <h4>⏱️ Timeout Issues:</h4>
+                <ul>
+                    <li><strong>Profile execution time</strong> - Optimize algorithms for speed</li>
+                    <li><strong>Avoid infinite loops</strong> - Add proper termination conditions</li>
+                    <li><strong>Consider upgrading</strong> - Higher tiers have longer timeouts</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="troubleshooting">
+            <div class="faq-question">
+                <h3>I'm getting compilation errors. Where can I get help?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Resources for resolving compilation issues:</p>
+                <h4>📚 Documentation:</h4>
+                <ul>
+                    <li><a href="/docs">WasmWiz Documentation</a> - Platform-specific guides</li>
+                    <li><a href="/examples">Code Examples</a> - Working examples for different languages</li>
+                    <li>Language-specific WASM guides (Rust Book, Emscripten docs, etc.)</li>
+                </ul>
+                <h4>🛠️ Tools:</h4>
+                <ul>
+                    <li><strong>wasm-validate</strong> - Validate your WASM modules</li>
+                    <li><strong>wasm-objdump</strong> - Inspect WASM module contents</li>
+                    <li><strong>wasmtime/wasmer</strong> - Test execution locally</li>
+                </ul>
+                <h4>💬 Community:</h4>
+                <ul>
+                    <li><a href="/support">Contact Support</a> - Direct help from our team</li>
+                    <li>WebAssembly community forums and Discord</li>
+                    <li>Language-specific communities (Rust users forum, etc.)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="troubleshooting">
+            <div class="faq-question">
+                <h3>How can I debug my WASM module?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Debugging strategies for WebAssembly modules:</p>
+                <h4>🔍 Local Testing:</h4>
+                <ul>
+                    <li><strong>Use wasmtime</strong> - <code>wasmtime your_module.wasm</code></li>
+                    <li><strong>Enable debug mode</strong> - Compile with debug symbols for better error messages</li>
+                    <li><strong>Test incremental</strong> - Start with simple functionality and build up</li>
+                </ul>
+                <h4>📊 Logging:</h4>
+                <ul>
+                    <li><strong>Use stderr</strong> - Write debug info to stderr (available in execution logs)</li>
+                    <li><strong>Assert statements</strong> - Add assertions for critical assumptions</li>
+                    <li><strong>Return codes</strong> - Use different exit codes to indicate error types</li>
+                </ul>
+                <h4>🔬 Advanced Debugging:</h4>
+                <ul>
+                    <li><strong>Memory profiling</strong> - Monitor memory usage patterns</li>
+                    <li><strong>Performance profiling</strong> - Use CPU profilers on local execution</li>
+                    <li><strong>WASM disassembly</strong> - Inspect generated WASM code with wasm2wat</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question">
+                <h3>What's the difference between WasmWiz and running WASM locally?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>WasmWiz offers several advantages over local execution:</p>
+                <h4>☁️ Cloud Benefits:</h4>
+                <ul>
+                    <li><strong>No setup required</strong> - No need to install WASM runtimes</li>
+                    <li><strong>Scalable infrastructure</strong> - Handle thousands of concurrent executions</li>
+                    <li><strong>Always available</strong> - 99.9% uptime SLA with global availability</li>
+                    <li><strong>API-first</strong> - Easy integration into web/mobile applications</li>
+                </ul>
+                <h4>🔒 Security & Isolation:</h4>
+                <ul>
+                    <li><strong>Complete isolation</strong> - Modules can't affect your host system</li>
+                    <li><strong>Resource limits</strong> - Automatic protection against resource exhaustion</li>
+                    <li><strong>Sandboxed environment</strong> - Enterprise-grade security controls</li>
+                </ul>
+                <h4>📊 Enterprise Features:</h4>
+                <ul>
+                    <li><strong>Usage analytics</strong> - Detailed execution metrics and logs</li>
+                    <li><strong>Rate limiting</strong> - Built-in protection and quota management</li>
+                    <li><strong>Monitoring</strong> - Performance tracking and alerting</li>
+                    <li><strong>Support</strong> - Expert help when you need it</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Still need help section -->
+    <div class="help-section">
+        <div class="help-card">
+            <h2>Still need help?</h2>
+            <p>Can't find what you're looking for? Our support team is here to help.</p>
+            <div class="help-options">
+                <a href="/support" class="help-link">
+                    <div class="help-icon">💬</div>
+                    <div>
+                        <h4>Contact Support</h4>
+                        <p>Get personalized help from our team</p>
+                    </div>
+                </a>
+                <a href="/docs" class="help-link">
+                    <div class="help-icon">📚</div>
+                    <div>
+                        <h4>Documentation</h4>
+                        <p>Comprehensive API and usage guides</p>
+                    </div>
+                </a>
+                <a href="/examples" class="help-link">
+                    <div class="help-icon">🚀</div>
+                    <div>
+                        <h4>Examples</h4>
+                        <p>Working code samples and tutorials</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.faq-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.faq-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.faq-header h1 {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.faq-header .lead {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.faq-search {
+    position: relative;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.faq-search input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.faq-search input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.faq-categories {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+}
+
+.category-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.category-btn:hover,
+.category-btn.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.faq-content {
+    space-y: 1rem;
+}
+
+.faq-item {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+}
+
+.faq-item:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.faq-question {
+    padding: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.faq-question h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.faq-toggle {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    margin-left: 1rem;
+}
+
+.faq-item.active .faq-toggle {
+    transform: rotate(45deg);
+}
+
+.faq-answer {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: none;
+}
+
+.faq-item.active .faq-answer {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.faq-answer p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.faq-answer h4 {
+    color: var(--text-primary);
+    margin: 1.5rem 0 0.75rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.faq-answer ul,
+.faq-answer ol {
+    color: var(--text-secondary);
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.faq-answer li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.faq-answer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.faq-answer a:hover {
+    text-decoration: underline;
+}
+
+.limits-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.925rem;
+}
+
+.limits-table th,
+.limits-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.limits-table th {
+    background: var(--background-color);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.limits-table tr:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.help-section {
+    margin-top: 4rem;
+    padding: 2rem;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+}
+
+.help-card {
+    text-align: center;
+}
+
+.help-card h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.help-card p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 1.125rem;
+}
+
+.help-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.help-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+    border: 1px solid var(--border-color);
+}
+
+.help-link:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.help-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.help-link h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-size: 1.125rem;
+}
+
+.help-link p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+    line-height: 1.4;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .faq-container {
+        padding: 1rem;
+    }
+
+    .faq-header h1 {
+        font-size: 2rem;
+    }
+
+    .faq-categories {
+        gap: 0.5rem;
+    }
+
+    .category-btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .faq-question {
+        padding: 1rem;
+    }
+
+    .faq-answer {
+        padding: 0 1rem 1rem 1rem;
+    }
+
+    .help-options {
+        grid-template-columns: 1fr;
+    }
+
+    .help-link {
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .faq-question h3 {
+        font-size: 1rem;
+    }
+
+    .help-link {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .limits-table {
+        font-size: 0.8rem;
+    }
+
+    .limits-table th,
+    .limits-table td {
+        padding: 0.5rem;
+    }
+}
+</style>
+
+<script>
+// FAQ functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const faqItems = document.querySelectorAll('.faq-item');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const searchInput = document.getElementById('faq-search');
+
+    // Toggle FAQ items
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        question.addEventListener('click', () => {
+            // Close other items
+            faqItems.forEach(otherItem => {
+                if (otherItem !== item && otherItem.classList.contains('active')) {
+                    otherItem.classList.remove('active');
+                }
+            });
+
+            // Toggle current item
+            item.classList.toggle('active');
+        });
+    });
+
+    // Category filtering
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const category = btn.dataset.category;
+
+            // Update active button
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Filter items
+            faqItems.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+
+        faqItems.forEach(item => {
+            const question = item.querySelector('h3').textContent.toLowerCase();
+            const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+
+            if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Reset category filter when searching
+        if (searchTerm) {
+            categoryBtns.forEach(btn => btn.classList.remove('active'));
+        }
+    });
+
+    // URL hash handling for direct links
+    if (window.location.hash) {
+        const targetId = window.location.hash.substring(1);
+        const targetItem = document.querySelector(`[data-faq-id="${targetId}"]`);
+        if (targetItem) {
+            targetItem.classList.add('active');
+            targetItem.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+});
+</script>
+{% endblock %}

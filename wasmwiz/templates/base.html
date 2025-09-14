@@ -24,10 +24,20 @@
                 <a href="/" class="nav-logo">
                     🧙‍♂️ WasmWiz
                 </a>
-                <ul class="nav-menu">
+                <!-- Mobile menu button -->
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+
+                <ul class="nav-menu" id="nav-menu">
                     <li><a href="/" class="{% if active_page == "index" %}active{% endif %}">Execute</a></li>
                     <li><a href="/api-keys" class="{% if active_page == "api-keys" %}active{% endif %}">API Keys</a></li>
                     <li><a href="/docs" class="{% if active_page == "docs" %}active{% endif %}">Documentation</a></li>
+                    <li><a href="/examples" class="{% if active_page == "examples" %}active{% endif %}">Examples</a></li>
+                    <li><a href="/pricing" class="{% if active_page == "pricing" %}active{% endif %}">Pricing</a></li>
+                    <li><a href="/support" class="{% if active_page == "support" %}active{% endif %}">Support</a></li>
                     <li>
                         <div class="language-selector">
                             <select id="language-selector" aria-label="Select language">
@@ -90,6 +100,43 @@
     </footer>
 
     <script src="/static/js/main.js"></script>
+
+    <script>
+    // Mobile menu functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+
+        if (mobileMenuBtn && navMenu) {
+            mobileMenuBtn.addEventListener('click', function() {
+                navMenu.classList.toggle('active');
+                mobileMenuBtn.classList.toggle('active');
+
+                // Prevent body scroll when menu is open
+                document.body.classList.toggle('menu-open');
+            });
+
+            // Close menu when clicking on a link
+            navMenu.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    navMenu.classList.remove('active');
+                    mobileMenuBtn.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                }
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!navMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                    navMenu.classList.remove('active');
+                    mobileMenuBtn.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                }
+            });
+        }
+    });
+    </script>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>

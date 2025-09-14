@@ -1,0 +1,1163 @@
+{% extends "base.html" %}
+
+{% block title %}Support - WasmWiz{% endblock %}
+
+{% block content %}
+<div class="support-container">
+    <div class="support-header">
+        <h1>Get Support</h1>
+        <p class="lead">We're here to help you succeed with WebAssembly</p>
+        <p class="support-subtitle">Choose the support option that best fits your needs</p>
+    </div>
+
+    <!-- Support Options Grid -->
+    <div class="support-options-grid">
+        <!-- Live Chat -->
+        <div class="support-option primary">
+            <div class="option-icon">💬</div>
+            <h3>Live Chat</h3>
+            <p>Get instant help from our support team during business hours</p>
+            <div class="option-details">
+                <div class="availability">
+                    <span class="status-dot online"></span>
+                    <span>Available Mon-Fri, 9 AM - 6 PM EST</span>
+                </div>
+                <div class="response-time">⚡ Immediate response</div>
+            </div>
+            <button class="support-btn primary" onclick="openLiveChat()">
+                Start Chat
+            </button>
+        </div>
+
+        <!-- Email Support -->
+        <div class="support-option">
+            <div class="option-icon">📧</div>
+            <h3>Email Support</h3>
+            <p>Send us a detailed message and we'll get back to you promptly</p>
+            <div class="option-details">
+                <div class="response-time">🕐 Response within 2 hours</div>
+                <div class="support-level">Available 24/7</div>
+            </div>
+            <button class="support-btn secondary" onclick="openContactForm()">
+                Send Email
+            </button>
+        </div>
+
+        <!-- Phone Support -->
+        <div class="support-option enterprise">
+            <div class="option-icon">📞</div>
+            <div class="option-badge">Enterprise Only</div>
+            <h3>Phone Support</h3>
+            <p>Direct phone line to our technical specialists</p>
+            <div class="option-details">
+                <div class="response-time">📞 +1-800-WASMWIZ</div>
+                <div class="support-level">24/7 for Enterprise customers</div>
+            </div>
+            <button class="support-btn secondary" onclick="requestCallback()">
+                Request Callback
+            </button>
+        </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="contact-section" id="contact-form" style="display: none;">
+        <div class="contact-card">
+            <div class="contact-header">
+                <h2>Send us a message</h2>
+                <p>Tell us how we can help and we'll get back to you as soon as possible</p>
+            </div>
+
+            <form id="support-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contact-name">Name *</label>
+                        <input type="text" id="contact-name" name="name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">Email *</label>
+                        <input type="email" id="contact-email" name="email" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact-subject">Subject *</label>
+                    <select id="contact-subject" name="subject" required>
+                        <option value="">Select a topic...</option>
+                        <option value="technical">Technical Support</option>
+                        <option value="billing">Billing & Account</option>
+                        <option value="api">API Integration Help</option>
+                        <option value="performance">Performance Issues</option>
+                        <option value="security">Security Questions</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contact-plan">Current Plan</label>
+                        <select id="contact-plan" name="plan">
+                            <option value="free">Free Tier</option>
+                            <option value="basic">Basic Plan</option>
+                            <option value="pro">Pro Plan</option>
+                            <option value="enterprise">Enterprise</option>
+                            <option value="none">Not a customer yet</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-priority">Priority</label>
+                        <select id="contact-priority" name="priority">
+                            <option value="low">Low - General inquiry</option>
+                            <option value="normal">Normal - Standard support</option>
+                            <option value="high">High - Urgent issue</option>
+                            <option value="critical">Critical - Service down</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact-message">Message *</label>
+                    <textarea
+                        id="contact-message"
+                        name="message"
+                        rows="6"
+                        placeholder="Please describe your issue or question in detail. Include any error messages, steps to reproduce, and what you expected to happen."
+                        required
+                    ></textarea>
+                    <div class="character-count">
+                        <span id="char-count">0</span>/2000 characters
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="include-logs" name="include_logs">
+                        <span class="checkmark"></span>
+                        Include execution logs and usage data to help diagnose the issue
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeContactForm()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resources Section -->
+    <div class="resources-section">
+        <h2>Self-Service Resources</h2>
+        <p>Find answers and solutions on your own schedule</p>
+
+        <div class="resources-grid">
+            <div class="resource-card">
+                <div class="resource-icon">📚</div>
+                <h4>Documentation</h4>
+                <p>Comprehensive guides, API reference, and tutorials</p>
+                <ul>
+                    <li><a href="/docs#quickstart">Quick Start Guide</a></li>
+                    <li><a href="/docs#api-reference">API Reference</a></li>
+                    <li><a href="/docs#troubleshooting">Troubleshooting Guide</a></li>
+                </ul>
+                <a href="/docs" class="resource-link">Browse Documentation →</a>
+            </div>
+
+            <div class="resource-card">
+                <div class="resource-icon">❓</div>
+                <h4>FAQ</h4>
+                <p>Answers to the most common questions</p>
+                <ul>
+                    <li><a href="/faq#getting-started">Getting Started</a></li>
+                    <li><a href="/faq#technical">Technical Issues</a></li>
+                    <li><a href="/faq#pricing">Pricing & Billing</a></li>
+                </ul>
+                <a href="/faq" class="resource-link">View FAQ →</a>
+            </div>
+
+            <div class="resource-card">
+                <div class="resource-icon">🚀</div>
+                <h4>Examples</h4>
+                <p>Working code samples and interactive demos</p>
+                <ul>
+                    <li><a href="/examples#hello-world">Hello World Example</a></li>
+                    <li><a href="/examples#tutorials">Step-by-step Tutorials</a></li>
+                    <li><a href="/examples#code-snippets">Code Snippets</a></li>
+                </ul>
+                <a href="/examples" class="resource-link">Try Examples →</a>
+            </div>
+
+            <div class="resource-card">
+                <div class="resource-icon">📊</div>
+                <h4>Status Page</h4>
+                <p>Real-time service status and maintenance updates</p>
+                <ul>
+                    <li>Current system status</li>
+                    <li>Planned maintenance</li>
+                    <li>Historical uptime data</li>
+                </ul>
+                <a href="https://status.wasmwiz.io" class="resource-link" target="_blank">Check Status →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Section -->
+    <div class="community-section">
+        <h2>Join Our Community</h2>
+        <p>Connect with other developers, share knowledge, and get community support</p>
+
+        <div class="community-grid">
+            <div class="community-card">
+                <div class="community-icon">💬</div>
+                <h4>Discord Community</h4>
+                <p>Chat with other WasmWiz users and get help from the community</p>
+                <div class="community-stats">
+                    <span>👥 2,500+ members</span>
+                    <span>💬 Active daily discussions</span>
+                </div>
+                <a href="https://discord.gg/wasmwiz" class="community-btn" target="_blank">
+                    Join Discord
+                </a>
+            </div>
+
+            <div class="community-card">
+                <div class="community-icon">🐙</div>
+                <h4>GitHub</h4>
+                <p>Contribute to open source projects, report issues, and share examples</p>
+                <div class="community-stats">
+                    <span>⭐ 1,200+ stars</span>
+                    <span>🐛 Bug reports welcome</span>
+                </div>
+                <a href="https://github.com/wasmwiz" class="community-btn" target="_blank">
+                    View on GitHub
+                </a>
+            </div>
+
+            <div class="community-card">
+                <div class="community-icon">📝</div>
+                <h4>Blog</h4>
+                <p>Technical articles, tutorials, and product updates</p>
+                <div class="community-stats">
+                    <span>📖 Weekly articles</span>
+                    <span>🔬 Technical deep dives</span>
+                </div>
+                <a href="https://blog.wasmwiz.io" class="community-btn" target="_blank">
+                    Read Blog
+                </a>
+            </div>
+
+            <div class="community-card">
+                <div class="community-icon">🐦</div>
+                <h4>Twitter</h4>
+                <p>Follow us for news, tips, and community highlights</p>
+                <div class="community-stats">
+                    <span>🐦 @WasmWiz</span>
+                    <span>📰 Latest updates</span>
+                </div>
+                <a href="https://twitter.com/wasmwiz" class="community-btn" target="_blank">
+                    Follow Us
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enterprise Support -->
+    <div class="enterprise-section">
+        <div class="enterprise-card">
+            <div class="enterprise-content">
+                <h2>Enterprise Support</h2>
+                <p>Get dedicated support with guaranteed response times and direct access to our engineering team.</p>
+
+                <div class="enterprise-features">
+                    <div class="enterprise-feature">
+                        <span class="feature-icon">🕐</span>
+                        <div>
+                            <h4>24/7 Priority Support</h4>
+                            <p>Round-the-clock support with guaranteed response times</p>
+                        </div>
+                    </div>
+
+                    <div class="enterprise-feature">
+                        <span class="feature-icon">👨‍💻</span>
+                        <div>
+                            <h4>Dedicated Account Manager</h4>
+                            <p>Personal point of contact who understands your business</p>
+                        </div>
+                    </div>
+
+                    <div class="enterprise-feature">
+                        <span class="feature-icon">🔧</span>
+                        <div>
+                            <h4>Technical Advisory</h4>
+                            <p>Architecture reviews and best practice recommendations</p>
+                        </div>
+                    </div>
+
+                    <div class="enterprise-feature">
+                        <span class="feature-icon">📞</span>
+                        <div>
+                            <h4>Phone & Video Support</h4>
+                            <p>Direct line to senior engineers for complex issues</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="enterprise-cta">
+                    <button class="enterprise-btn" onclick="contactEnterpriseSales()">
+                        Contact Enterprise Sales
+                    </button>
+                    <p class="enterprise-note">Custom SLA agreements available</p>
+                </div>
+            </div>
+
+            <div class="enterprise-image">
+                <div class="support-illustration">
+                    <div class="support-person">👨‍💻</div>
+                    <div class="support-chat">💬</div>
+                    <div class="support-phone">📞</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Stories -->
+    <div class="testimonials-section">
+        <h2>What Our Customers Say</h2>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-content">
+                    <p>"WasmWiz support team helped us integrate WebAssembly into our product in just 2 weeks. Their technical expertise and responsiveness were outstanding."</p>
+                </div>
+                <div class="testimonial-author">
+                    <div class="author-avatar">👩‍💻</div>
+                    <div class="author-info">
+                        <h5>Sarah Chen</h5>
+                        <span>CTO, TechCorp</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-content">
+                    <p>"The documentation is excellent, but when we had a complex performance issue, their engineering team jumped in and solved it within hours."</p>
+                </div>
+                <div class="testimonial-author">
+                    <div class="author-avatar">👨‍🔬</div>
+                    <div class="author-info">
+                        <h5>Marcus Rodriguez</h5>
+                        <span>Lead Developer, InnovateLabs</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-content">
+                    <p>"24/7 support means we can deploy with confidence. Their team has been incredibly helpful in scaling our WebAssembly workloads."</p>
+                </div>
+                <div class="testimonial-author">
+                    <div class="author-avatar">👩‍🚀</div>
+                    <div class="author-info">
+                        <h5>Dr. Emily Watson</h5>
+                        <span>Engineering Director, ScaleUp Inc</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.support-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.support-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.support-header h1 {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.support-header .lead {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.support-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+/* Support Options */
+.support-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.support-option {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 2px solid var(--border-color);
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.support-option:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.support-option.primary {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(107, 70, 193, 0.05));
+}
+
+.support-option.enterprise {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.05));
+}
+
+.option-badge {
+    position: absolute;
+    top: -10px;
+    right: 1rem;
+    background: #f59e0b;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.option-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.support-option h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.support-option p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.option-details {
+    margin-bottom: 2rem;
+}
+
+.availability {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.925rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.online {
+    background: #10b981;
+    animation: pulse 2s infinite;
+}
+
+.response-time,
+.support-level {
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+    margin: 0.25rem 0;
+}
+
+.support-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+    width: 100%;
+}
+
+.support-btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.support-btn.primary:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-1px);
+}
+
+.support-btn.secondary {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.support-btn.secondary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Contact Form */
+.contact-section {
+    margin: 3rem 0;
+    background: var(--background-color);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+}
+
+.contact-card {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.contact-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.contact-header h2 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.contact-header p {
+    color: var(--text-secondary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.character-count {
+    text-align: right;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-cancel {
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: var(--background-color);
+}
+
+.btn-submit {
+    padding: 0.75rem 2rem;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-submit:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-1px);
+}
+
+/* Resources Section */
+.resources-section {
+    margin: 4rem 0;
+}
+
+.resources-section h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.resources-section > p {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 1.125rem;
+}
+
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.resource-card {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.resource-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.resource-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.resource-card h4 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.resource-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.resource-card ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.resource-card li {
+    margin: 0.5rem 0;
+}
+
+.resource-card li a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.925rem;
+}
+
+.resource-card li a:hover {
+    text-decoration: underline;
+}
+
+.resource-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.resource-link:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+/* Community Section */
+.community-section {
+    background: var(--background-color);
+    padding: 3rem 2rem;
+    border-radius: var(--border-radius);
+    margin: 4rem 0;
+}
+
+.community-section h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.community-section > p {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 1.125rem;
+}
+
+.community-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.community-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.community-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.community-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.community-card h4 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.community-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 0.925rem;
+    line-height: 1.5;
+}
+
+.community-stats {
+    margin-bottom: 1.5rem;
+}
+
+.community-stats span {
+    display: block;
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+    margin: 0.25rem 0;
+}
+
+.community-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--gradient-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.community-btn:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-1px);
+}
+
+/* Enterprise Section */
+.enterprise-section {
+    margin: 4rem 0;
+}
+
+.enterprise-card {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    min-height: 400px;
+}
+
+.enterprise-content {
+    flex: 1;
+    padding: 3rem;
+}
+
+.enterprise-card h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.enterprise-card p {
+    font-size: 1.25rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.enterprise-features {
+    margin-bottom: 2rem;
+}
+
+.enterprise-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.enterprise-feature h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+}
+
+.enterprise-feature p {
+    margin: 0;
+    font-size: 0.925rem;
+    opacity: 0.8;
+}
+
+.enterprise-cta {
+    text-align: center;
+}
+
+.enterprise-btn {
+    padding: 1rem 2rem;
+    background: white;
+    color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 1.125rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.enterprise-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+}
+
+.enterprise-note {
+    margin-top: 1rem;
+    font-size: 0.925rem;
+    opacity: 0.8;
+}
+
+.enterprise-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.support-illustration {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+
+.support-person {
+    font-size: 4rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.support-chat {
+    font-size: 2rem;
+    position: absolute;
+    top: 20%;
+    right: 10%;
+    animation: bounce 2s infinite;
+}
+
+.support-phone {
+    font-size: 2rem;
+    position: absolute;
+    bottom: 20%;
+    left: 10%;
+    animation: bounce 2s infinite 0.5s;
+}
+
+/* Testimonials */
+.testimonials-section {
+    margin: 4rem 0;
+}
+
+.testimonials-section h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 3rem;
+    font-size: 2rem;
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.testimonial-card {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.testimonial-content {
+    margin-bottom: 1.5rem;
+}
+
+.testimonial-content p {
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 1.125rem;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.author-avatar {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.author-info h5 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.author-info span {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .support-container {
+        padding: 1rem;
+    }
+
+    .support-header h1 {
+        font-size: 2rem;
+    }
+
+    .support-options-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .enterprise-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .enterprise-content {
+        padding: 2rem;
+    }
+
+    .enterprise-image {
+        padding: 1rem;
+    }
+
+    .support-illustration {
+        width: 150px;
+        height: 150px;
+    }
+
+    .testimonials-grid,
+    .resources-grid,
+    .community-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .enterprise-card h2 {
+        font-size: 2rem;
+    }
+
+    .enterprise-card p {
+        font-size: 1rem;
+    }
+
+    .support-person {
+        font-size: 3rem;
+    }
+}
+</style>
+
+<script>
+// Support form functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const contactMessage = document.getElementById('contact-message');
+    const charCount = document.getElementById('char-count');
+    const supportForm = document.getElementById('support-form');
+
+    // Character counter
+    if (contactMessage && charCount) {
+        contactMessage.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = count;
+
+            if (count > 2000) {
+                charCount.style.color = 'var(--error-color)';
+            } else if (count > 1800) {
+                charCount.style.color = 'var(--warning-color)';
+            } else {
+                charCount.style.color = 'var(--text-secondary)';
+            }
+        });
+    }
+
+    // Form submission
+    if (supportForm) {
+        supportForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Show loading state
+            const submitBtn = this.querySelector('.btn-submit');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            // Simulate form submission
+            setTimeout(() => {
+                alert('Thank you for your message! We\'ll get back to you within 2 hours.');
+                this.reset();
+                charCount.textContent = '0';
+                closeContactForm();
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }, 1500);
+        });
+    }
+});
+
+function openLiveChat() {
+    // In a real implementation, this would open your live chat widget
+    alert('Opening live chat...\n\nIn a real implementation, this would connect you to our support team via Intercom, Zendesk Chat, or similar service.');
+}
+
+function openContactForm() {
+    const contactForm = document.getElementById('contact-form');
+    contactForm.style.display = 'block';
+    contactForm.scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeContactForm() {
+    const contactForm = document.getElementById('contact-form');
+    contactForm.style.display = 'none';
+}
+
+function requestCallback() {
+    // In a real implementation, this would open a callback request form
+    alert('Callback request form would open here.\n\nEnterprise customers can request a callback from our technical team.');
+}
+
+function contactEnterpriseSales() {
+    // In a real implementation, this would redirect to enterprise sales
+    alert('Redirecting to enterprise sales contact form...\n\nOur enterprise sales team will help you with custom solutions and pricing.');
+    // window.location.href = '/enterprise/contact';
+}
+</script>
+{% endblock %}

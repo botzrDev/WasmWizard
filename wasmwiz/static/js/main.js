@@ -50,10 +50,10 @@ performanceMetrics.startTiming('pageLoadTime');
 // Error tracking and reporting
 function reportError(error, context) {
     console.error(`Error in ${context}:`, error);
-    
+
     // In production, you would send this to your error monitoring service
     // Example: Sentry.captureException(error);
-    
+
     // For now, we'll just log it
     const errorData = {
         message: error.message,
@@ -63,12 +63,150 @@ function reportError(error, context) {
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent
     };
-    
+
     // In development, log the full error details
     console.debug('Error details:', errorData);
-    
+
     // Show a user-friendly message
     displayAlert(`An error occurred in ${context}. Please try again.`, 'error');
+}
+
+// Copy to clipboard functionality
+function copyToClipboard(text, feedback) {
+    if (!navigator.clipboard) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            if (feedback) showCopyFeedback(feedback, 'Copied!');
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            if (feedback) showCopyFeedback(feedback, 'Copy failed');
+        }
+
+        document.body.removeChild(textArea);
+        return;
+    }
+
+    navigator.clipboard.writeText(text).then(
+        () => {
+            if (feedback) showCopyFeedback(feedback, 'Copied!');
+        },
+        (err) => {
+            console.error('Copy failed:', err);
+            if (feedback) showCopyFeedback(feedback, 'Copy failed');
+        }
+    );
+}
+
+function showCopyFeedback(element, message) {
+    const originalText = element.textContent;
+    const originalColor = element.style.color;
+
+    element.textContent = message;
+    element.style.color = '#10b981';
+
+    setTimeout(() => {
+        element.textContent = originalText;
+        element.style.color = originalColor;
+    }, 2000);
+}
+
+// Loading state management
+function showLoading(element, loadingText = 'Loading...') {
+    if (!element) return;
+
+    element.dataset.originalText = element.textContent;
+    element.dataset.originalDisabled = element.disabled;
+
+    element.textContent = loadingText;
+    element.disabled = true;
+    element.classList.add('loading');
+}
+
+function hideLoading(element) {
+    if (!element) return;
+
+    element.textContent = element.dataset.originalText || element.textContent;
+    element.disabled = element.dataset.originalDisabled === 'true';
+    element.classList.remove('loading');
+
+    delete element.dataset.originalText;
+    delete element.dataset.originalDisabled;
+}
+
+// Enhanced alert system with better styling
+function displayAlert(message, type = 'info', duration = 5000) {
+    const alertArea = document.getElementById('notification-area');
+    if (!alertArea) {
+        console.warn('No notification area found, falling back to alert');
+        alert(message);
+        return;
+    }
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible`;
+
+    const alertContent = document.createElement('div');
+    alertContent.className = 'alert-content';
+
+    const alertIcon = document.createElement('div');
+    alertIcon.className = 'alert-icon';
+    alertIcon.textContent = getAlertIcon(type);
+
+    const alertMessage = document.createElement('div');
+    alertMessage.className = 'alert-message';
+    alertMessage.textContent = message;
+
+    const closeButton = document.createElement('button');
+    closeButton.className = 'alert-close';
+    closeButton.innerHTML = '×';
+    closeButton.setAttribute('aria-label', 'Close alert');
+    closeButton.onclick = () => removeAlert(alertDiv);
+
+    alertContent.appendChild(alertIcon);
+    alertContent.appendChild(alertMessage);
+    alertDiv.appendChild(alertContent);
+    alertDiv.appendChild(closeButton);
+
+    alertArea.appendChild(alertDiv);
+
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => removeAlert(alertDiv), duration);
+    }
+
+    // Animate in
+    setTimeout(() => alertDiv.classList.add('alert-show'), 100);
+}
+
+function removeAlert(alertDiv) {
+    if (!alertDiv) return;
+
+    alertDiv.classList.add('alert-hide');
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 300);
+}
+
+function getAlertIcon(type) {
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    return icons[type] || icons.info;
 }
 
 // Initialize offline detection
