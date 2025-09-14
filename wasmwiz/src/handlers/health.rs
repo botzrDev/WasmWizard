@@ -1,4 +1,59 @@
-// src/handlers/health.rs
+//! # Health Check Handlers
+//!
+//! This module provides comprehensive health check endpoints for monitoring
+//! the WasmWiz application status and diagnosing issues in production.
+//!
+//! ## Health Check Types
+//!
+//! ### Basic Health Check (`/health`)
+//! - Database connectivity
+//! - Filesystem access
+//! - System resources (CPU, memory)
+//! - Application responsiveness
+//!
+//! ### Kubernetes Liveness Probe (`/health/live`)
+//! - Quick check for application liveness
+//! - Used by Kubernetes to restart unhealthy pods
+//!
+//! ### Kubernetes Readiness Probe (`/health/ready`)
+//! - Comprehensive check including dependencies
+//! - Used by Kubernetes for load balancing
+//!
+//! ## Response Format
+//!
+//! ### Healthy Response
+//! ```json
+//! {
+//!   "status": "healthy",
+//!   "timestamp": "2024-01-01T12:00:00Z",
+//!   "checks": {
+//!     "database": {"status": "healthy", "message": "Connected"},
+//!     "filesystem": {"status": "healthy", "message": "Writable"},
+//!     "system": {"status": "healthy", "message": "CPU: 45%, Memory: 60%"}
+//!   }
+//! }
+//! ```
+//!
+//! ### Unhealthy Response
+//! ```json
+//! {
+//!   "status": "unhealthy",
+//!   "timestamp": "2024-01-01T12:00:00Z",
+//!   "checks": {
+//!     "database": {"status": "unhealthy", "message": "Connection timeout"},
+//!     "filesystem": {"status": "healthy", "message": "Writable"}
+//!   }
+//! }
+//! ```
+//!
+//! ## Monitoring Integration
+//!
+//! Health check results are designed to integrate with:
+//! - **Prometheus**: Metrics collection and alerting
+//! - **Kubernetes**: Pod lifecycle management
+//! - **Load Balancers**: Traffic routing decisions
+//! - **Uptime Monitors**: External service monitoring
+
 use crate::app::AppState;
 use crate::log_info;
 use actix_web::{web, HttpResponse, Result};
@@ -6,7 +61,50 @@ use serde_json::json;
 use sysinfo::System;
 use tracing::error;
 
-/// Health check endpoint that verifies system components
+/// Comprehensive health check endpoint.
+///
+/// Performs detailed checks of all system components and dependencies.
+/// This endpoint is used for monitoring the overall health of the WasmWiz
+/// application and can be used by load balancers and monitoring systems.
+///
+/// # Checks Performed
+///
+/// - **Database**: Connection and query execution
+/// - **Filesystem**: Read/write access to WASM temp directory
+/// - **System Resources**: CPU and memory usage
+/// - **Application**: General responsiveness
+///
+/// # Returns
+///
+/// - `200 OK`: All checks passed, system is healthy
+/// - `503 Service Unavailable`: One or more checks failed
+///
+/// # Examples
+///
+/// ## Healthy System
+/// ```json
+/// {
+///   "status": "healthy",
+///   "timestamp": "2024-01-01T12:00:00Z",
+///   "checks": {
+///     "database": {"status": "healthy", "message": "Connected"},
+///     "filesystem": {"status": "healthy", "message": "Writable"},
+///     "system": {"status": "healthy", "message": "CPU: 25%, Memory: 40%"}
+///   }
+/// }
+/// ```
+///
+/// ## Unhealthy System
+/// ```json
+/// {
+///   "status": "unhealthy",
+///   "timestamp": "2024-01-01T12:00:00Z",
+///   "checks": {
+///     "database": {"status": "unhealthy", "message": "Connection refused"},
+///     "filesystem": {"status": "healthy", "message": "Writable"}
+///   }
+/// }
+/// ```
 pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
     log_info!("Health check requested");
 

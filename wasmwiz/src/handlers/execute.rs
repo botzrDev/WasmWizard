@@ -1,4 +1,54 @@
-// src/handlers/execute.rs
+//! # WASM Execution Handler
+//!
+//! This module provides the core functionality for executing WebAssembly modules
+//! with user-provided input data. It handles multipart form data parsing, WASM
+//! validation, execution in a sandboxed environment, and comprehensive error handling.
+//!
+//! ## Execution Flow
+//!
+//! ```text
+//! 1. Parse multipart form data (WASM + input)
+//! 2. Validate WASM module format and size limits
+//! 3. Authenticate user and check rate limits
+//! 4. Execute WASM in sandboxed environment
+//! 5. Collect output and log usage metrics
+//! 6. Return results or error details
+//! ```
+//!
+//! ## Request Format
+//!
+//! The endpoint accepts `multipart/form-data` with the following fields:
+//!
+//! - `wasm`: WebAssembly module binary data (required)
+//! - `input`: UTF-8 encoded input string (optional)
+//!
+//! ## Response Format
+//!
+//! ```json
+//! {
+//!   "output": "Execution result string",
+//!   "error": null
+//! }
+//! ```
+//!
+//! ## Security Features
+//!
+//! - **Sandboxing**: WASM execution is isolated using Wasmer
+//! - **Time Limits**: Execution is bounded by configurable timeouts
+//! - **Memory Limits**: WASM memory usage is restricted
+//! - **Input Validation**: File format and size validation
+//! - **Rate Limiting**: Per-user execution limits
+//!
+//! ## Error Handling
+//!
+//! The handler provides detailed error messages for common failure scenarios:
+//!
+//! - Invalid WASM format or corrupted modules
+//! - Execution timeouts or memory limit exceeded
+//! - Malformed input data or encoding issues
+//! - Authentication or authorization failures
+//! - Rate limiting violations
+
 use actix_multipart::Multipart;
 use actix_web::{web, HttpRequest, HttpResponse, ResponseError, Result as ActixResult};
 use bytes::BytesMut;
@@ -21,7 +71,73 @@ use crate::models::usage_log::UsageLog;
 use crate::utils::file_system;
 use std::fs;
 
-/// Execute a WebAssembly module with provided input
+/// Execute a WebAssembly module with provided input data.
+///
+/// This is the main endpoint for WASM execution in WasmWiz. It accepts a multipart
+/// form containing a WASM module and optional input data, executes the module in
+/// a sandboxed environment, and returns the output or error details.
+///
+/// # Authentication
+///
+/// Requires a valid API key in the `Authorization` header.
+///
+/// # Request Format
+///
+/// ```text
+/// POST /api/wasm/execute
+/// Content-Type: multipart/form-data
+///
+/// --boundary
+/// Content-Disposition: form-data; name="wasm"; filename="module.wasm"
+///
+/// <WASM binary data>
+/// --boundary
+/// Content-Disposition: form-data; name="input"
+///
+/// Hello, WASM!
+/// --boundary--
+/// ```
+///
+/// # Parameters
+///
+/// - `wasm`: WebAssembly module binary data (required, max size configurable)
+/// - `input`: UTF-8 encoded input string (optional, max size configurable)
+///
+/// # Returns
+///
+/// Returns a JSON response with execution results:
+///
+/// - `200 OK`: Execution successful, contains output in `output` field
+/// - `400 Bad Request`: Invalid input data or WASM format
+/// - `401 Unauthorized`: Missing or invalid API key
+/// - `413 Payload Too Large`: WASM or input data exceeds size limits
+/// - `422 Unprocessable Entity`: WASM execution failed
+/// - `429 Too Many Requests`: Rate limit exceeded
+///
+/// # Examples
+///
+/// ## Successful Execution
+/// ```json
+/// {
+///   "output": "Hello, WASM! Processed by module",
+///   "error": null
+/// }
+/// ```
+///
+/// ## Execution Error
+/// ```json
+/// {
+///   "output": null,
+///   "error": "WASM execution timeout"
+/// }
+/// ```
+///
+/// # Security Considerations
+///
+/// - WASM modules are validated for correct format before execution
+/// - Execution is sandboxed with memory and time limits
+/// - Input data is validated for UTF-8 encoding
+/// - All executions are logged for audit purposes
 pub async fn execute_wasm(
     auth_context: AuthContext, // Custom FromRequest extractor handles authentication
     app_state: web::Data<AppState>,

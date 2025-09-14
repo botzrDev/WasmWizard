@@ -99,9 +99,10 @@ cargo run
 - **[Security Checklist](wasmwiz/SECURITY.md)** - Security hardening and compliance
 
 ### Development
-- **[API Documentation](wasmwiz/API.md)** - REST API reference
+- **[API Documentation](wasmwiz/API.md)** - Complete REST API reference with examples
+- **[Configuration Guide](wasmwiz/CONFIGURATION.md)** - Environment variables and setup
 - **[Development Guide](wasmwiz/DEVELOPMENT.md)** - Setup and contribution guidelines
-- **[Architecture Overview](wasmwiz/ARCHITECTURE.md)** - System design and components
+- **[Troubleshooting Guide](wasmwiz/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ## 🔗 API Endpoints
 
@@ -112,21 +113,18 @@ cargo run
 - `GET /metrics` - Prometheus metrics
 
 ### WebAssembly Operations
-- `POST /api/wasm/upload` - Upload WASM module with metadata
-- `POST /api/wasm/execute` - Execute WASM module with input
-- `GET /api/wasm/modules` - List available modules with pagination
-- `DELETE /api/wasm/modules/{id}` - Delete module (authorized users only)
+- `POST /api/wasm/execute` - Execute WASM module with input data
+- `GET /` - Main application dashboard
+- `GET /api-keys` - API key management interface
 
-### Authentication & Authorization
-- `POST /api/auth/keys` - Generate API key with tier assignment
+### Authentication & API Keys
+- `POST /api/auth/keys` - Generate new API key
 - `GET /api/auth/keys` - List user's API keys
 - `DELETE /api/auth/keys/{id}` - Revoke API key
-- `POST /api/auth/refresh` - Refresh JWT token
 
 ### Web Interface
-- `GET /` - Dashboard with usage metrics
-- `GET /api-keys` - Key management interface
-- `GET /upload` - WASM module upload interface
+- `GET /` - Main application dashboard
+- `GET /api-keys` - API key management interface
 
 ## 🛡️ Security Features
 

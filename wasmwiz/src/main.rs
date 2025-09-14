@@ -1,3 +1,54 @@
+//! # WasmWiz Application Server
+//!
+//! This is the main entry point for the WasmWiz WebAssembly execution platform.
+//! It sets up the Actix-web server with all necessary middleware, routes, and services.
+//!
+//! ## Startup Process
+//!
+//! The application follows a structured startup sequence:
+//!
+//! 1. **Environment Setup**: Load environment variables from `.env` file (development only)
+//! 2. **Configuration**: Load and validate application configuration
+//! 3. **Logging**: Initialize structured logging with appropriate verbosity
+//! 4. **Database**: Establish connection pool and run migrations (development)
+//! 5. **Background Tasks**: Start cleanup tasks for temporary files
+//! 6. **Server**: Configure and start the HTTP server
+//!
+//! ## Configuration
+//!
+//! The application is configured entirely through environment variables.
+//! See [`config::Config`] for complete configuration options.
+//!
+//! ## Security Features
+//!
+//! - **Environment-based config**: No hardcoded secrets or credentials
+//! - **Validation**: Configuration is validated on startup
+//! - **Sandboxing**: WASM execution is isolated with resource limits
+//! - **Authentication**: API key-based authentication (configurable)
+//! - **Rate Limiting**: Distributed rate limiting with Redis support
+//!
+//! ## Monitoring
+//!
+//! The application provides comprehensive monitoring:
+//!
+//! - **Health Checks**: `/health`, `/health/live`, `/health/ready`
+//! - **Metrics**: `/metrics` (Prometheus format)
+//! - **Structured Logging**: JSON-formatted logs with correlation IDs
+//! - **Performance Monitoring**: Request timing and resource usage
+//!
+//! ## Example
+//!
+//! ```bash
+//! # Development
+//! cargo run
+//!
+//! # Production
+//! export ENVIRONMENT=production
+//! export DATABASE_URL="postgresql://..."
+//! export API_SALT="your-secure-salt"
+//! cargo run --release
+//! ```
+
 mod app;
 mod config;
 mod errors;
