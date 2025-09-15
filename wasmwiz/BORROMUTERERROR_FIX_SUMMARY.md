@@ -2,7 +2,7 @@
 
 ## Problem Resolved
 
-The critical `BorrowMutError` panic in the WasmWiz WASM execution engine has been resolved by implementing the recommended architectural solution from the technical analysis.
+The critical `BorrowMutError` panic in the Wasm Wizard WASM execution engine has been resolved by implementing the recommended architectural solution from the technical analysis.
 
 ## Root Cause
 

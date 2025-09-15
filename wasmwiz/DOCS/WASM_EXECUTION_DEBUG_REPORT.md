@@ -1,4 +1,4 @@
-# WasmWiz WASM Execution Engine - Debug Report
+# Wasm Wizard WASM Execution Engine - Debug Report
 
 **Date:** June 23, 2025  
 **Issue Severity:** HIGH - Production Blocking  
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The WasmWiz WASM execution engine has been successfully updated to use the latest Wasmer 6.0.1 and wasmer-wasix 0.600.1 APIs, resolving all compilation issues. However, a critical runtime panic is preventing the execution of WASM modules. The application compiles cleanly and all supporting infrastructure (database, Redis, rate limiting) is functional, but multipart form parsing triggers a `BorrowMutError` that crashes the server.
+The Wasm Wizard WASM execution engine has been successfully updated to use the latest Wasmer 6.0.1 and wasmer-wasix 0.600.1 APIs, resolving all compilation issues. However, a critical runtime panic is preventing the execution of WASM modules. The application compiles cleanly and all supporting infrastructure (database, Redis, rate limiting) is functional, but multipart form parsing triggers a `BorrowMutError` that crashes the server.
 
 ## Current Status
 
@@ -67,7 +67,7 @@ cargo build
 > Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.81s
 
 # Server Startup - ✅ SUCCESS  
-./target/debug/wasmwiz
+./target/debug/wasm-wizard
 > Server starts normally, health endpoints responsive
 
 # WASM Execution - ❌ FAILURE
@@ -172,17 +172,17 @@ curl -X POST http://localhost:8081/api/execute -F "wasm_file=@path/to/file.wasm"
 ### Useful Debug Commands
 ```bash
 # Enable maximum debug logging
-RUST_LOG=debug,actix_web=trace ./target/debug/wasmwiz
+RUST_LOG=debug,actix_web=trace ./target/debug/wasm-wizard
 
 # Test with curl verbose output
 curl -v -X POST http://localhost:8081/api/debug-execute -F "wasm_file=@test.wasm"
 
 # Check for memory issues
-valgrind --tool=memcheck ./target/debug/wasmwiz
+valgrind --tool=memcheck ./target/debug/wasm-wizard
 
 # Profile performance
 cargo build --release
-perf record ./target/release/wasmwiz
+perf record ./target/release/wasm-wizard
 ```
 
 ### Code Patterns to Investigate
@@ -198,6 +198,6 @@ let auth = extensions.get::<AuthContext>();
 
 ## Conclusion
 
-The WasmWiz application is very close to production readiness. The core infrastructure, security, and configuration systems are robust and well-implemented. The current blocking issue is a specific runtime panic in request handling that can be resolved with focused debugging effort. Once this issue is fixed and basic WASM execution is restored, the application will be ready for production deployment with full monitoring and observability.
+The Wasm Wizard application is very close to production readiness. The core infrastructure, security, and configuration systems are robust and well-implemented. The current blocking issue is a specific runtime panic in request handling that can be resolved with focused debugging effort. Once this issue is fixed and basic WASM execution is restored, the application will be ready for production deployment with full monitoring and observability.
 
 The architecture decisions made during this refactoring (Wasmer 6.0.1 migration, Redis integration, enhanced configuration) are sound and will provide a solid foundation for scaling and maintaining the service long-term.

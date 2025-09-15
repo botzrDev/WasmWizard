@@ -8,7 +8,7 @@
 **Status:** � **IN PROGRESS** - WASM execution engine under active debugging  
 **Production Readiness Score:** 7.5/10 (down from 9.5 due to WASM execution issues)
 
-This document outlines all tasks required to take the WasmWiz WebAssembly Execution API from its current development state to production readiness, based on comprehensive audit findings and the requirements specified in the ERD.
+This document outlines all tasks required to take the Wasm Wizard WebAssembly Execution API from its current development state to production readiness, based on comprehensive audit findings and the requirements specified in the ERD.
 
 ---
 
@@ -89,7 +89,7 @@ This document outlines all tasks required to take the WasmWiz WebAssembly Execut
 ### **✅ Container & Deployment (COMPLETED)**
 - [x] **Production Dockerfile**: Multi-stage, security-hardened build:
   - Debian Slim base with security updates
-  - Non-root user execution (wasmwiz:1001)
+  - Non-root user execution (wasm-wizard:1001)
   - Minimal attack surface with only required dependencies
   - Health check integration and proper signal handling
 - [x] **Docker Compose**: Production-ready orchestration:
@@ -150,10 +150,10 @@ This document outlines all tasks required to take the WasmWiz WebAssembly Execut
 ### **🚀 Ready to Deploy Commands**
 ```bash
 # Production Build
-cd wasmwiz && cargo build --release
+cd wasm-wizard && cargo build --release
 
 # Container Build  
-docker build -t wasmwiz:latest .
+docker build -t wasm-wizard:latest .
 
 # Stack Deployment
 docker-compose up -d

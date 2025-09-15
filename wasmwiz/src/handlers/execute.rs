@@ -73,7 +73,7 @@ use std::fs;
 
 /// Execute a WebAssembly module with provided input data.
 ///
-/// This is the main endpoint for WASM execution in WasmWiz. It accepts a multipart
+/// This is the main endpoint for WASM execution in Wasm Wizard. It accepts a multipart
 /// form containing a WASM module and optional input data, executes the module in
 /// a sandboxed environment, and returns the output or error details.
 ///

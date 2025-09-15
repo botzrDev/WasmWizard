@@ -156,7 +156,7 @@ logs/
 log/
 
 # Application specific logs
-wasmwiz*.log
+wasm-wizard*.log
 execution*.log
 access*.log
 error*.log

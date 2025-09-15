@@ -1,8 +1,8 @@
-# WasmWiz API Documentation
+# Wasm Wizard API Documentation
 
 ## Overview
 
-The WasmWiz API provides a secure, scalable platform for executing WebAssembly modules with comprehensive monitoring, authentication, and rate limiting.
+The Wasm Wizard API provides a secure, scalable platform for executing WebAssembly modules with comprehensive monitoring, authentication, and rate limiting.
 
 **Base URL:** `https://your-domain.com`  
 **Authentication:** API Key (Bearer token)  
@@ -13,7 +13,7 @@ The WasmWiz API provides a secure, scalable platform for executing WebAssembly m
 All API requests require authentication using an API key in the `Authorization` header:
 
 ```
-Authorization: Bearer wasmwiz_your_api_key_here
+Authorization: Bearer wasm-wizard_your_api_key_here
 ```
 
 ### Getting an API Key
@@ -97,13 +97,13 @@ Prometheus metrics endpoint for monitoring and alerting.
 
 **Response (200 OK):**
 ```
-# HELP wasmwiz_requests_total Total number of requests
-# TYPE wasmwiz_requests_total counter
-wasmwiz_requests_total{method="POST",endpoint="/api/wasm/execute",status="200"} 12543
+# HELP wasm-wizard_requests_total Total number of requests
+# TYPE wasm-wizard_requests_total counter
+wasm-wizard_requests_total{method="POST",endpoint="/api/wasm/execute",status="200"} 12543
 
-# HELP wasmwiz_execution_duration_seconds WASM execution duration
-# TYPE wasmwiz_execution_duration_seconds histogram
-wasmwiz_execution_duration_seconds_bucket{le="0.1"} 1234
+# HELP wasm-wizard_execution_duration_seconds WASM execution duration
+# TYPE wasm-wizard_execution_duration_seconds histogram
+wasm-wizard_execution_duration_seconds_bucket{le="0.1"} 1234
 ```
 
 ### WebAssembly Operations
@@ -122,10 +122,10 @@ Execute a WebAssembly module with provided input data.
 **Example Request (curl):**
 ```bash
 curl -X POST \
-  -H "Authorization: Bearer wasmwiz_your_key" \
+  -H "Authorization: Bearer wasm-wizard_your_key" \
   -F "wasm=@hello.wasm" \
   -F "input=Hello World" \
-  https://api.wasmwiz.com/api/wasm/execute
+  https://api.wasm-wizard.com/api/wasm/execute
 ```
 
 **Response (200 OK - Success):**
@@ -165,7 +165,7 @@ Generate a new API key for the authenticated user.
 **Response (201 Created):**
 ```json
 {
-  "api_key": "wasmwiz_abc123def456789...",
+  "api_key": "wasm-wizard_abc123def456789...",
   "api_key_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
@@ -260,10 +260,10 @@ All API errors follow a consistent format:
 ### JavaScript/TypeScript
 
 ```javascript
-class WasmWizClient {
+class Wasm WizardClient {
   constructor(apiKey) {
     this.apiKey = apiKey;
-    this.baseUrl = 'https://api.wasmwiz.com';
+    this.baseUrl = 'https://api.wasm-wizard.com';
   }
 
   async executeWasm(wasmFile, input = '') {
@@ -289,10 +289,10 @@ class WasmWizClient {
 ```python
 import requests
 
-class WasmWizClient:
+class Wasm WizardClient:
     def __init__(self, api_key):
         self.api_key = api_key
-        self.base_url = 'https://api.wasmwiz.com'
+        self.base_url = 'https://api.wasm-wizard.com'
 
     def execute_wasm(self, wasm_file_path, input_data=''):
         with open(wasm_file_path, 'rb') as f:
@@ -344,7 +344,7 @@ try {
 
 ## Support
 
-- **Documentation:** https://docs.wasmwiz.com
-- **API Status:** https://status.wasmwiz.com
-- **Support:** support@wasmwiz.com
-- **Community:** https://community.wasmwiz.com
+- **Documentation:** https://docs.wasm-wizard.com
+- **API Status:** https://status.wasm-wizard.com
+- **Support:** support@wasm-wizard.com
+- **Community:** https://community.wasm-wizard.com

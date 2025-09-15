@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# WasmWiz Production Readiness Validation Script
+# Wasm Wizard Production Readiness Validation Script
 # This script performs comprehensive checks to ensure 100% production readiness
 
 set -e  # Exit on error
@@ -18,7 +18,7 @@ WARNINGS=0
 ERRORS=0
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}🚀 WasmWiz Production Readiness Validation${NC}"
+echo -e "${BLUE}🚀 Wasm Wizard Production Readiness Validation${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -136,14 +136,14 @@ print_section "5. Docker Container Security"
 
 if command -v docker &> /dev/null; then
     echo "Building Docker image..."
-    if docker build -t wasmwiz:validation . 2>/dev/null; then
+    if docker build -t wasm-wizard:validation . 2>/dev/null; then
         print_success "Docker build successful"
 
         # Check for security best practices
         echo "Checking Docker security..."
-        DOCKER_CHECK=$(docker inspect wasmwiz:validation 2>/dev/null || echo "{}")
+        DOCKER_CHECK=$(docker inspect wasm-wizard:validation 2>/dev/null || echo "{}")
 
-        if echo "$DOCKER_CHECK" | grep -q '"User": "wasmwiz"'; then
+        if echo "$DOCKER_CHECK" | grep -q '"User": "wasm-wizard"'; then
             print_success "Container runs as non-root user"
         else
             print_warning "Container might run as root user"
@@ -152,7 +152,7 @@ if command -v docker &> /dev/null; then
         # Scan with docker scan if available
         if command -v docker scan &> /dev/null; then
             echo "Running Docker security scan..."
-            docker scan wasmwiz:validation 2>/dev/null || print_warning "Docker scan not configured"
+            docker scan wasm-wizard:validation 2>/dev/null || print_warning "Docker scan not configured"
         else
             print_warning "Docker scan not available"
         fi
@@ -218,12 +218,12 @@ fi
 print_section "8. Performance Validation"
 
 # Check binary size
-if [ -f "target/release/wasmwiz" ]; then
-    SIZE=$(du -h target/release/wasmwiz | cut -f1)
+if [ -f "target/release/wasm-wizard" ]; then
+    SIZE=$(du -h target/release/wasm-wizard | cut -f1)
     print_success "Release binary size: $SIZE"
 
     # Check if size is reasonable (< 50MB)
-    SIZE_MB=$(du -m target/release/wasmwiz | cut -f1)
+    SIZE_MB=$(du -m target/release/wasm-wizard | cut -f1)
     if [ "$SIZE_MB" -lt 50 ]; then
         print_success "Binary size is optimized"
     else
@@ -294,7 +294,7 @@ echo -e "Production Readiness: ${GREEN}$READINESS_PERCENT%${NC}"
 echo ""
 if [ "$VALIDATION_PASSED" = true ] && [ "$ERRORS" -eq 0 ]; then
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}✅ WasmWiz is PRODUCTION READY!${NC}"
+    echo -e "${GREEN}✅ Wasm Wizard is PRODUCTION READY!${NC}"
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
     if [ "$WARNINGS" -gt 0 ]; then
@@ -304,13 +304,13 @@ if [ "$VALIDATION_PASSED" = true ] && [ "$ERRORS" -eq 0 ]; then
     exit 0
 elif [ "$ERRORS" -le 3 ]; then
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${YELLOW}⚠️  WasmWiz is NEARLY production ready${NC}"
+    echo -e "${YELLOW}⚠️  Wasm Wizard is NEARLY production ready${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "\n${YELLOW}Address the $ERRORS errors above before deployment${NC}"
     exit 1
 else
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${RED}❌ WasmWiz is NOT production ready${NC}"
+    echo -e "${RED}❌ Wasm Wizard is NOT production ready${NC}"
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "\n${RED}Fix the $ERRORS errors above before proceeding${NC}"
     exit 1

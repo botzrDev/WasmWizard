@@ -1,22 +1,22 @@
-# WasmWiz Development Environment Setup - Complete
+# Wasm Wizard Development Environment Setup - Complete
 
 ## Overview
-Successfully set up a complete development environment for the WasmWiz project with database, Redis, and application running on custom ports in the 7000-8000 range.
+Successfully set up a complete development environment for the Wasm Wizard project with database, Redis, and application running on custom ports in the 7000-8000 range.
 
 ## Current Status: ✅ FULLY OPERATIONAL
 
 ### Services Running
 - **PostgreSQL Database**: Port 7432
 - **Redis Cache**: Port 7379  
-- **pgAdmin Interface**: Port 7050 (admin@wasmwiz.dev / admin)
-- **WasmWiz Application**: Port 8081
+- **pgAdmin Interface**: Port 7050 (admin@wasm-wizard.dev / admin)
+- **Wasm Wizard Application**: Port 8081
 
 ### Database Configuration
-- **Database**: `wasmwiz_dev` on PostgreSQL 16
-- **Connection**: `postgres://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev`
+- **Database**: `wasm-wizard_dev` on PostgreSQL 16
+- **Connection**: `postgres://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev`
 - **Migrations**: Successfully applied (2 migrations)
 - **Seed Data**: Test user and API key created
-  - User: `test@wasmwiz.dev`
+  - User: `test@wasm-wizard.dev`
   - API Key: `dev-test-key-123` (for testing authenticated endpoints)
 
 ### Application Configuration
@@ -30,13 +30,13 @@ Successfully set up a complete development environment for the WasmWiz project w
 
 ### New Files
 1. **`/DATABASE_ANALYSIS.md`** - Comprehensive database schema analysis
-2. **`/wasmwiz/docker-compose.dev-ports.yml`** - Development Docker Compose with custom ports
-3. **`/wasmwiz/scripts/init-dev-db.sql`** - Database seed script for test data
-4. **`/wasmwiz/scripts/start-dev.sh`** - Automated development environment startup script
+2. **`/wasm-wizard/docker-compose.dev-ports.yml`** - Development Docker Compose with custom ports
+3. **`/wasm-wizard/scripts/init-dev-db.sql`** - Database seed script for test data
+4. **`/wasm-wizard/scripts/start-dev.sh`** - Automated development environment startup script
 
 ### Modified Files
-1. **`/wasmwiz/.env.development`** - Updated to use ports 7432/7379
-2. **`/wasmwiz/src/app.rs`** - Temporarily disabled rate limiting middleware
+1. **`/wasm-wizard/.env.development`** - Updated to use ports 7432/7379
+2. **`/wasm-wizard/src/app.rs`** - Temporarily disabled rate limiting middleware
 
 ## Database Schema
 The application uses a PostgreSQL database with the following key tables:
@@ -57,13 +57,13 @@ Performance indexes are in place for:
 
 ### Option 1: Automated Startup (Recommended)
 ```bash
-cd /home/austingreen/Documents/botzr/projects/WasmWiz/wasmwiz
+cd /home/austingreen/Documents/botzr/projects/Wasm Wizard/wasm-wizard
 ./scripts/start-dev.sh
 ```
 
 ### Option 2: Manual Startup
 ```bash
-cd /home/austingreen/Documents/botzr/projects/WasmWiz/wasmwiz
+cd /home/austingreen/Documents/botzr/projects/Wasm Wizard/wasm-wizard
 
 # Start database services
 docker-compose -f docker-compose.dev-ports.yml up -d
@@ -72,24 +72,24 @@ docker-compose -f docker-compose.dev-ports.yml up -d
 sleep 10
 
 # Run migrations
-sqlx migrate run --database-url postgres://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev
+sqlx migrate run --database-url postgres://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev
 
 # Seed test data (if needed)
-psql -h localhost -p 7432 -U wasmwiz -d wasmwiz_dev -f scripts/init-dev-db.sql
+psql -h localhost -p 7432 -U wasm-wizard -d wasm-wizard_dev -f scripts/init-dev-db.sql
 
 # Start application
-DATABASE_URL=postgres://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev REDIS_URL=redis://127.0.0.1:7379 ./target/debug/wasmwiz
+DATABASE_URL=postgres://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev REDIS_URL=redis://127.0.0.1:7379 ./target/debug/wasm-wizard
 ```
 
 ### Option 3: Development Build and Run
 ```bash
-cd /home/austingreen/Documents/botzr/projects/WasmWiz/wasmwiz
+cd /home/austingreen/Documents/botzr/projects/Wasm Wizard/wasm-wizard
 
 # Build the application
 cargo build
 
 # Start with environment variables
-DATABASE_URL=postgres://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev REDIS_URL=redis://127.0.0.1:7379 ./target/debug/wasmwiz
+DATABASE_URL=postgres://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev REDIS_URL=redis://127.0.0.1:7379 ./target/debug/wasm-wizard
 ```
 
 ## Testing
@@ -110,7 +110,7 @@ Open: http://localhost:8081
 ### Database Access
 ```bash
 # Connect to database
-psql -h localhost -p 7432 -U wasmwiz -d wasmwiz_dev
+psql -h localhost -p 7432 -U wasm-wizard -d wasm-wizard_dev
 
 # Check tables
 \dt
@@ -124,7 +124,7 @@ SELECT * FROM api_keys;
 
 ### pgAdmin Access
 - URL: http://localhost:7050
-- Email: admin@wasmwiz.dev
+- Email: admin@wasm-wizard.dev
 - Password: admin
 
 ## Known Issues & Fixes
@@ -142,7 +142,7 @@ SELECT * FROM api_keys;
 **Impact**: Warnings in logs, but requests still process correctly
 
 ## WASM Test Modules
-Available test modules in `/wasmwiz/temp_wasm_src/`:
+Available test modules in `/wasm-wizard/temp_wasm_src/`:
 - `hello_world.rs` - Simple hello world
 - `echo.rs` - Echo input back
 - `calc_add.rs` - Add two numbers
@@ -156,7 +156,7 @@ Available test modules in `/wasmwiz/temp_wasm_src/`:
 
 ## Environment Variables Reference
 ```bash
-DATABASE_URL=postgres://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev
+DATABASE_URL=postgres://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev
 REDIS_URL=redis://127.0.0.1:7379
 ENVIRONMENT=development
 AUTH_REQUIRED=false

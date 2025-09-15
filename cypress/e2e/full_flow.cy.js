@@ -1,10 +1,10 @@
 // cypress/e2e/full_flow.cy.js
 // E2E test for upload → execute → display results for all sample modules
 
-describe('WasmWiz Full E2E Flow', () => {
+describe('Wasm Wizard Full E2E Flow', () => {
   const samples = [
     { name: 'calc_add', input: '2 3', expected: '5' },
-    { name: 'echo', input: 'Hello, WasmWiz!', expected: 'Hello, WasmWiz!' },
+    { name: 'echo', input: 'Hello, Wasm Wizard!', expected: 'Hello, Wasm Wizard!' },
     { name: 'hello_world', input: '', expected: 'Hello, World!' },
   ];
 

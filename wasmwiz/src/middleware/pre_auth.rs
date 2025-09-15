@@ -1,4 +1,4 @@
-// wasmwiz/src/middleware/pre_auth.rs
+// wasm-wizard/src/middleware/pre_auth.rs
 
 use crate::models::{ApiKey, SubscriptionTier, User};
 use crate::services::DatabaseService;

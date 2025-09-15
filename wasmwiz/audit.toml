@@ -1,4 +1,4 @@
-# Security audit configuration for WasmWiz
+# Security audit configuration for Wasm Wizard
 # This file defines security policies for dependencies
 
 [database]

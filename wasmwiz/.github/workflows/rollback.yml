@@ -59,7 +59,7 @@ jobs:
           ENV_SUFFIX="-staging"
         fi
         
-        IMAGE_TAG="${{ secrets.REGISTRY_URL }}/wasmwiz:${{ github.event.inputs.commit_sha }}${ENV_SUFFIX}"
+        IMAGE_TAG="${{ secrets.REGISTRY_URL }}/wasm-wizard:${{ github.event.inputs.commit_sha }}${ENV_SUFFIX}"
         echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
         
         if docker manifest inspect $IMAGE_TAG > /dev/null 2>&1; then
@@ -88,8 +88,8 @@ jobs:
         
         # This would contain actual deployment commands
         # For Kubernetes:
-        # kubectl set image deployment/wasmwiz wasmwiz=${{ steps.set-image.outputs.image-tag }}
-        # kubectl rollout status deployment/wasmwiz
+        # kubectl set image deployment/wasm-wizard wasm-wizard=${{ steps.set-image.outputs.image-tag }}
+        # kubectl rollout status deployment/wasm-wizard
         
         # For Docker Compose:
         # docker-compose down
@@ -101,7 +101,7 @@ jobs:
       run: |
         echo "Verifying rollback deployment..."
         # Add health checks here
-        # curl -f https://api-${{ github.event.inputs.environment }}.wasmwiz.com/health || exit 1
+        # curl -f https://api-${{ github.event.inputs.environment }}.wasm-wizard.com/health || exit 1
         echo "Rollback verification completed"
     
     - name: Create rollback record

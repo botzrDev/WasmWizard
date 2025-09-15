@@ -1,7 +1,7 @@
 //! # API Key Model
 //!
 //! This module defines the ApiKey data structure for managing authentication tokens.
-//! API keys are the primary authentication mechanism for the WasmWiz API.
+//! API keys are the primary authentication mechanism for the Wasm Wizard API.
 //!
 //! ## Security Design
 //!
@@ -42,7 +42,7 @@ use uuid::Uuid;
 
 /// Represents an API key for authentication and authorization.
 ///
-/// API keys are the primary authentication mechanism for the WasmWiz API.
+/// API keys are the primary authentication mechanism for the Wasm Wizard API.
 /// Each key is associated with a user and a subscription tier that determines
 /// access levels and rate limits.
 ///
@@ -55,7 +55,7 @@ use uuid::Uuid;
 /// # Examples
 ///
 /// ```rust
-/// use wasmwiz::models::api_key::ApiKey;
+/// use wasm-wizard::models::api_key::ApiKey;
 /// use chrono::Utc;
 /// use uuid::Uuid;
 ///

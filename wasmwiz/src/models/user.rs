@@ -24,7 +24,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// Represents a user in the WasmWiz system.
+/// Represents a user in the Wasm Wizard system.
 ///
 /// Users are identified by their email address and can have multiple API keys
 /// associated with their account. User records are created automatically when
@@ -33,7 +33,7 @@ use uuid::Uuid;
 /// # Examples
 ///
 /// ```rust
-/// use wasmwiz::models::user::User;
+/// use wasm-wizard::models::user::User;
 /// use chrono::Utc;
 /// use uuid::Uuid;
 ///

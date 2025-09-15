@@ -4,8 +4,8 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: wasmwiz
-      POSTGRES_USER: wasmwiz
+      POSTGRES_DB: wasm-wizard
+      POSTGRES_USER: wasm-wizard
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wasmwiz -d wasmwiz"]
+      test: ["CMD-SHELL", "pg_isready -U wasm-wizard -d wasm-wizard"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,7 +21,7 @@ services:
     secrets:
       - db_password
     networks:
-      - wasmwiz-network
+      - wasm-wizard-network
 
   redis:
     image: redis:7-alpine
@@ -36,7 +36,7 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - wasmwiz-network
+      - wasm-wizard-network
     sysctls:
       # Redis optimization for production
       net.core.somaxconn: 1024
@@ -47,13 +47,13 @@ services:
         reservations:
           memory: 256M
 
-  wasmwiz:
+  wasm-wizard:
     build: 
       context: .
       dockerfile: Dockerfile
     environment:
       # Database configuration
-      DATABASE_URL: postgresql://wasmwiz:${POSTGRES_PASSWORD}@postgres:5432/wasmwiz
+      DATABASE_URL: postgresql://wasm-wizard:${POSTGRES_PASSWORD}@postgres:5432/wasm-wizard
       REDIS_URL: redis://redis:6379
       
       # Server configuration
@@ -63,7 +63,7 @@ services:
       
       # Logging
       LOG_LEVEL: info
-      RUST_LOG: info,wasmwiz=info
+      RUST_LOG: info,wasm-wizard=info
       
       # Security - must be set via environment or secrets
       API_SALT_FILE: /run/secrets/api_salt
@@ -87,7 +87,7 @@ services:
     secrets:
       - api_salt
     networks:
-      - wasmwiz-network
+      - wasm-wizard-network
     deploy:
       resources:
         limits:
@@ -120,13 +120,13 @@ services:
       - '--web.enable-lifecycle'
     restart: unless-stopped
     networks:
-      - wasmwiz-network
+      - wasm-wizard-network
 
   grafana:
     image: grafana/grafana:latest
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/wasmwiz.json:ro
+      - ./monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/wasm-wizard.json:ro
       - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
     environment:
       GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
@@ -139,7 +139,7 @@ services:
     secrets:
       - grafana_password
     networks:
-      - wasmwiz-network
+      - wasm-wizard-network
 
 volumes:
   postgres_data:
@@ -165,7 +165,7 @@ secrets:
     file: ./secrets/grafana_password.txt
 
 networks:
-  wasmwiz-network:
+  wasm-wizard-network:
     driver: bridge
     ipam:
       config:

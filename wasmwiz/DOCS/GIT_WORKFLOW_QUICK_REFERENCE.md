@@ -1,6 +1,6 @@
 # Git Workflow Quick Reference Card
 
-**WasmWiz Project** | **Last Updated:** June 20, 2025
+**Wasm Wizard Project** | **Last Updated:** June 20, 2025
 
 ## 🚀 Daily Development Commands
 
@@ -74,8 +74,8 @@ docs(readme): update installation instructions
 
 | Environment | Trigger | URL | Purpose |
 |------------|---------|-----|---------|
-| **Staging** | Automatic | `staging.wasmwiz.example.com` | Testing |
-| **Production** | Manual Approval | `wasmwiz.example.com` | Live |
+| **Staging** | Automatic | `staging.wasm-wizard.example.com` | Testing |
+| **Production** | Manual Approval | `wasm-wizard.example.com` | Live |
 
 ### Approval Process
 1. Go to GitHub Actions
@@ -94,7 +94,7 @@ docs(readme): update installation instructions
 
 ### Emergency Kubectl Rollback
 ```bash
-kubectl rollout undo deployment/wasmwiz -n wasmwiz-production
+kubectl rollout undo deployment/wasm-wizard -n wasm-wizard-production
 ```
 
 ## 🛠️ Troubleshooting
@@ -128,10 +128,10 @@ cargo update
 cargo check
 
 # Deployment status
-kubectl get pods -n wasmwiz-production
+kubectl get pods -n wasm-wizard-production
 
 # Logs
-kubectl logs -l app=wasmwiz -n wasmwiz-production --tail=50
+kubectl logs -l app=wasm-wizard -n wasm-wizard-production --tail=50
 ```
 
 ## 📞 Health Checks

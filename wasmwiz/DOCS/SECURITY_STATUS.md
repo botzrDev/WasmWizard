@@ -1,8 +1,8 @@
-# Security Status Report - WasmWiz
+# Security Status Report - Wasm Wizard
 
 ## Executive Summary
 
-This document tracks the status of critical security vulnerabilities identified in the WasmWiz project and the mitigation measures implemented.
+This document tracks the status of critical security vulnerabilities identified in the Wasm Wizard project and the mitigation measures implemented.
 
 ## CRITICAL SECURITY ISSUES - RESOLVED ✅
 

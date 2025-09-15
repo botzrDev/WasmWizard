@@ -1,6 +1,6 @@
 //! # Error Handling
 //!
-//! This module defines comprehensive error types for the WasmWiz application.
+//! This module defines comprehensive error types for the Wasm Wizard application.
 //! It provides structured error handling with appropriate HTTP status codes and
 //! user-friendly error messages.
 //!
@@ -26,7 +26,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use wasmwiz::errors::ApiError;
+//! use wasm-wizard::errors::ApiError;
 //!
 //! // Creating specific errors
 //! let error = ApiError::BadRequest("Invalid WASM module format".to_string());
@@ -44,7 +44,7 @@ use std::io::Error as IoError;
 use wasmer::RuntimeError;
 use wasmer_wasix::WasiError;
 
-/// Comprehensive error type for the WasmWiz API.
+/// Comprehensive error type for the Wasm Wizard API.
 ///
 /// This enum covers all possible error conditions in the application, from client
 /// errors to server failures and WASM-specific issues. Each variant includes

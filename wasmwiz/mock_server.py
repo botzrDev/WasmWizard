@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mock server to serve WasmWiz templates for UI testing.
+Mock server to serve Wasm Wizard templates for UI testing.
 This allows testing the web interface without needing the full Rust compilation.
 """
 
@@ -13,7 +13,7 @@ from urllib.parse import urlparse, parse_qs
 TEMPLATES_DIR = "/workspaces/WasmWiz/wasmwiz/templates"
 STATIC_DIR = "/workspaces/WasmWiz/wasmwiz/static"
 
-class WasmWizHandler(BaseHTTPRequestHandler):
+class WasmWizardHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed_url = urlparse(self.path)
         path = parsed_url.path
@@ -131,7 +131,7 @@ class WasmWizHandler(BaseHTTPRequestHandler):
                     rendered = re.sub(r'{% block title %}.*?{% endblock %}', title_content, rendered, flags=re.DOTALL)
                 else:
                     # Use default title from context
-                    rendered = re.sub(r'{% block title %}.*?{% endblock %}', context.get('title', 'WasmWiz'), rendered, flags=re.DOTALL)
+                    rendered = re.sub(r'{% block title %}.*?{% endblock %}', context.get('title', 'Wasm Wizard'), rendered, flags=re.DOTALL)
             else:
                 rendered = content
         else:
@@ -154,18 +154,18 @@ class WasmWizHandler(BaseHTTPRequestHandler):
     def get_page_title(self, route):
         """Get page title based on route"""
         titles = {
-            '/': 'Execute WebAssembly - WasmWiz',
-            '/api-keys': 'API Key Management - WasmWiz',
-            '/docs': 'API Documentation - WasmWiz',
-            '/examples': 'WebAssembly Examples - WasmWiz',
-            '/pricing': 'Pricing Plans - WasmWiz',
-            '/faq': 'Frequently Asked Questions - WasmWiz',
-            '/support': 'Get Support - WasmWiz',
-            '/security': 'Security & Compliance - WasmWiz',
-            '/terms': 'Terms of Service - WasmWiz',
-            '/privacy': 'Privacy Policy - WasmWiz'
+            '/': 'Execute WebAssembly - Wasm Wizard',
+            '/api-keys': 'API Key Management - Wasm Wizard',
+            '/docs': 'API Documentation - Wasm Wizard',
+            '/examples': 'WebAssembly Examples - Wasm Wizard',
+            '/pricing': 'Pricing Plans - Wasm Wizard',
+            '/faq': 'Frequently Asked Questions - Wasm Wizard',
+            '/support': 'Get Support - Wasm Wizard',
+            '/security': 'Security & Compliance - Wasm Wizard',
+            '/terms': 'Terms of Service - Wasm Wizard',
+            '/privacy': 'Privacy Policy - Wasm Wizard'
         }
-        return titles.get(route, 'WasmWiz - WebAssembly Execution API')
+        return titles.get(route, 'Wasm Wizard - WebAssembly Execution API')
 
     def get_active_page(self, route):
         """Get active page identifier"""
@@ -186,8 +186,8 @@ class WasmWizHandler(BaseHTTPRequestHandler):
 def run_server(port=8080):
     """Start the mock server"""
     server_address = ('0.0.0.0', port)
-    httpd = HTTPServer(server_address, WasmWizHandler)
-    print(f"🧙‍♂️ WasmWiz Mock Server starting on port {port}")
+    httpd = HTTPServer(server_address, WasmWizardHandler)
+    print(f"🧙‍♂️ Wasm Wizard Mock Server starting on port {port}")
     print(f"📖 Serving templates from: {TEMPLATES_DIR}")
     print(f"📁 Serving static files from: {STATIC_DIR}")
     print(f"🌐 Open http://localhost:{port} to view the website")

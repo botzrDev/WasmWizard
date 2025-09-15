@@ -1,6 +1,6 @@
 //! # Configuration Management
 //!
-//! This module provides centralized configuration management for the WasmWiz application.
+//! This module provides centralized configuration management for the Wasm Wizard application.
 //! It supports environment-based configuration with sensible defaults for different deployment
 //! environments (development, staging, production).
 //!
@@ -8,7 +8,7 @@
 //!
 //! | Variable | Default | Description |
 //! |----------|---------|-------------|
-//! | `DATABASE_URL` | `postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev` | PostgreSQL connection string |
+//! | `DATABASE_URL` | `postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev` | PostgreSQL connection string |
 //! | `REDIS_URL` | `redis://127.0.0.1:6379` | Redis connection string for rate limiting |
 //! | `REDIS_ENABLED` | `false` | Enable Redis-based rate limiting |
 //! | `SERVER_HOST` | `127.0.0.1` (dev) / `0.0.0.0` (prod) | Server bind address |
@@ -27,7 +27,7 @@
 //! ## Example
 //!
 //! ```bash
-//! export DATABASE_URL="postgresql://user:pass@localhost/wasmwiz"
+//! export DATABASE_URL="postgresql://user:pass@localhost/wasm-wizard"
 //! export REDIS_URL="redis://localhost:6379"
 //! export ENVIRONMENT="production"
 //! export API_SALT="your-secure-salt-here"
@@ -36,7 +36,7 @@
 use serde::{Deserialize, Serialize};
 use std::env;
 
-/// Central configuration structure for the WasmWiz application.
+/// Central configuration structure for the Wasm Wizard application.
 ///
 /// This struct contains all runtime configuration options loaded from environment variables
 /// with sensible defaults. The configuration is validated on startup to ensure all required
@@ -122,7 +122,7 @@ impl Config {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use wasmwiz::config::Config;
+    /// use wasm-wizard::config::Config;
     ///
     /// let config = Config::from_env()?;
     /// println!("Server will bind to {}:{}", config.server_host, config.server_port);
@@ -145,7 +145,7 @@ impl Config {
         // Default to local PostgreSQL for development
         let default_database_url = match environment {
             Environment::Development => {
-                "postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev".to_string()
+                "postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev".to_string()
             }
             _ => env::var("DATABASE_URL").map_err(|_| {
                 ConfigError::Missing("DATABASE_URL must be set for production/staging")
@@ -199,7 +199,7 @@ impl Config {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use wasmwiz::config::Config;
+    /// use wasm-wizard::config::Config;
     ///
     /// let config = Config::from_env()?;
     /// if config.is_production() {
@@ -216,7 +216,7 @@ impl Config {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use wasmwiz::config::Config;
+    /// use wasm-wizard::config::Config;
     ///
     /// let config = Config::from_env()?;
     /// if config.is_development() {
@@ -241,7 +241,7 @@ impl Config {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use wasmwiz::config::Config;
+    /// use wasm-wizard::config::Config;
     ///
     /// let config = Config::from_env()?;
     /// config.validate()?;
@@ -285,7 +285,7 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            database_url: "postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev".to_string(),
+            database_url: "postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev".to_string(),
             redis_url: "redis://127.0.0.1:6379".to_string(),
             redis_enabled: false,
             server_host: "127.0.0.1".to_string(),

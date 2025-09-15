@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wasmwiz-production
-  namespace: wasmwiz-production
+  name: wasm-wizard-production
+  namespace: wasm-wizard-production
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: production
   annotations:
     deployment.kubernetes.io/revision: "1"
@@ -18,12 +18,12 @@ spec:
       maxSurge: 25%
   selector:
     matchLabels:
-      app: wasmwiz
+      app: wasm-wizard
       environment: production
   template:
     metadata:
       labels:
-        app: wasmwiz
+        app: wasm-wizard
         environment: production
       annotations:
         prometheus.io/scrape: "true"
@@ -35,8 +35,8 @@ spec:
         runAsUser: 65534
         fsGroup: 65534
       containers:
-      - name: wasmwiz
-        image: wasmwiz:latest # Will be replaced by CI/CD
+      - name: wasm-wizard
+        image: wasm-wizard:latest # Will be replaced by CI/CD
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -49,22 +49,22 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: database-url
         - name: REDIS_URL
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: redis-url
         - name: API_SALT
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: api-salt
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: jwt-secret
         resources:
           requests:
@@ -124,10 +124,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: wasmwiz-production-service
-  namespace: wasmwiz-production
+  name: wasm-wizard-production-service
+  namespace: wasm-wizard-production
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: production
   annotations:
     prometheus.io/scrape: "true"
@@ -135,7 +135,7 @@ metadata:
     prometheus.io/path: "/metrics"
 spec:
   selector:
-    app: wasmwiz
+    app: wasm-wizard
     environment: production
   ports:
   - protocol: TCP
@@ -148,10 +148,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: wasmwiz-production-ingress
-  namespace: wasmwiz-production
+  name: wasm-wizard-production-ingress
+  namespace: wasm-wizard-production
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: production
   annotations:
     kubernetes.io/ingress.class: "nginx"
@@ -163,17 +163,17 @@ metadata:
 spec:
   tls:
   - hosts:
-    - api.wasmwiz.com
-    secretName: wasmwiz-production-tls
+    - api.wasm-wizard.com
+    secretName: wasm-wizard-production-tls
   rules:
-  - host: api.wasmwiz.com
+  - host: api.wasm-wizard.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: wasmwiz-production-service
+            name: wasm-wizard-production-service
             port:
               number: 80
 
@@ -181,16 +181,16 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: wasmwiz-production-hpa
-  namespace: wasmwiz-production
+  name: wasm-wizard-production-hpa
+  namespace: wasm-wizard-production
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: production
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: wasmwiz-production
+    name: wasm-wizard-production
   minReplicas: 5
   maxReplicas: 20
   metrics:
@@ -211,14 +211,14 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: wasmwiz-production-pdb
-  namespace: wasmwiz-production
+  name: wasm-wizard-production-pdb
+  namespace: wasm-wizard-production
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: production
 spec:
   minAvailable: 3
   selector:
     matchLabels:
-      app: wasmwiz
+      app: wasm-wizard
       environment: production

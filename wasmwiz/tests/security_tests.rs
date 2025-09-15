@@ -1,6 +1,6 @@
 use actix_web::{test, web, App};
 use sqlx::PgPool;
-use wasmwiz::{
+use wasm-wizard::{
     app::configure_app,
     config::Settings,
     middleware::auth::ApiKey,

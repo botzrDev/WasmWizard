@@ -1,6 +1,6 @@
 #!/bin/bash
-# WasmWiz Load Testing Script
-# This script performs comprehensive load testing of the WasmWiz API
+# Wasm Wizard Load Testing Script
+# This script performs comprehensive load testing of the Wasm Wizard API
 
 set -euo pipefail
 
@@ -66,7 +66,7 @@ pre_flight_checks() {
     
     # Check if service is running
     if ! curl -f "$BASE_URL/health" >/dev/null 2>&1; then
-        log "${RED}ERROR: WasmWiz service is not responding at $BASE_URL${NC}"
+        log "${RED}ERROR: Wasm Wizard service is not responding at $BASE_URL${NC}"
         exit 1
     fi
     
@@ -137,7 +137,7 @@ test_with_wrk() {
     
     # Create wrk script for more complex testing
     cat > "$OUTPUT_DIR/wrk_script.lua" << 'EOF'
--- WRK script for WasmWiz load testing
+-- WRK script for Wasm Wizard load testing
 wrk.method = "GET"
 wrk.headers["Content-Type"] = "application/json"
 
@@ -185,8 +185,8 @@ monitor_resources() {
     {
         while true; do
             # Get container stats if running in Docker
-            if docker ps | grep -q wasmwiz; then
-                docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}" | grep wasmwiz
+            if docker ps | grep -q wasm-wizard; then
+                docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}" | grep wasm-wizard
             fi
             
             # System memory and CPU
@@ -221,7 +221,7 @@ analyze_results() {
     
     # Create summary report
     cat > "$OUTPUT_DIR/performance_summary.md" << EOF
-# WasmWiz Load Testing Results
+# Wasm Wizard Load Testing Results
 
 Generated: $(date)
 
@@ -283,7 +283,7 @@ cleanup() {
 
 # Main execution
 main() {
-    log "${GREEN}Starting WasmWiz load testing...${NC}"
+    log "${GREEN}Starting Wasm Wizard load testing...${NC}"
     
     # Setup trap for cleanup
     trap cleanup EXIT
@@ -311,7 +311,7 @@ main() {
 # Help function
 show_help() {
     cat << EOF
-WasmWiz Load Testing Script
+Wasm Wizard Load Testing Script
 
 Usage: $0 [OPTIONS]
 
@@ -325,7 +325,7 @@ OPTIONS:
 
 EXAMPLES:
     $0                                    # Run with defaults
-    $0 -u https://api.wasmwiz.com        # Test production API
+    $0 -u https://api.wasm-wizard.com        # Test production API
     $0 -c 100 -n 5000 -d 120            # Heavy load test
     $0 -o /tmp/results                   # Custom output directory
 

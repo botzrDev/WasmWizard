@@ -20,9 +20,9 @@ spec:
         image: postgres:15-alpine
         env:
         - name: POSTGRES_DB
-          value: wasmwiz
+          value: wasm-wizard
         - name: POSTGRES_USER
-          value: wasmwiz
+          value: wasm-wizard
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -48,9 +48,9 @@ spec:
             command:
             - pg_isready
             - -U
-            - wasmwiz
+            - wasm-wizard
             - -d
-            - wasmwiz
+            - wasm-wizard
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
@@ -58,9 +58,9 @@ spec:
             command:
             - pg_isready
             - -U
-            - wasmwiz
+            - wasm-wizard
             - -d
-            - wasmwiz
+            - wasm-wizard
           initialDelaySeconds: 5
           periodSeconds: 5
   volumeClaimTemplates:

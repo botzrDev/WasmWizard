@@ -1,6 +1,6 @@
 //! # Business Logic Services
 //!
-//! This module contains the core business logic services for WasmWiz.
+//! This module contains the core business logic services for Wasm Wizard.
 //! These services handle data persistence, caching, and background processing.
 //!
 //! ## Services Overview
@@ -21,7 +21,7 @@
 //! ## Usage
 //!
 //! ```rust,no_run
-//! use wasmwiz::services::{DatabaseService, RedisService};
+//! use wasm-wizard::services::{DatabaseService, RedisService};
 //!
 //! // In application setup
 //! let db_service = DatabaseService::new(db_pool);

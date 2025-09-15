@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: wasmwiz-sa
+  name: wasm-wizard-sa
   labels:
-    app: wasmwiz
+    app: wasm-wizard
 automountServiceAccountToken: false
 
 ---
@@ -13,11 +13,11 @@ automountServiceAccountToken: false
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: wasmwiz-network-policy
+  name: wasm-wizard-network-policy
 spec:
   podSelector:
     matchLabels:
-      app: wasmwiz
+      app: wasm-wizard
   policyTypes:
   - Ingress
   - Egress
@@ -74,19 +74,19 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: wasmwiz-pdb
+  name: wasm-wizard-pdb
 spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: wasmwiz
+      app: wasm-wizard
 
 ---
 # ResourceQuota for namespace limits
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: wasmwiz-quota
+  name: wasm-wizard-quota
 spec:
   hard:
     requests.cpu: "4"
@@ -101,7 +101,7 @@ spec:
 apiVersion: v1
 kind: LimitRange
 metadata:
-  name: wasmwiz-limits
+  name: wasm-wizard-limits
 spec:
   limits:
   - max:
@@ -123,7 +123,7 @@ spec:
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: wasmwiz-psp
+  name: wasm-wizard-psp
 spec:
   privileged: false
   allowPrivilegeEscalation: false

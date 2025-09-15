@@ -62,7 +62,7 @@ pub fn init_logging(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
 macro_rules! log_error {
     ($($arg:tt)*) => {
         tracing::error!(
-            target = "wasmwiz",
+            target = "wasm-wizard",
             $($arg)*
         )
     };
@@ -72,7 +72,7 @@ macro_rules! log_error {
 macro_rules! log_warn {
     ($($arg:tt)*) => {
         tracing::warn!(
-            target = "wasmwiz",
+            target = "wasm-wizard",
             $($arg)*
         )
     };
@@ -82,7 +82,7 @@ macro_rules! log_warn {
 macro_rules! log_info {
     ($($arg:tt)*) => {
         tracing::info!(
-            target = "wasmwiz",
+            target = "wasm-wizard",
             $($arg)*
         )
     };
@@ -92,7 +92,7 @@ macro_rules! log_info {
 macro_rules! log_debug {
     ($($arg:tt)*) => {
         tracing::debug!(
-            target = "wasmwiz",
+            target = "wasm-wizard",
             $($arg)*
         )
     };

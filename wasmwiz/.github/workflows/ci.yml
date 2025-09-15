@@ -19,9 +19,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: wasmwiz_user
+          POSTGRES_USER: wasm_wizard_user
           POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: wasmwiz_test
+          POSTGRES_DB: wasm_wizard_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -70,10 +70,10 @@ jobs:
     - name: Run database migrations
       run: |
         cargo install sqlx-cli --no-default-features --features postgres
-        sqlx database create --database-url "postgres://wasmwiz_user:test_password@localhost:5432/wasmwiz_test"
-        sqlx migrate run --database-url "postgres://wasmwiz_user:test_password@localhost:5432/wasmwiz_test"
+        sqlx database create --database-url "postgres://wasm_wizard_user:test_password@localhost:5432/wasm_wizard_test"
+        sqlx migrate run --database-url "postgres://wasm_wizard_user:test_password@localhost:5432/wasm_wizard_test"
       env:
-        DATABASE_URL: postgres://wasmwiz_user:test_password@localhost:5432/wasmwiz_test
+        DATABASE_URL: postgres://wasm_wizard_user:test_password@localhost:5432/wasm_wizard_test
         
     - name: Check code formatting
       run: cargo fmt -- --check
@@ -87,7 +87,7 @@ jobs:
     - name: Run unit tests
       run: cargo test --verbose --lib
       env:
-        DATABASE_URL: postgres://wasmwiz_user:test_password@localhost:5432/wasmwiz_test
+        DATABASE_URL: postgres://wasm_wizard_user:test_password@localhost:5432/wasm_wizard_test
         REDIS_URL: redis://localhost:6379
         API_SALT: test_salt_for_ci
         JWT_SECRET: test_jwt_secret_for_ci_pipeline_runs
@@ -95,7 +95,7 @@ jobs:
     - name: Run integration tests
       run: cargo test --verbose --test integration_tests
       env:
-        DATABASE_URL: postgres://wasmwiz_user:test_password@localhost:5432/wasmwiz_test
+        DATABASE_URL: postgres://wasm_wizard_user:test_password@localhost:5432/wasm_wizard_test
         REDIS_URL: redis://localhost:6379
         API_SALT: test_salt_for_ci
         JWT_SECRET: test_jwt_secret_for_ci_pipeline_runs
@@ -103,7 +103,7 @@ jobs:
     - name: Run functional tests
       run: cargo test --verbose --test functional_tests
       env:
-        DATABASE_URL: postgres://wasmwiz_user:test_password@localhost:5432/wasmwiz_test
+        DATABASE_URL: postgres://wasm_wizard_user:test_password@localhost:5432/wasm_wizard_test
         REDIS_URL: redis://localhost:6379
         API_SALT: test_salt_for_ci
         JWT_SECRET: test_jwt_secret_for_ci_pipeline_runs
@@ -208,13 +208,13 @@ jobs:
       with:
         context: .
         push: false
-        tags: wasmwiz:test
+        tags: wasm-wizard:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
     - name: Test Docker image
       run: |
-        docker run --rm wasmwiz:test --version || echo "Version check completed"
+        docker run --rm wasm-wizard:test --version || echo "Version check completed"
 
   staging-deploy:
     name: Deploy to Staging
@@ -243,8 +243,8 @@ jobs:
         context: .
         push: true
         tags: |
-          ${{ secrets.REGISTRY_URL }}/wasmwiz:staging-${{ github.sha }}
-          ${{ secrets.REGISTRY_URL }}/wasmwiz:staging-latest
+          ${{ secrets.REGISTRY_URL }}/wasm-wizard:staging-${{ github.sha }}
+          ${{ secrets.REGISTRY_URL }}/wasm-wizard:staging-latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
@@ -252,7 +252,7 @@ jobs:
       run: |
         echo "Deploying to staging environment..."
         # This would typically involve kubectl commands or cloud deployment
-        # kubectl set image deployment/wasmwiz wasmwiz=${{ secrets.REGISTRY_URL }}/wasmwiz:staging-${{ github.sha }}
+        # kubectl set image deployment/wasm-wizard wasm-wizard=${{ secrets.REGISTRY_URL }}/wasm-wizard:staging-${{ github.sha }}
 
   production-deploy:
     name: Deploy to Production
@@ -281,8 +281,8 @@ jobs:
         context: .
         push: true
         tags: |
-          ${{ secrets.REGISTRY_URL }}/wasmwiz:${{ github.sha }}
-          ${{ secrets.REGISTRY_URL }}/wasmwiz:latest
+          ${{ secrets.REGISTRY_URL }}/wasm-wizard:${{ github.sha }}
+          ${{ secrets.REGISTRY_URL }}/wasm-wizard:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
@@ -290,7 +290,7 @@ jobs:
       run: |
         echo "Deploying to production environment..."
         # This would involve actual deployment commands
-        # kubectl set image deployment/wasmwiz wasmwiz=${{ secrets.REGISTRY_URL }}/wasmwiz:${{ github.sha }}
+        # kubectl set image deployment/wasm-wizard wasm-wizard=${{ secrets.REGISTRY_URL }}/wasm-wizard:${{ github.sha }}
         
     - name: Create deployment record
       run: |

@@ -1,4 +1,4 @@
-# WasmWiz Deployment Strategy
+# Wasm Wizard Deployment Strategy
 
 ## Branch Structure
 
@@ -44,7 +44,7 @@ graph TD
 ## Deployment Environments
 
 ### Production Environment
-- **URL:** `https://wasmwiz.com` (when configured)
+- **URL:** `https://wasm-wizard.com` (when configured)
 - **Infrastructure:** Kubernetes cluster with HA
 - **Database:** PostgreSQL with backup/replication
 - **Redis:** Clustered for high availability
@@ -53,7 +53,7 @@ graph TD
 - **Scaling:** Auto-scaling based on metrics
 
 ### Staging Environment
-- **URL:** `https://staging.wasmwiz.com` (when configured)
+- **URL:** `https://staging.wasm-wizard.com` (when configured)
 - **Infrastructure:** Single Kubernetes node or Docker Compose
 - **Database:** PostgreSQL (smaller instance)
 - **Redis:** Single instance
@@ -62,7 +62,7 @@ graph TD
 - **Purpose:** Integration testing, user acceptance
 
 ### Research Environment
-- **URL:** `https://research.wasmwiz.com` (when configured)
+- **URL:** `https://research.wasm-wizard.com` (when configured)
 - **Infrastructure:** Docker Compose or local deployment
 - **Database:** PostgreSQL (development)
 - **Redis:** Single instance
@@ -118,10 +118,10 @@ graph TD
 kubectl apply -f k8s/production/
 
 # Rolling update
-kubectl set image deployment/wasmwiz wasmwiz=wasmwiz:latest
+kubectl set image deployment/wasm-wizard wasm-wizard=wasm-wizard:latest
 
 # Monitor rollout
-kubectl rollout status deployment/wasmwiz
+kubectl rollout status deployment/wasm-wizard
 ```
 
 ### Staging Deployment (Docker Compose)
@@ -131,7 +131,7 @@ docker-compose -f docker-compose.staging.yml up -d
 
 # Update image
 docker-compose -f docker-compose.staging.yml pull
-docker-compose -f docker-compose.staging.yml up -d --no-deps wasmwiz
+docker-compose -f docker-compose.staging.yml up -d --no-deps wasm-wizard
 ```
 
 ### Research Deployment (Local)
@@ -150,9 +150,9 @@ cargo run
 ENVIRONMENT=production
 AUTH_REQUIRED=true
 RUST_LOG=info
-DATABASE_URL=postgres://prod_user@prod_host/wasmwiz
+DATABASE_URL=postgres://prod_user@prod_host/wasm-wizard
 REDIS_URL=redis://prod-redis-cluster
-SSL_CERT_PATH=/etc/ssl/certs/wasmwiz.crt
+SSL_CERT_PATH=/etc/ssl/certs/wasm-wizard.crt
 ```
 
 ### Staging
@@ -160,7 +160,7 @@ SSL_CERT_PATH=/etc/ssl/certs/wasmwiz.crt
 ENVIRONMENT=staging
 AUTH_REQUIRED=true
 RUST_LOG=debug
-DATABASE_URL=postgres://staging_user@staging_host/wasmwiz_staging
+DATABASE_URL=postgres://staging_user@staging_host/wasm-wizard_staging
 REDIS_URL=redis://staging-redis
 SSL_CERT_PATH=/etc/ssl/certs/staging.crt
 ```
@@ -170,7 +170,7 @@ SSL_CERT_PATH=/etc/ssl/certs/staging.crt
 ENVIRONMENT=development
 AUTH_REQUIRED=false
 RUST_LOG=trace
-DATABASE_URL=postgres://dev_user@localhost/wasmwiz_dev
+DATABASE_URL=postgres://dev_user@localhost/wasm-wizard_dev
 REDIS_URL=redis://localhost:6379
 ```
 
@@ -179,13 +179,13 @@ REDIS_URL=redis://localhost:6379
 ### Production Rollback
 ```bash
 # Quick rollback to previous version
-kubectl rollout undo deployment/wasmwiz
+kubectl rollout undo deployment/wasm-wizard
 
 # Rollback to specific revision
-kubectl rollout undo deployment/wasmwiz --to-revision=2
+kubectl rollout undo deployment/wasm-wizard --to-revision=2
 
 # Verify rollback
-kubectl rollout status deployment/wasmwiz
+kubectl rollout status deployment/wasm-wizard
 ```
 
 ### Database Migrations

@@ -1,14 +1,14 @@
 #!/bin/bash
-# WasmWiz Production Restore Script
+# Wasm Wizard Production Restore Script
 # This script restores the PostgreSQL database from a backup
 
 set -euo pipefail
 
 # Configuration
-BACKUP_DIR="${BACKUP_DIR:-/opt/wasmwiz/backups}"
-POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-wasmwiz_postgres_1}"
-DATABASE_NAME="${DATABASE_NAME:-wasmwiz}"
-DATABASE_USER="${DATABASE_USER:-wasmwiz}"
+BACKUP_DIR="${BACKUP_DIR:-/opt/wasm-wizard/backups}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-wasm-wizard_postgres_1}"
+DATABASE_NAME="${DATABASE_NAME:-wasm-wizard}"
+DATABASE_USER="${DATABASE_USER:-wasm-wizard}"
 
 # Function to log messages
 log() {
@@ -41,9 +41,9 @@ restore_database() {
         exit 1
     fi
     
-    # Stop the WasmWiz application to prevent database connections
-    log "Stopping WasmWiz application..."
-    docker-compose stop wasmwiz || true
+    # Stop the Wasm Wizard application to prevent database connections
+    log "Stopping Wasm Wizard application..."
+    docker-compose stop wasm-wizard || true
     
     # Wait for connections to close
     sleep 5
@@ -63,9 +63,9 @@ restore_database() {
         exit 1
     fi
     
-    # Restart the WasmWiz application
-    log "Starting WasmWiz application..."
-    docker-compose start wasmwiz
+    # Restart the Wasm Wizard application
+    log "Starting Wasm Wizard application..."
+    docker-compose start wasm-wizard
     
     # Wait for application to start
     sleep 10

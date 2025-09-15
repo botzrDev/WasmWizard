@@ -1,6 +1,6 @@
 //! # Web Interface Handlers
 //!
-//! This module provides the web interface handlers for the WasmWiz application.
+//! This module provides the web interface handlers for the Wasm Wizard application.
 //! It serves HTML pages for the user interface and handles web-based interactions.
 //!
 //! ## Pages Served
@@ -26,7 +26,7 @@
 //!
 //! ```rust,no_run
 //! use actix_web::{web, App};
-//! use wasmwiz::handlers::web;
+//! use wasm-wizard::handlers::web;
 //!
 //! let app = App::new()
 //!     .route("/", web::get().to(web::index))

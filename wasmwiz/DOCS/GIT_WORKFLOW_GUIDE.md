@@ -1,6 +1,6 @@
-# Git Workflow Guide for WasmWiz
+# Git Workflow Guide for Wasm Wizard
 
-**Project:** WasmWiz - WebAssembly Execution Platform  
+**Project:** Wasm Wizard - WebAssembly Execution Platform  
 **Document Version:** 1.0  
 **Last Updated:** June 20, 2025  
 **Target Audience:** Developers, DevOps Engineers, Project Maintainers
@@ -20,7 +20,7 @@
 
 ## Overview
 
-The WasmWiz project uses a **Git-based CI/CD workflow** powered by GitHub Actions. This workflow ensures code quality, security, and reliable deployments through automated testing, security scanning, and staged deployment processes.
+The Wasm Wizard project uses a **Git-based CI/CD workflow** powered by GitHub Actions. This workflow ensures code quality, security, and reliable deployments through automated testing, security scanning, and staged deployment processes.
 
 ### Key Components
 
@@ -225,10 +225,10 @@ jobs:
 **Validation**:
 ```bash
 # Health check
-curl https://staging.wasmwiz.example.com/health
+curl https://staging.wasm-wizard.example.com/health
 
 # Functionality test
-curl -X POST https://staging.wasmwiz.example.com/api/execute \
+curl -X POST https://staging.wasm-wizard.example.com/api/execute \
   -H "Content-Type: application/json" \
   -d '{"wasm_code": "...", "input": "test"}'
 ```
@@ -465,7 +465,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 4. Manual kubectl rollback if needed:
 
 ```bash
-kubectl rollout undo deployment/wasmwiz -n wasmwiz-production
+kubectl rollout undo deployment/wasm-wizard -n wasm-wizard-production
 ```
 
 ### Getting Help
@@ -476,22 +476,22 @@ kubectl rollout undo deployment/wasmwiz -n wasmwiz-production
 # Navigate to Actions tab → Select workflow run → View logs
 
 # Kubernetes logs
-kubectl logs -f deployment/wasmwiz -n wasmwiz-production
+kubectl logs -f deployment/wasm-wizard -n wasm-wizard-production
 
 # Application logs
-kubectl logs -l app=wasmwiz -n wasmwiz-production --tail=100
+kubectl logs -l app=wasm-wizard -n wasm-wizard-production --tail=100
 ```
 
 **Health Checks**:
 ```bash
 # Check deployment status
-kubectl get deployments -n wasmwiz-production
+kubectl get deployments -n wasm-wizard-production
 
 # Check pod status
-kubectl get pods -n wasmwiz-production
+kubectl get pods -n wasm-wizard-production
 
 # Check service status
-kubectl get services -n wasmwiz-production
+kubectl get services -n wasm-wizard-production
 ```
 
 ## Quick Reference
@@ -517,14 +517,14 @@ git checkout master && git pull && git branch -d feature/name
 
 ### GitHub Actions URLs
 
-- **All Workflows**: `https://github.com/your-org/wasmwiz/actions`
-- **CI Pipeline**: `https://github.com/your-org/wasmwiz/actions/workflows/ci.yml`
-- **Rollback**: `https://github.com/your-org/wasmwiz/actions/workflows/rollback.yml`
+- **All Workflows**: `https://github.com/your-org/wasm-wizard/actions`
+- **CI Pipeline**: `https://github.com/your-org/wasm-wizard/actions/workflows/ci.yml`
+- **Rollback**: `https://github.com/your-org/wasm-wizard/actions/workflows/rollback.yml`
 
 ### Environment URLs
 
-- **Staging**: `https://staging.wasmwiz.example.com`
-- **Production**: `https://wasmwiz.example.com`
+- **Staging**: `https://staging.wasm-wizard.example.com`
+- **Production**: `https://wasm-wizard.example.com`
 - **Health Check**: `/health`
 - **Readiness Check**: `/ready`
 
@@ -548,8 +548,8 @@ rustfmt.toml           # Code formatting config
 
 Add to README.md:
 ```markdown
-![CI/CD Pipeline](https://github.com/your-org/wasmwiz/workflows/CI%2FCD%20Pipeline/badge.svg)
-![Security Scan](https://github.com/your-org/wasmwiz/workflows/Security%20Scan/badge.svg)
+![CI/CD Pipeline](https://github.com/your-org/wasm-wizard/workflows/CI%2FCD%20Pipeline/badge.svg)
+![Security Scan](https://github.com/your-org/wasm-wizard/workflows/Security%20Scan/badge.svg)
 ```
 
 ---

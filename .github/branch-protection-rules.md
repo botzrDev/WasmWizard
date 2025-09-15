@@ -1,7 +1,7 @@
 # Branch Protection Rules Configuration
 
 ## Overview
-This document provides instructions for setting up branch protection rules for the WasmWiz repository to ensure code quality and security.
+This document provides instructions for setting up branch protection rules for the Wasm Wizard repository to ensure code quality and security.
 
 ## Required Branch Protection Rules
 

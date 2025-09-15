@@ -1,6 +1,6 @@
-# WasmWiz Troubleshooting Guide
+# Wasm Wizard Troubleshooting Guide
 
-This guide helps diagnose and resolve common issues with WasmWiz in production environments.
+This guide helps diagnose and resolve common issues with Wasm Wizard in production environments.
 
 ## Quick Diagnostics
 
@@ -28,11 +28,11 @@ curl -f http://localhost:8080/health/redis
 ```bash
 # Docker Compose deployment
 docker-compose ps
-docker-compose logs --tail=50 wasmwiz
+docker-compose logs --tail=50 wasm-wizard
 
 # Kubernetes deployment
-kubectl get pods -n wasmwiz
-kubectl logs -l app=wasmwiz -n wasmwiz --tail=50
+kubectl get pods -n wasm-wizard
+kubectl logs -l app=wasm-wizard -n wasm-wizard --tail=50
 ```
 
 ## Common Issues and Solutions
@@ -47,10 +47,10 @@ kubectl logs -l app=wasmwiz -n wasmwiz --tail=50
 #### Diagnosis
 ```bash
 # Check container logs
-docker-compose logs wasmwiz
+docker-compose logs wasm-wizard
 
 # Check environment variables
-docker-compose exec wasmwiz env | grep -E "(DATABASE_URL|API_SALT|REDIS_URL)"
+docker-compose exec wasm-wizard env | grep -E "(DATABASE_URL|API_SALT|REDIS_URL)"
 
 # Verify configuration
 docker-compose config
@@ -69,9 +69,9 @@ echo $API_SALT | wc -c
 **Database Connection Issues:**
 ```bash
 # Test database connectivity
-docker-compose exec postgres pg_isready -U wasmwiz -d wasmwiz
+docker-compose exec postgres pg_isready -U wasm-wizard -d wasm-wizard
 # Check if database exists
-docker-compose exec postgres psql -U wasmwiz -d wasmwiz -c "\dt"
+docker-compose exec postgres psql -U wasm-wizard -d wasm-wizard -c "\dt"
 ```
 
 **Port Conflicts:**
@@ -94,7 +94,7 @@ netstat -tlnp | grep :8080
 docker-compose logs postgres
 
 # Test direct connection
-docker-compose exec postgres psql -U wasmwiz -d wasmwiz -c "SELECT 1;"
+docker-compose exec postgres psql -U wasm-wizard -d wasm-wizard -c "SELECT 1;"
 
 # Check connection pool status
 curl http://localhost:8080/metrics | grep database_connections
@@ -107,7 +107,7 @@ curl http://localhost:8080/metrics | grep database_connections
 # Wait for database to fully start
 docker-compose up -d postgres
 sleep 30
-docker-compose up wasmwiz
+docker-compose up wasm-wizard
 ```
 
 **Wrong Credentials:**
@@ -120,7 +120,7 @@ grep POSTGRES_PASSWORD docker-compose.yml
 **Network Issues:**
 ```bash
 # Check if containers can communicate
-docker-compose exec wasmwiz ping postgres
+docker-compose exec wasm-wizard ping postgres
 ```
 
 ### 3. Redis Connection Issues
@@ -139,7 +139,7 @@ docker-compose logs redis
 docker-compose exec redis redis-cli ping
 
 # Test from application container
-docker-compose exec wasmwiz curl redis:6379
+docker-compose exec wasm-wizard curl redis:6379
 ```
 
 #### Solutions
@@ -169,7 +169,7 @@ docker stats
 curl http://localhost:8080/metrics | grep memory
 
 # Analyze memory distribution
-docker-compose exec wasmwiz ps aux --sort=-%mem
+docker-compose exec wasm-wizard ps aux --sort=-%mem
 ```
 
 #### Solutions
@@ -208,7 +208,7 @@ curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8080/health
 curl http://localhost:8080/metrics | grep -E "(http_request_duration|cpu)"
 
 # Check database performance
-docker-compose exec postgres psql -U wasmwiz -d wasmwiz -c "
+docker-compose exec postgres psql -U wasm-wizard -d wasm-wizard -c "
 SELECT query, mean_time, calls 
 FROM pg_stat_statements 
 ORDER BY mean_time DESC 
@@ -233,7 +233,7 @@ SELECT query, mean_time FROM pg_stat_statements WHERE mean_time > 1000;
 **Application Scaling:**
 ```yaml
 # Scale horizontally with multiple replicas
-wasmwiz:
+wasm-wizard:
   deploy:
     replicas: 3
 ```
@@ -248,7 +248,7 @@ wasmwiz:
 #### Diagnosis
 ```bash
 # Check WASM execution logs
-docker-compose logs wasmwiz | grep -E "(wasm|execute)"
+docker-compose logs wasm-wizard | grep -E "(wasm|execute)"
 
 # Verify WASM file integrity
 hexdump -C your_module.wasm | head -1
@@ -331,9 +331,9 @@ curl -u admin:password http://localhost:3000/api/datasources
 ```yaml
 # In monitoring/prometheus.yml
 scrape_configs:
-  - job_name: 'wasmwiz'
+  - job_name: 'wasm-wizard'
     static_configs:
-      - targets: ['wasmwiz:8080']  # Ensure correct hostname
+      - targets: ['wasm-wizard:8080']  # Ensure correct hostname
     metrics_path: /metrics
     scrape_interval: 15s
 ```
@@ -344,11 +344,11 @@ scrape_configs:
 
 ```bash
 # Temporary debug logging
-docker-compose exec wasmwiz env RUST_LOG=debug wasmwiz
+docker-compose exec wasm-wizard env RUST_LOG=debug wasm-wizard
 
 # Persistent debug logging
 echo "LOG_LEVEL=debug" >> .env
-docker-compose restart wasmwiz
+docker-compose restart wasm-wizard
 ```
 
 ### Database Debugging
@@ -369,34 +369,34 @@ SELECT
     query_start,
     query
 FROM pg_stat_activity 
-WHERE datname = 'wasmwiz';
+WHERE datname = 'wasm-wizard';
 ```
 
 ### Network Debugging
 
 ```bash
 # Test internal container networking
-docker-compose exec wasmwiz nslookup postgres
-docker-compose exec wasmwiz nc -zv postgres 5432
+docker-compose exec wasm-wizard nslookup postgres
+docker-compose exec wasm-wizard nc -zv postgres 5432
 
 # Check external connectivity
-docker-compose exec wasmwiz curl -I google.com
+docker-compose exec wasm-wizard curl -I google.com
 
 # Monitor network traffic
-docker-compose exec wasmwiz netstat -tlnp
+docker-compose exec wasm-wizard netstat -tlnp
 ```
 
 ### Performance Profiling
 
 ```bash
 # Enable application profiling
-export RUST_LOG=debug,wasmwiz=trace
+export RUST_LOG=debug,wasm-wizard=trace
 
 # Monitor system resources
-top -p $(docker-compose exec wasmwiz pgrep wasmwiz)
+top -p $(docker-compose exec wasm-wizard pgrep wasm-wizard)
 
 # Analyze memory usage
-docker-compose exec wasmwiz valgrind --tool=massif wasmwiz
+docker-compose exec wasm-wizard valgrind --tool=massif wasm-wizard
 ```
 
 ## Log Analysis
@@ -405,26 +405,26 @@ docker-compose exec wasmwiz valgrind --tool=massif wasmwiz
 
 ```bash
 # Error patterns to watch
-grep -E "(ERROR|FATAL|panic)" /var/log/wasmwiz.log
+grep -E "(ERROR|FATAL|panic)" /var/log/wasm-wizard.log
 
 # Performance patterns
-grep -E "(slow|timeout|high_memory)" /var/log/wasmwiz.log
+grep -E "(slow|timeout|high_memory)" /var/log/wasm-wizard.log
 
 # Security patterns
-grep -E "(unauthorized|forbidden|rate_limit)" /var/log/wasmwiz.log
+grep -E "(unauthorized|forbidden|rate_limit)" /var/log/wasm-wizard.log
 ```
 
 ### Structured Log Queries
 
 ```bash
 # Using jq for JSON logs
-cat /var/log/wasmwiz.log | jq '.level="ERROR"'
+cat /var/log/wasm-wizard.log | jq '.level="ERROR"'
 
 # Filter by component
-cat /var/log/wasmwiz.log | jq '.target="wasmwiz::handlers::execute"'
+cat /var/log/wasm-wizard.log | jq '.target="wasm-wizard::handlers::execute"'
 
 # Performance analysis
-cat /var/log/wasmwiz.log | jq '.message | contains("execution_time")' | jq '.execution_time'
+cat /var/log/wasm-wizard.log | jq '.message | contains("execution_time")' | jq '.execution_time'
 ```
 
 ## Recovery Procedures
@@ -434,7 +434,7 @@ cat /var/log/wasmwiz.log | jq '.message | contains("execution_time")' | jq '.exe
 1. **Application Down:**
    ```bash
    # Quick restart
-   docker-compose restart wasmwiz
+   docker-compose restart wasm-wizard
    
    # If that fails, full redeploy
    docker-compose down
@@ -444,19 +444,19 @@ cat /var/log/wasmwiz.log | jq '.message | contains("execution_time")' | jq '.exe
 2. **Database Corruption:**
    ```bash
    # Stop application
-   docker-compose stop wasmwiz
+   docker-compose stop wasm-wizard
    
    # Restore from backup
    ./scripts/restore.sh latest
    
    # Restart application
-   docker-compose start wasmwiz
+   docker-compose start wasm-wizard
    ```
 
 3. **High Load:**
    ```bash
    # Scale horizontally
-   docker-compose up --scale wasmwiz=3
+   docker-compose up --scale wasm-wizard=3
    
    # Enable maintenance mode
    echo "maintenance" > /tmp/maintenance
@@ -472,7 +472,7 @@ docker-compose build
 docker-compose up -d
 
 # Database migration rollback
-docker-compose exec wasmwiz wasmwiz migrate-down
+docker-compose exec wasm-wizard wasm-wizard migrate-down
 ```
 
 ## Performance Baselines
@@ -505,7 +505,7 @@ curl -X POST http://localhost:8080/api/wasm/execute \
 
 ```bash
 # Collect all relevant logs
-./scripts/collect-logs.sh > wasmwiz-debug.tar.gz
+./scripts/collect-logs.sh > wasm-wizard-debug.tar.gz
 ```
 
 ### System Information

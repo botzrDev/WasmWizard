@@ -16,7 +16,7 @@ BEGIN
     INSERT INTO users (id, email, created_at, updated_at)
     VALUES (
         uuid_generate_v4(),
-        'test@wasmwiz.dev',
+        'test@wasm-wizard.dev',
         NOW(),
         NOW()
     )
@@ -25,7 +25,7 @@ BEGIN
 
     -- Get the user ID if it already exists
     IF test_user_id IS NULL THEN
-        SELECT id INTO test_user_id FROM users WHERE email = 'test@wasmwiz.dev';
+        SELECT id INTO test_user_id FROM users WHERE email = 'test@wasm-wizard.dev';
     END IF;
 
     -- Get the Free tier ID
@@ -48,7 +48,7 @@ BEGIN
     ON CONFLICT (key_hash) DO NOTHING;
 
     RAISE NOTICE 'Development test data created:';
-    RAISE NOTICE '  User: test@wasmwiz.dev (ID: %)', test_user_id;
+    RAISE NOTICE '  User: test@wasm-wizard.dev (ID: %)', test_user_id;
     RAISE NOTICE '  API Key: dev-test-key-123';
     RAISE NOTICE '  Tier: Free';
 END $$;

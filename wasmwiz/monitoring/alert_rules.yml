@@ -1,30 +1,30 @@
 groups:
-  - name: wasmwiz.rules
+  - name: wasm-wizard.rules
     rules:
     # Application Health Alerts
-    - alert: WasmWizDown
-      expr: up{job="wasmwiz"} == 0
+    - alert: WasmWizardDown
+      expr: up{job="wasm-wizard"} == 0
       for: 1m
       labels:
         severity: critical
         component: application
       annotations:
-        summary: "WasmWiz application is down"
-        description: "WasmWiz instance {{ $labels.instance }} has been down for more than 1 minute."
-        runbook_url: "https://github.com/your-org/wasmwiz/blob/main/TROUBLESHOOTING.md#application-down"
+        summary: "Wasm Wizard application is down"
+        description: "Wasm Wizard instance {{ $labels.instance }} has been down for more than 1 minute."
+        runbook_url: "https://github.com/your-org/wasm-wizard/blob/main/TROUBLESHOOTING.md#application-down"
 
-    - alert: WasmWizHighErrorRate
-      expr: rate(wasmwiz_http_requests_total{status=~"5.."}[5m]) / rate(wasmwiz_http_requests_total[5m]) > 0.05
+    - alert: WasmWizardHighErrorRate
+      expr: rate(wasm_wizard_http_requests_total{status=~"5.."}[5m]) / rate(wasm_wizard_http_requests_total[5m]) > 0.05
       for: 2m
       labels:
         severity: warning
         component: application
       annotations:
         summary: "High error rate detected"
-        description: "WasmWiz error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+        description: "Wasm Wizard error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
 
-    - alert: WasmWizSlowResponseTime
-      expr: histogram_quantile(0.95, rate(wasmwiz_http_request_duration_seconds_bucket[5m])) > 1.0
+    - alert: WasmWizardSlowResponseTime
+      expr: histogram_quantile(0.95, rate(wasm_wizard_http_request_duration_seconds_bucket[5m])) > 1.0
       for: 3m
       labels:
         severity: warning
@@ -35,7 +35,7 @@ groups:
 
     # Database Alerts
     - alert: DatabaseConnectionFailure
-      expr: wasmwiz_database_connections_failed_total > 10
+      expr: wasm_wizard_database_connections_failed_total > 10
       for: 1m
       labels:
         severity: critical
@@ -45,7 +45,7 @@ groups:
         description: "{{ $value }} database connection failures detected."
 
     - alert: DatabaseHighConnectionUsage
-      expr: wasmwiz_database_connections_active / wasmwiz_database_connections_max > 0.8
+      expr: wasm_wizard_database_connections_active / wasm_wizard_database_connections_max > 0.8
       for: 5m
       labels:
         severity: warning
@@ -118,7 +118,7 @@ groups:
 
     # WASM Execution Alerts
     - alert: WasmExecutionFailureRate
-      expr: rate(wasmwiz_wasm_executions_failed_total[5m]) / rate(wasmwiz_wasm_executions_total[5m]) > 0.1
+      expr: rate(wasm_wizard_wasm_executions_failed_total[5m]) / rate(wasm_wizard_wasm_executions_total[5m]) > 0.1
       for: 3m
       labels:
         severity: warning
@@ -128,7 +128,7 @@ groups:
         description: "WASM execution failure rate is {{ $value | humanizePercentage }}."
 
     - alert: WasmExecutionTimeout
-      expr: rate(wasmwiz_wasm_executions_timeout_total[5m]) > 0.05
+      expr: rate(wasm_wizard_wasm_executions_timeout_total[5m]) > 0.05
       for: 2m
       labels:
         severity: warning
@@ -138,7 +138,7 @@ groups:
         description: "{{ $value }} WASM executions are timing out per second."
 
     - alert: WasmHighMemoryUsage
-      expr: wasmwiz_wasm_memory_usage_bytes > 100000000  # 100MB
+      expr: wasm_wizard_wasm_memory_usage_bytes > 100000000  # 100MB
       for: 1m
       labels:
         severity: warning
@@ -149,7 +149,7 @@ groups:
 
     # Rate Limiting Alerts
     - alert: HighRateLimitHits
-      expr: rate(wasmwiz_rate_limit_hits_total[5m]) > 10
+      expr: rate(wasm_wizard_rate_limit_hits_total[5m]) > 10
       for: 2m
       labels:
         severity: info
@@ -160,7 +160,7 @@ groups:
 
     # Security Alerts
     - alert: UnauthorizedAccessAttempts
-      expr: rate(wasmwiz_http_requests_total{status="401"}[5m]) > 5
+      expr: rate(wasm_wizard_http_requests_total{status="401"}[5m]) > 5
       for: 1m
       labels:
         severity: warning
@@ -170,7 +170,7 @@ groups:
         description: "{{ $value }} unauthorized access attempts per second."
 
     - alert: SuspiciousActivity
-      expr: rate(wasmwiz_http_requests_total{status="403"}[5m]) > 2
+      expr: rate(wasm_wizard_http_requests_total{status="403"}[5m]) > 2
       for: 30s
       labels:
         severity: warning
@@ -181,7 +181,7 @@ groups:
 
     # Backup Alerts
     - alert: BackupFailed
-      expr: time() - wasmwiz_last_backup_timestamp > 86400  # 24 hours
+      expr: time() - wasm_wizard_last_backup_timestamp > 86400  # 24 hours
       for: 1m
       labels:
         severity: critical
@@ -211,11 +211,11 @@ groups:
         summary: "SSL certificate has expired"
         description: "SSL certificate for {{ $labels.instance }} has expired."
 
-  # Custom WasmWiz Business Logic Alerts
-  - name: wasmwiz.business
+  # Custom Wasm Wizard Business Logic Alerts
+  - name: wasm-wizard.business
     rules:
     - alert: LowAPIKeyGeneration
-      expr: rate(wasmwiz_api_keys_generated_total[1h]) < 1
+      expr: rate(wasm_wizard_api_keys_generated_total[1h]) < 1
       for: 2h
       labels:
         severity: info
@@ -225,7 +225,7 @@ groups:
         description: "Only {{ $value }} API keys generated per hour in the last 2 hours."
 
     - alert: UnusualWasmUploadPattern
-      expr: rate(wasmwiz_wasm_uploads_total[10m]) > 50
+      expr: rate(wasm_wizard_wasm_uploads_total[10m]) > 50
       for: 5m
       labels:
         severity: warning
@@ -235,7 +235,7 @@ groups:
         description: "{{ $value }} WASM modules uploaded per second - possible abuse."
 
     - alert: UserQuotaExceeded
-      expr: wasmwiz_user_quota_exceeded_total > 0
+      expr: wasm_wizard_user_quota_exceeded_total > 0
       for: 1m
       labels:
         severity: info

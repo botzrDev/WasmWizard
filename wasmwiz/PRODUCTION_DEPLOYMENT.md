@@ -1,6 +1,6 @@
-# WasmWiz Production Deployment Guide
+# Wasm Wizard Production Deployment Guide
 
-This guide covers the complete production deployment of WasmWiz, a secure WebAssembly execution platform.
+This guide covers the complete production deployment of Wasm Wizard, a secure WebAssembly execution platform.
 
 ## Table of Contents
 
@@ -43,8 +43,8 @@ This guide covers the complete production deployment of WasmWiz, a secure WebAss
 
 ```bash
 # Create secrets directory
-mkdir -p /opt/wasmwiz/secrets
-cd /opt/wasmwiz/secrets
+mkdir -p /opt/wasm-wizard/secrets
+cd /opt/wasm-wizard/secrets
 
 # Generate secure database password
 openssl rand -base64 32 > db_password.txt
@@ -67,9 +67,9 @@ chown root:docker *.txt
 certbot certonly --nginx -d your-domain.com
 
 # Or place your certificates
-cp your-cert.pem /opt/wasmwiz/secrets/tls_cert.pem
-cp your-key.pem /opt/wasmwiz/secrets/tls_key.pem
-chmod 600 /opt/wasmwiz/secrets/tls_*
+cp your-cert.pem /opt/wasm-wizard/secrets/tls_cert.pem
+cp your-key.pem /opt/wasm-wizard/secrets/tls_key.pem
+chmod 600 /opt/wasm-wizard/secrets/tls_*
 ```
 
 ### 3. Firewall Configuration
@@ -91,12 +91,12 @@ ufw enable
 
 ```bash
 # Create production directory
-sudo mkdir -p /opt/wasmwiz
-cd /opt/wasmwiz
+sudo mkdir -p /opt/wasm-wizard
+cd /opt/wasm-wizard
 
 # Clone the repository
-git clone https://github.com/your-org/wasmwiz.git .
-cd wasmwiz
+git clone https://github.com/your-org/wasm-wizard.git .
+cd wasm-wizard
 
 # Copy production configuration
 cp docker-compose.production.yml docker-compose.yml
@@ -122,17 +122,17 @@ docker-compose build
 docker-compose up -d
 
 # Run database migrations
-docker-compose exec wasmwiz wasmwiz migrate
+docker-compose exec wasm-wizard wasm-wizard migrate
 
 # Verify deployment
 docker-compose ps
-docker-compose logs wasmwiz
+docker-compose logs wasm-wizard
 ```
 
 ### 3. nginx Reverse Proxy
 
 ```nginx
-# /etc/nginx/sites-available/wasmwiz
+# /etc/nginx/sites-available/wasm-wizard
 server {
     listen 80;
     server_name your-domain.com;
@@ -193,41 +193,41 @@ server {
 
 ```bash
 # Create namespace
-kubectl create namespace wasmwiz
+kubectl create namespace wasm-wizard
 
 # Create secrets
-kubectl create secret generic wasmwiz-secrets \
+kubectl create secret generic wasm-wizard-secrets \
   --from-file=api-salt=secrets/api_salt.txt \
-  --from-file=database-url=<(echo "postgresql://wasmwiz:$(cat secrets/db_password.txt)@postgres-service:5432/wasmwiz") \
-  -n wasmwiz
+  --from-file=database-url=<(echo "postgresql://wasm-wizard:$(cat secrets/db_password.txt)@postgres-service:5432/wasm-wizard") \
+  -n wasm-wizard
 
 kubectl create secret generic postgres-secret \
   --from-file=password=secrets/db_password.txt \
-  -n wasmwiz
+  -n wasm-wizard
 ```
 
 ### 2. Deploy Services
 
 ```bash
 # Deploy PostgreSQL and Redis
-kubectl apply -f k8s/dependencies.yaml -n wasmwiz
+kubectl apply -f k8s/dependencies.yaml -n wasm-wizard
 
 # Wait for dependencies to be ready
-kubectl wait --for=condition=ready pod -l app=postgres -n wasmwiz --timeout=300s
-kubectl wait --for=condition=ready pod -l app=redis -n wasmwiz --timeout=300s
+kubectl wait --for=condition=ready pod -l app=postgres -n wasm-wizard --timeout=300s
+kubectl wait --for=condition=ready pod -l app=redis -n wasm-wizard --timeout=300s
 
-# Deploy WasmWiz application
-kubectl apply -f k8s/wasmwiz-deployment.yaml -n wasmwiz
+# Deploy Wasm Wizard application
+kubectl apply -f k8s/wasm-wizard-deployment.yaml -n wasm-wizard
 
 # Verify deployment
-kubectl get pods -n wasmwiz
-kubectl logs -l app=wasmwiz -n wasmwiz
+kubectl get pods -n wasm-wizard
+kubectl logs -l app=wasm-wizard -n wasm-wizard
 ```
 
 ### 3. Setup Ingress and TLS
 
 ```yaml
-# Update k8s/wasmwiz-deployment.yaml ingress section
+# Update k8s/wasm-wizard-deployment.yaml ingress section
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -258,18 +258,18 @@ The monitoring stack is included in the Docker Compose setup. Access:
 ```yaml
 # monitoring/alert_rules.yml
 groups:
-  - name: wasmwiz.rules
+  - name: wasm-wizard.rules
     rules:
-    - alert: WasmWizDown
-      expr: up{job="wasmwiz"} == 0
+    - alert: Wasm WizardDown
+      expr: up{job="wasm-wizard"} == 0
       for: 1m
       labels:
         severity: critical
       annotations:
-        summary: "WasmWiz instance is down"
+        summary: "Wasm Wizard instance is down"
         
     - alert: HighErrorRate
-      expr: rate(wasmwiz_http_requests_total{status=~"5.."}[5m]) > 0.1
+      expr: rate(wasm-wizard_http_requests_total{status=~"5.."}[5m]) > 0.1
       for: 5m
       labels:
         severity: warning
@@ -277,7 +277,7 @@ groups:
         summary: "High error rate detected"
         
     - alert: DatabaseConnectionFailure
-      expr: wasmwiz_database_connections_failed_total > 10
+      expr: wasm-wizard_database_connections_failed_total > 10
       for: 1m
       labels:
         severity: critical
@@ -291,20 +291,20 @@ groups:
 
 ```bash
 # Setup daily backups via cron
-echo "0 2 * * * /opt/wasmwiz/scripts/backup.sh" | crontab -
+echo "0 2 * * * /opt/wasm-wizard/scripts/backup.sh" | crontab -
 
 # Setup backup rotation and monitoring
-echo "0 3 * * 0 /opt/wasmwiz/scripts/cleanup-backups.sh" | crontab -
+echo "0 3 * * 0 /opt/wasm-wizard/scripts/cleanup-backups.sh" | crontab -
 ```
 
 ### 2. Disaster Recovery Testing
 
 ```bash
 # Test restore procedure monthly
-/opt/wasmwiz/scripts/restore.sh latest
+/opt/wasm-wizard/scripts/restore.sh latest
 
 # Verify data integrity
-docker-compose exec wasmwiz wasmwiz health-check
+docker-compose exec wasm-wizard wasm-wizard health-check
 ```
 
 ## Performance Tuning
@@ -356,7 +356,7 @@ deploy:
    ```bash
    # Check database status
    docker-compose logs postgres
-   docker-compose exec postgres pg_isready -U wasmwiz
+   docker-compose exec postgres pg_isready -U wasm-wizard
    ```
 
 2. **High Memory Usage**
@@ -364,13 +364,13 @@ deploy:
    # Monitor container resources
    docker stats
    # Check for memory leaks
-   docker-compose exec wasmwiz ps aux
+   docker-compose exec wasm-wizard ps aux
    ```
 
 3. **WASM Execution Timeouts**
    ```bash
    # Check execution logs
-   docker-compose logs wasmwiz | grep "execution_timeout"
+   docker-compose logs wasm-wizard | grep "execution_timeout"
    # Adjust timeout in environment variables
    ```
 
@@ -378,10 +378,10 @@ deploy:
 
 ```bash
 # Real-time monitoring
-docker-compose logs -f wasmwiz
+docker-compose logs -f wasm-wizard
 
 # Error analysis
-docker-compose logs wasmwiz | grep "ERROR"
+docker-compose logs wasm-wizard | grep "ERROR"
 
 # Performance metrics
 curl http://localhost:8080/metrics

@@ -1,6 +1,6 @@
-# WasmWiz Security Checklist
+# Wasm Wizard Security Checklist
 
-This checklist ensures WasmWiz meets production security standards.
+This checklist ensures Wasm Wizard meets production security standards.
 
 ## Pre-Deployment Security Checklist
 
@@ -109,11 +109,11 @@ ufw enable
 
 ```yaml
 # Key security metrics
-- wasmwiz_http_requests_total{status="401"}  # Unauthorized attempts
-- wasmwiz_http_requests_total{status="403"}  # Forbidden requests
-- wasmwiz_rate_limit_hits_total              # Rate limit violations
-- wasmwiz_api_key_failures_total             # Invalid API key usage
-- wasmwiz_wasm_execution_failures_total      # WASM security violations
+- wasm-wizard_http_requests_total{status="401"}  # Unauthorized attempts
+- wasm-wizard_http_requests_total{status="403"}  # Forbidden requests
+- wasm-wizard_rate_limit_hits_total              # Rate limit violations
+- wasm-wizard_api_key_failures_total             # Invalid API key usage
+- wasm-wizard_wasm_execution_failures_total      # WASM security violations
 ```
 
 ### Security Alerts
@@ -121,7 +121,7 @@ ufw enable
 ```yaml
 # Critical security alerts
 - alert: UnauthorizedAccessSpike
-  expr: rate(wasmwiz_http_requests_total{status="401"}[5m]) > 10
+  expr: rate(wasm-wizard_http_requests_total{status="401"}[5m]) > 10
   for: 1m
   labels:
     severity: critical
@@ -129,7 +129,7 @@ ufw enable
     summary: "Spike in unauthorized access attempts"
 
 - alert: PossibleBruteForceAttack
-  expr: rate(wasmwiz_api_key_failures_total[5m]) > 5
+  expr: rate(wasm-wizard_api_key_failures_total[5m]) > 5
   for: 2m
   labels:
     severity: warning
@@ -137,7 +137,7 @@ ufw enable
     summary: "Possible brute force attack on API keys"
 
 - alert: SuspiciousWasmUpload
-  expr: rate(wasmwiz_wasm_uploads_total[1m]) > 10
+  expr: rate(wasm-wizard_wasm_uploads_total[1m]) > 10
   for: 30s
   labels:
     severity: warning
@@ -153,7 +153,7 @@ ufw enable
 # Regular security audits
 cargo audit                    # Rust dependencies
 npm audit                     # Node.js dependencies (if any)
-docker scan wasmwiz:latest    # Container image scanning
+docker scan wasm-wizard:latest    # Container image scanning
 ```
 
 ### Security Updates
@@ -214,7 +214,7 @@ docker-compose down
 ufw insert 1 deny from <suspicious-ip>
 
 # Reset API keys (if compromised)
-psql -d wasmwiz -c "UPDATE api_keys SET is_active = false WHERE created_at > '2024-01-01';"
+psql -d wasm-wizard -c "UPDATE api_keys SET is_active = false WHERE created_at > '2024-01-01';"
 
 # Enable maintenance mode
 touch /tmp/maintenance

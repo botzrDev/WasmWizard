@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🚀 Starting WasmWiz Development Environment"
+echo "🚀 Starting Wasm Wizard Development Environment"
 echo "=============================================="
 
 # Function to check if a port is available
@@ -47,7 +47,7 @@ echo "🔍 Checking port availability..."
 check_port 7432 || exit 1  # PostgreSQL
 check_port 7379 || exit 1  # Redis
 check_port 7050 || exit 1  # pgAdmin (optional)
-check_port 8081 || exit 1  # WasmWiz server
+check_port 8081 || exit 1  # Wasm Wizard server
 
 # Start database services
 echo "🗄️  Starting database services..."
@@ -59,8 +59,8 @@ wait_for_service "Redis" 7379
 
 # Run database migrations
 echo "📊 Running database migrations..."
-export DATABASE_URL="postgresql://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev"
-cd ../wasmwiz
+export DATABASE_URL="postgresql://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev"
+cd ../wasm-wizard
 sqlx migrate run --source ./migrations || {
     echo "❌ Migration failed. Check your database connection."
     exit 1
@@ -69,7 +69,7 @@ sqlx migrate run --source ./migrations || {
 echo "✅ Database migrations completed successfully"
 
 # Build the application
-echo "🔨 Building WasmWiz application..."
+echo "🔨 Building Wasm Wizard application..."
 cargo build || {
     echo "❌ Build failed. Check your Rust code."
     exit 1
@@ -79,7 +79,7 @@ echo "✅ Build completed successfully"
 
 # Set up environment variables
 export WASMWIZ_ENV=development
-export DATABASE_URL="postgresql://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev"
+export DATABASE_URL="postgresql://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev"
 export REDIS_URL="redis://127.0.0.1:7379"
 export SERVER_PORT=8081
 export AUTH_REQUIRED=false
@@ -98,13 +98,13 @@ echo ""
 echo "🔗 Useful URLs:"
 echo "   Application: http://localhost:8081"
 echo "   Health Check: http://localhost:8081/health"
-echo "   pgAdmin: http://localhost:7050 (admin@wasmwiz.dev / admin)"
+echo "   pgAdmin: http://localhost:7050 (admin@wasm-wizard.dev / admin)"
 echo ""
 echo "🧪 Test API Key (if auth enabled): dev-test-key-123"
 echo ""
-echo "🚀 Starting WasmWiz server..."
+echo "🚀 Starting Wasm Wizard server..."
 echo "   (Press Ctrl+C to stop)"
 echo ""
 
 # Start the application
-./target/debug/wasmwiz
+./target/debug/wasm-wizard

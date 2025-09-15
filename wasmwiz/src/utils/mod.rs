@@ -1,7 +1,7 @@
 //! # Utility Functions
 //!
 //! This module contains common utility functions and helpers used throughout
-//! the WasmWiz application.
+//! the Wasm Wizard application.
 //!
 //! ## Utilities Overview
 //!
@@ -18,7 +18,7 @@
 //! ## Usage
 //!
 //! ```rust,no_run
-//! use wasmwiz::utils::{auth, file_system};
+//! use wasm-wizard::utils::{auth, file_system};
 //!
 //! // Authentication utilities
 //! let hashed_key = auth::hash_api_key("user-key", "salt")?;

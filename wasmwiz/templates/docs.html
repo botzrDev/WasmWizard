@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}API Documentation - WasmWiz{% endblock %}
+{% block title %}API Documentation - Wasm Wizard{% endblock %}
 
 {% block content %}
 <div class="docs-container">
@@ -44,14 +44,14 @@
     <!-- Main Documentation Content -->
     <main class="docs-content">
         <div class="docs-header">
-            <h1>WasmWiz API Documentation</h1>
+            <h1>Wasm Wizard API Documentation</h1>
             <p class="lead">Complete reference for integrating WebAssembly execution into your applications</p>
         </div>
 
         <!-- Introduction -->
         <section id="introduction" class="docs-section">
             <h2>Introduction</h2>
-            <p>WasmWiz provides a secure, scalable platform for executing WebAssembly modules in the cloud. Our API allows you to upload WASM modules and execute them with custom inputs, all within a sandboxed environment.</p>
+            <p>Wasm Wizard provides a secure, scalable platform for executing WebAssembly modules in the cloud. Our API allows you to upload WASM modules and execute them with custom inputs, all within a sandboxed environment.</p>
 
             <div class="feature-grid">
                 <div class="feature-card">
@@ -80,14 +80,14 @@
         <!-- Quick Start -->
         <section id="quickstart" class="docs-section">
             <h2>Quick Start</h2>
-            <p>Get up and running with WasmWiz in minutes:</p>
+            <p>Get up and running with Wasm Wizard in minutes:</p>
 
             <ol class="quickstart-steps">
                 <li>
                     <h4>Get an API Key</h4>
                     <p>Generate your API key from the <a href="/api-keys">API Keys page</a></p>
                     <div class="code-block">
-                        <pre><code>curl -X POST https://api.wasmwiz.io/api/auth/keys \
+                        <pre><code>curl -X POST https://api.wasm-wizard.io/api/auth/keys \
   -H "Content-Type: application/json" \
   -d '{"user_email": "you@example.com", "tier_name": "Free"}'</code></pre>
                     </div>
@@ -97,7 +97,7 @@
                     <h4>Upload a WASM Module</h4>
                     <p>Upload your compiled WebAssembly module:</p>
                     <div class="code-block">
-                        <pre><code>curl -X POST https://api.wasmwiz.io/api/wasm/upload \
+                        <pre><code>curl -X POST https://api.wasm-wizard.io/api/wasm/upload \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F "wasm=@your_module.wasm"</code></pre>
                     </div>
@@ -107,7 +107,7 @@
                     <h4>Execute the Module</h4>
                     <p>Run your WASM module with input data:</p>
                     <div class="code-block">
-                        <pre><code>curl -X POST https://api.wasmwiz.io/api/wasm/execute \
+                        <pre><code>curl -X POST https://api.wasm-wizard.io/api/wasm/execute \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -349,10 +349,10 @@ Authorization: Bearer YOUR_API_KEY</code></pre>
         <section id="example-javascript" class="docs-section">
             <h2>JavaScript Example</h2>
             <div class="code-block">
-                <pre><code class="language-javascript">// WasmWiz JavaScript SDK Example
-const WasmWiz = {
+                <pre><code class="language-javascript">// Wasm Wizard JavaScript SDK Example
+const Wasm Wizard = {
   apiKey: 'YOUR_API_KEY',
-  baseUrl: 'https://api.wasmwiz.io',
+  baseUrl: 'https://api.wasm-wizard.io',
 
   async uploadModule(wasmFile) {
     const formData = new FormData();
@@ -391,11 +391,11 @@ async function runWasmModule() {
   try {
     // Upload module
     const fileInput = document.getElementById('wasm-file');
-    const uploadResult = await WasmWiz.uploadModule(fileInput.files[0]);
+    const uploadResult = await Wasm Wizard.uploadModule(fileInput.files[0]);
     console.log('Module uploaded:', uploadResult.module_id);
 
     // Execute module
-    const execResult = await WasmWiz.executeModule(
+    const execResult = await Wasm Wizard.executeModule(
       uploadResult.module_id,
       'Hello, WebAssembly!'
     );
@@ -413,10 +413,10 @@ async function runWasmModule() {
                 <pre><code class="language-python">import requests
 import json
 
-class WasmWizClient:
+class Wasm WizardClient:
     def __init__(self, api_key):
         self.api_key = api_key
-        self.base_url = "https://api.wasmwiz.io"
+        self.base_url = "https://api.wasm-wizard.io"
         self.headers = {
             "Authorization": f"Bearer {api_key}"
         }
@@ -464,7 +464,7 @@ class WasmWizClient:
 
 # Usage example
 if __name__ == "__main__":
-    client = WasmWizClient("YOUR_API_KEY")
+    client = Wasm WizardClient("YOUR_API_KEY")
 
     # Upload a module
     upload_result = client.upload_module("./my_module.wasm", name="My Module")
@@ -515,18 +515,18 @@ struct ExecuteResponse {
     execution_time_ms: u64,
 }
 
-struct WasmWizClient {
+struct Wasm WizardClient {
     client: Client,
     api_key: String,
     base_url: String,
 }
 
-impl WasmWizClient {
+impl Wasm WizardClient {
     fn new(api_key: String) -> Self {
         Self {
             client: Client::new(),
             api_key,
-            base_url: "https://api.wasmwiz.io".to_string(),
+            base_url: "https://api.wasm-wizard.io".to_string(),
         }
     }
 
@@ -574,7 +574,7 @@ impl WasmWizClient {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = WasmWizClient::new("YOUR_API_KEY".to_string());
+    let client = Wasm WizardClient::new("YOUR_API_KEY".to_string());
 
     // Upload module
     let upload_result = client.upload_module("./my_module.wasm").await?;
@@ -597,7 +597,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         <!-- WASM Compilation -->
         <section id="wasm-compilation" class="docs-section">
             <h2>Compiling to WebAssembly</h2>
-            <p>WasmWiz supports WASM modules compiled from various languages:</p>
+            <p>Wasm Wizard supports WASM modules compiled from various languages:</p>
 
             <h4>Rust to WASM</h4>
             <div class="code-block">
@@ -765,8 +765,8 @@ npm run asbuild</code></pre>
                 <p>Current API Version: <strong>v1.0.0</strong></p>
                 <p>Last Updated: <strong>January 2025</strong></p>
                 <div class="status-links">
-                    <a href="https://status.wasmwiz.io" target="_blank">Status Page</a>
-                    <a href="https://github.com/wasmwiz/api-docs" target="_blank">GitHub</a>
+                    <a href="https://status.wasm-wizard.io" target="_blank">Status Page</a>
+                    <a href="https://github.com/wasm-wizard/api-docs" target="_blank">GitHub</a>
                     <a href="/support">Contact Support</a>
                 </div>
             </div>

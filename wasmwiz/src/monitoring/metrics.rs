@@ -1,5 +1,5 @@
 // src/monitoring/metrics.rs
-// Prometheus metrics collection for WasmWiz
+// Prometheus metrics collection for Wasm Wizard
 
 use once_cell::sync::Lazy;
 use prometheus::{Gauge, Histogram, HistogramOpts, IntCounter, IntGauge, Opts, Registry};

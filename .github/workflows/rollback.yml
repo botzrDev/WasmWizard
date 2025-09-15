@@ -32,7 +32,7 @@ jobs:
           echo "Rolling back ${{ github.event.inputs.environment }} to version ${{ github.event.inputs.version }}"
           # Add your rollback logic here, e.g. kubectl rollout undo or helm rollback
           # Example:
-          # kubectl rollout undo deployment/wasmwiz -n wasmwiz-${{ github.event.inputs.environment }} --to-revision=${{ github.event.inputs.version }}
+          # kubectl rollout undo deployment/wasm-wizard -n wasm-wizard-${{ github.event.inputs.environment }} --to-revision=${{ github.event.inputs.version }}
 
       - name: Notify Slack
         if: env.SLACK_WEBHOOK != ''

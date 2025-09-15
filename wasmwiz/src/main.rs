@@ -1,6 +1,6 @@
-//! # WasmWiz Application Server
+//! # Wasm Wizard Application Server
 //!
-//! This is the main entry point for the WasmWiz WebAssembly execution platform.
+//! This is the main entry point for the Wasm Wizard WebAssembly execution platform.
 //! It sets up the Actix-web server with all necessary middleware, routes, and services.
 //!
 //! ## Startup Process
@@ -96,7 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!(
         environment = ?config.environment,
         version = env!("CARGO_PKG_VERSION"),
-        "WasmWiz starting up"
+        "Wasm Wizard starting up"
     );
 
     // 4. Database connection and setup

@@ -1,8 +1,8 @@
 use chrono::Utc;
 use uuid::Uuid;
-use wasmwiz::middleware::auth::{hash_api_key, AuthContext};
-use wasmwiz::middleware::rate_limit::{RateLimit, TokenBucket};
-use wasmwiz::models::{ApiKey, SubscriptionTier, UsageLog, User};
+use wasm-wizard::middleware::auth::{hash_api_key, AuthContext};
+use wasm-wizard::middleware::rate_limit::{RateLimit, TokenBucket};
+use wasm-wizard::models::{ApiKey, SubscriptionTier, UsageLog, User};
 
 #[test]
 fn test_api_key_hashing() {
@@ -153,7 +153,7 @@ fn test_wasm_validation() {
 #[test]
 fn test_config_validation() {
     use std::env;
-    use wasmwiz::config::Config;
+    use wasm-wizard::config::Config;
 
     // Set up valid environment variables
     let vars = [
@@ -196,7 +196,7 @@ fn test_config_validation() {
 
 #[test]
 fn test_csrf_token_generation() {
-    use wasmwiz::middleware::generate_csrf_token;
+    use wasm-wizard::middleware::generate_csrf_token;
 
     let secret = "test_secret";
     let token1 = generate_csrf_token(secret);

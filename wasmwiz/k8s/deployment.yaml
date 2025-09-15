@@ -1,34 +1,34 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wasmwiz
+  name: wasm-wizard
   labels:
-    app: wasmwiz
+    app: wasm-wizard
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: wasmwiz
+      app: wasm-wizard
   template:
     metadata:
       labels:
-        app: wasmwiz
+        app: wasm-wizard
     spec:
       containers:
-      - name: wasmwiz
-        image: wasmwiz:latest
+      - name: wasm-wizard
+        image: wasm-wizard:latest
         ports:
         - containerPort: 8080
         env:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: database-url
         - name: API_SALT
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: api-salt
         resources:
           requests:
@@ -69,16 +69,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: wasmwiz-service
+  name: wasm-wizard-service
   labels:
-    app: wasmwiz
+    app: wasm-wizard
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8080"
     prometheus.io/path: "/metrics"
 spec:
   selector:
-    app: wasmwiz
+    app: wasm-wizard
   ports:
   - protocol: TCP
     port: 80
@@ -89,13 +89,13 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: wasmwiz-monitor
+  name: wasm-wizard-monitor
   labels:
-    app: wasmwiz
+    app: wasm-wizard
 spec:
   selector:
     matchLabels:
-      app: wasmwiz
+      app: wasm-wizard
   endpoints:
   - port: http
     path: /metrics

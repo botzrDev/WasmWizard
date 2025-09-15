@@ -1,6 +1,6 @@
 //! # Data Models
 //!
-//! This module defines all data structures used in the WasmWiz application,
+//! This module defines all data structures used in the Wasm Wizard application,
 //! including database entities, API payloads, and domain models.
 //!
 //! ## Model Categories
@@ -51,7 +51,7 @@
 //! ## Usage
 //!
 //! ```rust,no_run
-//! use wasmwiz::models::{User, ApiKey, ExecuteResponse};
+//! use wasm-wizard::models::{User, ApiKey, ExecuteResponse};
 //!
 //! // Database entities
 //! let user = User {

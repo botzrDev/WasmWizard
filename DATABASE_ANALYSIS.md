@@ -1,10 +1,10 @@
-# WasmWiz Database Analysis & Development Setup
+# Wasm Wizard Database Analysis & Development Setup
 
 ## Current Database Architecture
 
 ### Database Schema Overview
 
-The WasmWiz project uses **PostgreSQL** with a well-structured schema designed for a WASM execution platform with API key authentication and usage tracking.
+The Wasm Wizard project uses **PostgreSQL** with a well-structured schema designed for a WASM execution platform with API key authentication and usage tracking.
 
 #### Core Tables:
 
@@ -54,14 +54,14 @@ The WasmWiz project uses **PostgreSQL** with a well-structured schema designed f
 **Production Setup** (docker-compose.yml):
 - PostgreSQL 15-alpine
 - Port: 5432
-- Database: `wasmwiz`
-- User: `wasmwiz`
+- Database: `wasm-wizard`
+- User: `wasm-wizard`
 
 **Development Setup** (docker-compose.dev.yml):
 - PostgreSQL 15
 - Port: 5433 (avoiding conflicts)
-- Database: `wasmwiz_dev`
-- User: `wasmwiz` / Password: `wasmwiz`
+- Database: `wasm-wizard_dev`
+- User: `wasm-wizard` / Password: `wasm-wizard`
 - Includes pgAdmin on port 5050
 
 ## Development Database Setup Plan
@@ -80,7 +80,7 @@ We'll modify the development setup to use the requested port range:
 For development with no authentication required:
 ```bash
 WASMWIZ_ENV=development
-DATABASE_URL="postgresql://wasmwiz:wasmwiz@localhost:7432/wasmwiz_dev"
+DATABASE_URL="postgresql://wasm-wizard:wasm-wizard@localhost:7432/wasm-wizard_dev"
 REDIS_URL="redis://127.0.0.1:7379"
 SERVER_PORT=8081
 AUTH_REQUIRED=false

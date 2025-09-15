@@ -1,5 +1,5 @@
 {
-  "name": "wasmwiz",
+  "name": "wasm-wizard",
   "version": "1.0.0",
   "description": "A production-ready WebAssembly management and execution platform.",
   "main": "index.js",

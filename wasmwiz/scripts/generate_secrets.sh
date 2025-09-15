@@ -1,5 +1,5 @@
 #!/bin/bash
-# Secret generation script for WasmWiz production deployment
+# Secret generation script for Wasm Wizard production deployment
 # This script generates secure random secrets for production use
 
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 SECRETS_DIR="$(dirname "$0")/../secrets"
 mkdir -p "$SECRETS_DIR"
 
-echo "Generating production secrets for WasmWiz..."
+echo "Generating production secrets for Wasm Wizard..."
 
 # Generate database password (32 characters)
 echo "Generating database password..."

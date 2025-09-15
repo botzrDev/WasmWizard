@@ -1,8 +1,8 @@
 /**
- * WasmWiz Main JavaScript - Production Version
+ * Wasm Wizard Main JavaScript - Production Version
  * @version 1.0.0
- * @author WasmWiz Team
- * @description Main frontend functionality for the WasmWiz platform
+ * @author Wasm Wizard Team
+ * @description Main frontend functionality for the Wasm Wizard platform
  */
 
 // Browser compatibility check
@@ -12,7 +12,7 @@ function checkBrowserCompatibility() {
     const isFetchSupported = (typeof fetch === 'function');
     
     if (!isWebAssemblySupported || !isFileReaderSupported || !isFetchSupported) {
-        displayAlert('Your browser does not support all features required for WasmWiz. Please upgrade to a modern browser.', 'error');
+        displayAlert('Your browser does not support all features required for Wasm Wizard. Please upgrade to a modern browser.', 'error');
         return false;
     }
     
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300));
         
         // Load saved API key
-        const savedApiKey = localStorage.getItem('wasmwiz-api-key');
+        const savedApiKey = localStorage.getItem('wasm-wizard-api-key');
         if (savedApiKey) {
             apiKeyInput.value = savedApiKey;
             validateApiKeyAndShowFeedback(savedApiKey);
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Save API key when changed
         apiKeyInput.addEventListener('change', function() {
-            localStorage.setItem('wasmwiz-api-key', this.value);
+            localStorage.setItem('wasm-wizard-api-key', this.value);
         });
     }
     
@@ -354,12 +354,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (languageSelector) {
         languageSelector.addEventListener('change', function() {
             const language = this.value;
-            localStorage.setItem('wasmwiz-language', language);
+            localStorage.setItem('wasm-wizard-language', language);
             showToast(`Language set to ${language}`, 'info');
         });
 
         // Load saved language
-        const savedLanguage = localStorage.getItem('wasmwiz-language');
+        const savedLanguage = localStorage.getItem('wasm-wizard-language');
         if (savedLanguage) {
             languageSelector.value = savedLanguage;
         }
@@ -369,14 +369,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         // Load saved theme
-        const savedTheme = localStorage.getItem('wasmwiz-theme') || 'light';
+        const savedTheme = localStorage.getItem('wasm-wizard-theme') || 'light';
         setTheme(savedTheme);
 
         themeToggle.addEventListener('click', function() {
             const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             setTheme(newTheme);
-            localStorage.setItem('wasmwiz-theme', newTheme);
+            localStorage.setItem('wasm-wizard-theme', newTheme);
             showToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`, 'info');
         });
     }
@@ -857,7 +857,7 @@ function downloadResults() {
     const outputElement = resultContainer.querySelector('.code-output');
     const errorElement = resultContainer.querySelector('.error-output');
     
-    let content = '# WasmWiz Execution Results\n\n';
+    let content = '# Wasm Wizard Execution Results\n\n';
     content += `Date: ${new Date().toLocaleString()}\n\n`;
     
     if (outputElement) {
@@ -893,7 +893,7 @@ function downloadResults() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `wasmwiz-result-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.md`;
+            a.download = `wasm-wizard-result-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.md`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1001,7 +1001,7 @@ function showToast(message, type = 'info') {
 function getApiKey() {
     // For development mode, return empty if not set (no-auth mode)
     // In production, this would be handled by authentication
-    return localStorage.getItem('wasmwiz-api-key') || '';
+    return localStorage.getItem('wasm-wizard-api-key') || '';
 }
 
 function formatFileSize(bytes) {
@@ -1090,7 +1090,7 @@ async function loadSampleModule(sampleName) {
                 inputText.value = '2 3';
                 break;
             case 'echo':
-                inputText.value = 'Hello, WasmWiz!';
+                inputText.value = 'Hello, Wasm Wizard!';
                 break;
             case 'hello_world':
                 inputText.value = '';
@@ -1349,10 +1349,10 @@ async function revokeApiKey(keyId) {
 
 // Generate a persistent session ID for analytics
 function getSessionId() {
-    let sessionId = localStorage.getItem('wasmwiz-session-id');
+    let sessionId = localStorage.getItem('wasm-wizard-session-id');
     if (!sessionId) {
         sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        localStorage.setItem('wasmwiz-session-id', sessionId);
+        localStorage.setItem('wasm-wizard-session-id', sessionId);
     }
     return sessionId;
 }

@@ -1,6 +1,6 @@
 //! # HTTP Request Handlers
 //!
-//! This module contains all HTTP request handlers for the WasmWiz API and web interface.
+//! This module contains all HTTP request handlers for the Wasm Wizard API and web interface.
 //! Handlers are organized by functionality and follow RESTful conventions.
 //!
 //! ## Handler Categories
@@ -27,7 +27,7 @@
 //!
 //! ```rust,no_run
 //! use actix_web::{web, HttpResponse, Result};
-//! use wasmwiz::{errors::ApiError, middleware::pre_auth::AuthContext};
+//! use wasm-wizard::{errors::ApiError, middleware::pre_auth::AuthContext};
 //!
 //! pub async fn my_handler(
 //!     auth_context: AuthContext,           // Authentication context

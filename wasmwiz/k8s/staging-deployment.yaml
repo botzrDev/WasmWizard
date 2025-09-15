@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wasmwiz-staging
-  namespace: wasmwiz-staging
+  name: wasm-wizard-staging
+  namespace: wasm-wizard-staging
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: staging
   annotations:
     deployment.kubernetes.io/revision: "1"
@@ -18,12 +18,12 @@ spec:
       maxSurge: 25%
   selector:
     matchLabels:
-      app: wasmwiz
+      app: wasm-wizard
       environment: staging
   template:
     metadata:
       labels:
-        app: wasmwiz
+        app: wasm-wizard
         environment: staging
       annotations:
         prometheus.io/scrape: "true"
@@ -35,8 +35,8 @@ spec:
         runAsUser: 65534
         fsGroup: 65534
       containers:
-      - name: wasmwiz
-        image: wasmwiz:staging-latest # Will be replaced by CI/CD
+      - name: wasm-wizard
+        image: wasm-wizard:staging-latest # Will be replaced by CI/CD
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -49,22 +49,22 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: database-url
         - name: REDIS_URL
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: redis-url
         - name: API_SALT
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: api-salt
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: wasmwiz-secrets
+              name: wasm-wizard-secrets
               key: jwt-secret
         resources:
           requests:
@@ -124,10 +124,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: wasmwiz-staging-service
-  namespace: wasmwiz-staging
+  name: wasm-wizard-staging-service
+  namespace: wasm-wizard-staging
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: staging
   annotations:
     prometheus.io/scrape: "true"
@@ -135,7 +135,7 @@ metadata:
     prometheus.io/path: "/metrics"
 spec:
   selector:
-    app: wasmwiz
+    app: wasm-wizard
     environment: staging
   ports:
   - protocol: TCP
@@ -148,10 +148,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: wasmwiz-staging-ingress
-  namespace: wasmwiz-staging
+  name: wasm-wizard-staging-ingress
+  namespace: wasm-wizard-staging
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: staging
   annotations:
     kubernetes.io/ingress.class: "nginx"
@@ -161,17 +161,17 @@ metadata:
 spec:
   tls:
   - hosts:
-    - api-staging.wasmwiz.com
-    secretName: wasmwiz-staging-tls
+    - api-staging.wasm-wizard.com
+    secretName: wasm-wizard-staging-tls
   rules:
-  - host: api-staging.wasmwiz.com
+  - host: api-staging.wasm-wizard.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: wasmwiz-staging-service
+            name: wasm-wizard-staging-service
             port:
               number: 80
 
@@ -179,16 +179,16 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: wasmwiz-staging-hpa
-  namespace: wasmwiz-staging
+  name: wasm-wizard-staging-hpa
+  namespace: wasm-wizard-staging
   labels:
-    app: wasmwiz
+    app: wasm-wizard
     environment: staging
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: wasmwiz-staging
+    name: wasm-wizard-staging
   minReplicas: 2
   maxReplicas: 5
   metrics:

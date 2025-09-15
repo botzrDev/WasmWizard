@@ -1,11 +1,11 @@
-//! # WasmWiz Core Library
+//! # Wasm Wizard Core Library
 //!
-//! This is the core library crate for WasmWiz, a production-ready WebAssembly execution platform.
+//! This is the core library crate for Wasm Wizard, a production-ready WebAssembly execution platform.
 //! It provides all the essential components for building secure, scalable WASM execution services.
 //!
 //! ## Architecture Overview
 //!
-//! WasmWiz follows a modular architecture with clear separation of concerns:
+//! Wasm Wizard follows a modular architecture with clear separation of concerns:
 //!
 //! - **`config`**: Environment-based configuration management
 //! - **`errors`**: Comprehensive error handling with HTTP status mapping
@@ -28,7 +28,7 @@
 //! ## Usage
 //!
 //! ```rust,no_run
-//! use wasmwiz::{
+//! use wasm-wizard::{
 //!     config::Config,
 //!     app::create_app,
 //!     services::establish_connection_pool,

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }} - WasmWiz{% endblock %}
+{% block title %}{{ title }} - Wasm Wizard{% endblock %}
 
 {% block content %}
 <div class="card">
     <div class="card-header">
         <h1 class="card-title">API Key Management</h1>
         <p class="card-description">
-            Generate and manage your API keys for accessing the WasmWiz execution API.
+            Generate and manage your API keys for accessing the Wasm Wizard execution API.
         </p>
     </div>
 
@@ -125,7 +125,7 @@
     
     <p>Include your API key in the <code>Authorization</code> header when making requests:</p>
     
-    <div class="code-output">curl -X POST "https://api.wasmwiz.com/execute" \
+    <div class="code-output">curl -X POST "https://api.wasm-wizard.com/execute" \
   -H "Authorization: Bearer YOUR_API_KEY_HERE" \
   -F "wasm=@your_module.wasm" \
   -F "input=your input data"</div>

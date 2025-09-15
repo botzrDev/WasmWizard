@@ -34,7 +34,7 @@
 //!
 //! ```rust,no_run
 //! use actix_web::{web, App};
-//! use wasmwiz::middleware::*;
+//! use wasm-wizard::middleware::*;
 //!
 //! let app = App::new()
 //!     .wrap(SecurityHeadersMiddleware)

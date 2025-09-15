@@ -1,6 +1,6 @@
 # Git Workflow Visual Diagrams
 
-**WasmWiz Project Workflow Visualization**  
+**Wasm Wizard Project Workflow Visualization**  
 **Created:** June 20, 2025
 
 ## Complete Workflow Overview
@@ -334,7 +334,7 @@ graph TD
 
 ## Usage Instructions
 
-These diagrams illustrate the complete workflow for the WasmWiz project. They can be:
+These diagrams illustrate the complete workflow for the Wasm Wizard project. They can be:
 
 1. **Embedded in Documentation**: Copy the mermaid code into markdown files
 2. **Rendered in GitHub**: GitHub automatically renders mermaid diagrams

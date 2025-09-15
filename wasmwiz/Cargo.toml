@@ -1,12 +1,12 @@
 # Cargo.toml
 
 [package]
-name = "wasmwiz"
+name = "wasm-wizard"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "wasmwiz"
+name = "wasm-wizard"
 path = "src/lib.rs"
 
 [dependencies]
@@ -151,7 +151,7 @@ actix-web = { version = "4", features = ["macros"] }
 sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
 testcontainers = "0.12"
 testcontainers-modules = { version = "0.12", features = ["postgres"] }
-wasmwiz = { path = ".", features = ["test"] }
+wasm-wizard = { path = ".", features = ["test"] }
 
 # Note: Patches would go here, but the vulnerable dependencies are transitive
 # from Wasmer and cannot be directly patched without breaking compatibility.

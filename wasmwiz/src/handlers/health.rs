@@ -1,7 +1,7 @@
 //! # Health Check Handlers
 //!
 //! This module provides comprehensive health check endpoints for monitoring
-//! the WasmWiz application status and diagnosing issues in production.
+//! the Wasm Wizard application status and diagnosing issues in production.
 //!
 //! ## Health Check Types
 //!
@@ -64,7 +64,7 @@ use tracing::error;
 /// Comprehensive health check endpoint.
 ///
 /// Performs detailed checks of all system components and dependencies.
-/// This endpoint is used for monitoring the overall health of the WasmWiz
+/// This endpoint is used for monitoring the overall health of the Wasm Wizard
 /// application and can be used by load balancers and monitoring systems.
 ///
 /// # Checks Performed
@@ -161,7 +161,7 @@ pub async fn health_check(pool: web::Data<AppState>) -> Result<HttpResponse> {
     let response = json!({
         "status": status,
         "timestamp": chrono::Utc::now(),
-        "service": "wasmwiz",
+        "service": "wasm-wizard",
         "version": env!("CARGO_PKG_VERSION"),
         "checks": checks
     });

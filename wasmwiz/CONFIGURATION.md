@@ -2,7 +2,7 @@
 
 ## Overview
 
-WasmWiz uses environment-based configuration with sensible defaults for different deployment environments. This document provides a complete reference for all configuration options.
+Wasm Wizard uses environment-based configuration with sensible defaults for different deployment environments. This document provides a complete reference for all configuration options.
 
 ## Environment Variables
 
@@ -11,7 +11,7 @@ WasmWiz uses environment-based configuration with sensible defaults for differen
 | Variable | Default | Required | Description |
 |----------|---------|----------|-------------|
 | `ENVIRONMENT` | `development` | No | Runtime environment (`development`, `staging`, `production`) |
-| `DATABASE_URL` | `postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev` | Yes* | PostgreSQL connection string |
+| `DATABASE_URL` | `postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev` | Yes* | PostgreSQL connection string |
 | `REDIS_URL` | `redis://127.0.0.1:6379` | No | Redis connection string for rate limiting |
 | `REDIS_ENABLED` | `false` | No | Enable Redis-based rate limiting |
 
@@ -50,7 +50,7 @@ WasmWiz uses environment-based configuration with sensible defaults for differen
 ```bash
 # Automatic defaults when ENVIRONMENT=development
 ENVIRONMENT=development
-DATABASE_URL=postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev
+DATABASE_URL=postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev
 REDIS_ENABLED=false
 SERVER_HOST=127.0.0.1
 LOG_LEVEL=debug
@@ -86,7 +86,7 @@ AUTH_REQUIRED=true
 ```bash
 # .env.development
 ENVIRONMENT=development
-DATABASE_URL=postgresql://wasmwiz:password@localhost:5432/wasmwiz_dev
+DATABASE_URL=postgresql://wasm-wizard:password@localhost:5432/wasm-wizard_dev
 API_SALT=dev-salt-change-in-production-16-chars-min
 LOG_LEVEL=debug
 ```
@@ -96,7 +96,7 @@ LOG_LEVEL=debug
 ```bash
 # .env.production
 ENVIRONMENT=production
-DATABASE_URL=postgresql://wasmwiz:secure_password@db.example.com:5432/wasmwiz_prod
+DATABASE_URL=postgresql://wasm-wizard:secure_password@db.example.com:5432/wasm-wizard_prod
 REDIS_URL=redis://redis-cluster.example.com:6379
 REDIS_ENABLED=true
 API_SALT=your-very-secure-production-salt-here-32-chars
@@ -117,10 +117,10 @@ CSP_REPORT_URI=https://csp.example.com/report
 # docker-compose.override.yml
 version: '3.8'
 services:
-  wasmwiz:
+  wasm-wizard:
     environment:
       - ENVIRONMENT=production
-      - DATABASE_URL=postgresql://wasmwiz:password@db:5432/wasmwiz
+      - DATABASE_URL=postgresql://wasm-wizard:password@db:5432/wasm-wizard
       - REDIS_URL=redis://redis:6379
       - REDIS_ENABLED=true
       - API_SALT=${API_SALT}
@@ -195,7 +195,7 @@ CSP_REPORT_URI=https://security.example.com/csp-reports
 DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require&pool_max_conns=20&pool_min_conns=5
 
 # Development with connection pooling
-DATABASE_URL=postgresql://wasmwiz:pass@localhost:5432/wasmwiz_dev?pool_max_conns=5
+DATABASE_URL=postgresql://wasm-wizard:pass@localhost:5432/wasm-wizard_dev?pool_max_conns=5
 ```
 
 ## Monitoring Configuration
@@ -213,11 +213,11 @@ Health checks use the same database and filesystem paths as the main application
 ```bash
 # Structured JSON logging for production
 LOG_LEVEL=info
-RUST_LOG=wasmwiz=info,actix_web=warn
+RUST_LOG=wasm-wizard=info,actix_web=warn
 
 # Debug logging for development
 LOG_LEVEL=debug
-RUST_LOG=wasmwiz=debug,actix_web=debug,sqlx=debug
+RUST_LOG=wasm-wizard=debug,actix_web=debug,sqlx=debug
 ```
 
 ## Security Considerations
@@ -244,8 +244,8 @@ DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
 DATABASE_URL=postgresql://user:pass@host:5432/db?pool_max_conns=10&pool_min_conns=2
 
 # Never expose credentials
-DATABASE_URL=postgresql://admin:password@localhost:5432/wasmwiz  # ❌ BAD
-DATABASE_URL=postgresql://readonly:limited@localhost:5432/wasmwiz  # ✅ GOOD
+DATABASE_URL=postgresql://admin:password@localhost:5432/wasm-wizard  # ❌ BAD
+DATABASE_URL=postgresql://readonly:limited@localhost:5432/wasm-wizard  # ✅ GOOD
 ```
 
 ### Network Security
@@ -294,7 +294,7 @@ systemctl status redis
 #### Invalid Configuration on Startup
 ```bash
 # Check validation errors in logs
-docker-compose logs wasmwiz
+docker-compose logs wasm-wizard
 
 # Validate configuration manually
 cargo run -- --validate-config
@@ -345,7 +345,7 @@ REDIS_ENABLED=false
 
 2. **Configure Database**
    ```bash
-   export DATABASE_URL="postgresql://user:secure_pass@prod-db:5432/wasmwiz"
+   export DATABASE_URL="postgresql://user:secure_pass@prod-db:5432/wasm-wizard"
    ```
 
 3. **Enable Security**
@@ -371,7 +371,7 @@ REDIS_ENABLED=false
 #### .env.development
 ```bash
 ENVIRONMENT=development
-DATABASE_URL=postgresql://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev
+DATABASE_URL=postgresql://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev
 API_SALT=dev-salt-change-in-production-16-chars-min
 LOG_LEVEL=debug
 AUTH_REQUIRED=false
@@ -380,7 +380,7 @@ AUTH_REQUIRED=false
 #### .env.staging
 ```bash
 ENVIRONMENT=staging
-DATABASE_URL=postgresql://wasmwiz:staging_pass@staging-db:5432/wasmwiz_staging
+DATABASE_URL=postgresql://wasm-wizard:staging_pass@staging-db:5432/wasm-wizard_staging
 REDIS_URL=redis://staging-redis:6379
 REDIS_ENABLED=true
 API_SALT=staging-salt-32-chars-secure-random-string
@@ -391,7 +391,7 @@ AUTH_REQUIRED=true
 #### .env.production
 ```bash
 ENVIRONMENT=production
-DATABASE_URL=postgresql://wasmwiz:prod_pass@prod-db:5432/wasmwiz_prod?sslmode=require
+DATABASE_URL=postgresql://wasm-wizard:prod_pass@prod-db:5432/wasm-wizard_prod?sslmode=require
 REDIS_URL=redis://prod-redis-cluster:6379
 REDIS_ENABLED=true
 API_SALT=prod-salt-64-chars-highly-secure-random-string

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }} - WasmWiz{% endblock %}
+{% block title %}{{ title }} - Wasm Wizard{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -602,14 +602,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const apiKeyInput = document.querySelector('#api-key');
     
     // Load saved API key
-    const savedApiKey = localStorage.getItem('wasmwiz-api-key');
+    const savedApiKey = localStorage.getItem('wasm-wizard-api-key');
     if (savedApiKey) {
         apiKeyInput.value = savedApiKey;
     }
     
     // Save API key when changed
     apiKeyInput.addEventListener('change', function() {
-        localStorage.setItem('wasmwiz-api-key', this.value);
+        localStorage.setItem('wasm-wizard-api-key', this.value);
     });
     
     // File upload click handler

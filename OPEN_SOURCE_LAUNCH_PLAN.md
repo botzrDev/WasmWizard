@@ -1,33 +1,38 @@
-# 🚀 WasmWiz Open Source Launch Plan for Botzr
+# 🚀 Wasm Wizard Open Source Launch Plan for Botzr
 
 ## 📋 Executive Summary
 
-This document provides a step-by-step plan to launch WasmWiz as Botzr's first open source project. The plan is designed to be straightforward and manageable, removing complexity while ensuring a professional launch.
+This document provides a step-by-step plan to launch Wasm Wizard as Botzr's first open source project. The plan is designed to be straightforward and manageable, removing complexity while ensuring a professional launch.
 
-**Timeline: 4-6 weeks from start to public launch**
+## Timeline: 4-6 weeks from start to public launch
 
 ---
 
 ## 🎯 Phase 1: Pre-Launch Preparation (Week 1-2)
 
 ### 1.1 Legal & Licensing ✅
+
 **Priority: CRITICAL**
 
 #### Choose a License
+
 - **Recommended: Apache 2.0** - Business-friendly, allows commercial use, provides patent protection
 - **Alternative: MIT** - Simpler, more permissive
 - **Action**: Add LICENSE file to repository root
 
 #### Get Legal Approval
+
 - [ ] Review with Botzr legal team/advisor
 - [ ] Ensure no proprietary code or secrets in repository
 - [ ] Confirm company owns all code contributions
 - [ ] Get written approval to open source
 
 ### 1.2 Clean Up Repository 🧹
+
 **Priority: HIGH**
 
 #### Remove Sensitive Data
+
 ```bash
 # Scan for secrets
 git secrets --scan-history
@@ -40,15 +45,17 @@ grep -r "botzr\|internal\|private" --exclude-dir=.git
 ```
 
 #### Sanitize History (if needed)
+
 ```bash
 # Use BFG Repo-Cleaner if secrets found in history
 # https://rtyley.github.io/bfg-repo-cleaner/
 ```
 
 ### 1.3 Branding & Identity 🎨
+
 **Priority: MEDIUM**
 
-- [ ] Confirm project name (WasmWiz or rebrand?)
+- [ ] Confirm project name (Wasm Wizard or rebrand?)
 - [ ] Create logo/banner (can use free tools like Canva)
 - [ ] Decide on tagline: "Enterprise WebAssembly Execution Platform"
 - [ ] Reserve social media handles if desired
@@ -62,6 +69,7 @@ grep -r "botzr\|internal\|private" --exclude-dir=.git
 I'll create these essential files for you:
 
 #### LICENSE (Apache 2.0)
+
 ```apache
 Copyright 2024 Botzr
 
@@ -69,10 +77,12 @@ Licensed under the Apache License, Version 2.0...
 ```
 
 #### CODE_OF_CONDUCT.md
+
 - Use Contributor Covenant standard
 - Shows professionalism and inclusivity
 
 #### CONTRIBUTING.md
+
 - How to report bugs
 - How to suggest features
 - Development setup
@@ -80,6 +90,7 @@ Licensed under the Apache License, Version 2.0...
 - Pull request process
 
 #### SECURITY.md
+
 - How to report vulnerabilities
 - Security update process
 - Supported versions
@@ -89,10 +100,10 @@ Licensed under the Apache License, Version 2.0...
 Transform current README into an engaging open source landing page:
 
 ```markdown
-# WasmWiz 🚀
+# Wasm Wizard 🚀
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)]
-[![Build Status](https://github.com/botzr/wasmwiz/workflows/CI/badge.svg)]
+[![Build Status](https://github.com/botzr/wasm-wizard/workflows/CI/badge.svg)]
 [![Discord](https://img.shields.io/discord/xxxxx)]
 
 > Enterprise-grade WebAssembly execution platform with built-in security, monitoring, and scalability
@@ -129,6 +140,7 @@ Create `.github/` directory with:
 #### GitHub Actions Workflows
 
 **.github/workflows/ci.yml** - Main CI pipeline
+
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -143,6 +155,7 @@ jobs:
 ```
 
 **.github/workflows/release.yml** - Automated releases
+
 ```yaml
 name: Release
 on:
@@ -153,12 +166,13 @@ on:
 
 ### 3.2 Development Environment
 
-#### Make it EASY for contributors:
+#### Make it EASY for contributors
 
 1. **Docker Compose for everything**
+
    ```bash
-   git clone https://github.com/botzr/wasmwiz
-   cd wasmwiz
+   git clone https://github.com/botzr/wasm-wizard
+   cd wasm-wizard
    docker-compose up
    # Ready to go!
    ```
@@ -175,6 +189,7 @@ on:
 ### 3.3 Demo & Examples
 
 Create `examples/` directory with:
+
 - Hello World WASM module
 - API usage examples
 - Integration examples
@@ -199,6 +214,7 @@ Create `examples/` directory with:
 ### 4.2 Public Launch Checklist
 
 #### Repository Settings
+
 - [ ] Make repository public
 - [ ] Enable Issues
 - [ ] Enable Discussions
@@ -206,6 +222,7 @@ Create `examples/` directory with:
 - [ ] Configure CODEOWNERS file
 
 #### Communication Channels
+
 - [ ] Create Discord/Slack community
 - [ ] Set up project website (can be GitHub Pages)
 - [ ] Prepare Twitter/LinkedIn announcements
@@ -213,10 +230,11 @@ Create `examples/` directory with:
 ### 4.3 Launch Announcement
 
 #### Blog Post Template
-```markdown
-# Introducing WasmWiz: Botzr's First Open Source Project
 
-We're excited to announce that WasmWiz, our enterprise WebAssembly
+```markdown
+# Introducing Wasm Wizard: Botzr's First Open Source Project
+
+We're excited to announce that Wasm Wizard, our enterprise WebAssembly
 execution platform, is now open source!
 
 ## Why We're Open Sourcing
@@ -234,13 +252,14 @@ execution platform, is now open source!
 
 ## Get Involved
 
-- GitHub: github.com/botzr/wasmwiz
-- Discord: discord.gg/wasmwiz
-- Documentation: wasmwiz.dev
+- GitHub: github.com/botzr/wasm-wizard
+- Discord: discord.gg/wasm-wizard
+- Documentation: wasm-wizard.dev
 ```
 
-#### Where to Announce:
-1. **Hacker News** - "Show HN: WasmWiz - Open Source WebAssembly Execution Platform"
+#### Where to Announce
+
+1. **Hacker News** - "Show HN: Wasm Wizard - Open Source WebAssembly Execution Platform"
 2. **Reddit** - r/rust, r/webassembly, r/kubernetes
 3. **Dev.to / Medium** - Technical deep-dive article
 4. **Twitter/LinkedIn** - Company accounts
@@ -252,13 +271,15 @@ execution platform, is now open source!
 
 ### 5.1 Community Building
 
-#### First Month Goals:
+#### First Month Goals
+
 - [ ] 100 GitHub stars
 - [ ] 10 external contributors
 - [ ] 5 production users
 - [ ] 50 Discord members
 
-#### Engagement Strategy:
+#### Engagement Strategy
+
 - Respond to issues within 24 hours
 - Weekly community updates
 - Monthly virtual meetups
@@ -275,13 +296,15 @@ execution platform, is now open source!
 
 ### 5.3 Sustainability Plan
 
-#### Funding Options:
+#### Funding Options
+
 1. **GitHub Sponsors** - Individual/corporate sponsorships
 2. **OpenCollective** - Transparent funding
 3. **Botzr Cloud** - Managed service offering
 4. **Support Contracts** - Enterprise support
 
-#### Governance Model:
+#### Governance Model
+
 - Start with "Benevolent Dictator" (Botzr maintains control)
 - Evolve to steering committee as project grows
 - Document decision-making process
@@ -291,30 +314,35 @@ execution platform, is now open source!
 ## ✅ Quick Start Checklist
 
 ### Week 1: Legal & Cleanup
+
 - [ ] Get legal approval
 - [ ] Choose license (Apache 2.0)
 - [ ] Remove sensitive data
 - [ ] Audit git history
 
 ### Week 2: Documentation
+
 - [ ] Create LICENSE file
 - [ ] Write CODE_OF_CONDUCT.md
 - [ ] Create CONTRIBUTING.md
 - [ ] Update README for open source
 
 ### Week 3: Technical Setup
+
 - [ ] Set up GitHub Actions CI/CD
 - [ ] Create issue/PR templates
 - [ ] Add examples directory
 - [ ] Test development setup
 
 ### Week 4: Community Prep
+
 - [ ] Create Discord/Slack
 - [ ] Set up project website
 - [ ] Prepare announcement blog
 - [ ] Plan launch venues
 
-### Week 5: Launch!
+### Week 5: Launch
+
 - [ ] Make repository public
 - [ ] Publish announcements
 - [ ] Monitor feedback
@@ -324,19 +352,22 @@ execution platform, is now open source!
 
 ## 🎯 Success Metrics (First 3 Months)
 
-### Minimum Success:
+### Minimum Success
+
 - 100+ GitHub stars
 - 5+ external contributors
 - 3+ production deployments
 - Active community (daily activity)
 
-### Great Success:
+### Great Success
+
 - 500+ GitHub stars
 - 20+ external contributors
 - 10+ production deployments
 - Featured in major tech publications
 
-### Outstanding Success:
+### Outstanding Success
+
 - 1000+ GitHub stars
 - 50+ external contributors
 - 25+ production deployments
@@ -365,18 +396,21 @@ execution platform, is now open source!
 
 ## 📚 Resources & Examples
 
-### Successful Rust Open Source Projects to Learn From:
+### Successful Rust Open Source Projects to Learn From
+
 - **Tokio** - Excellent documentation and community
 - **Axum** - Clean API and good examples
 - **SQLx** - Great testing and CI/CD setup
 
-### Helpful Tools:
+### Helpful Tools
+
 - **All Contributors** - Recognize all contributions
 - **Dependabot** - Automated dependency updates
 - **Codecov** - Test coverage tracking
 - **Stale Bot** - Manage inactive issues
 
-### Learning Resources:
+### Learning Resources
+
 - [Open Source Guides](https://opensource.guide/)
 - [The Cathedral and the Bazaar](http://www.catb.org/~esr/writings/cathedral-bazaar/)
 - [Producing Open Source Software](https://producingoss.com/)
@@ -385,7 +419,7 @@ execution platform, is now open source!
 
 ## 💪 You've Got This!
 
-Remember: Every successful open source project started with someone hitting the "Make Public" button for the first time. WasmWiz is well-architected, well-tested, and solves real problems. The community needs tools like this.
+Remember: Every successful open source project started with someone hitting the "Make Public" button for the first time. Wasm Wizard is well-architected, well-tested, and solves real problems. The community needs tools like this.
 
 **Next Step**: Let's start with Phase 1 - I can create all the necessary files for you right now!
 
@@ -394,6 +428,7 @@ Remember: Every successful open source project started with someone hitting the 
 ## 📞 Support Channels
 
 As you go through this process:
+
 1. I'm here to help create any documents
 2. Botzr team can review and provide feedback
 3. Consider hiring an open source consultant for the first month

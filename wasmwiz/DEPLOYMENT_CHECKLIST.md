@@ -1,4 +1,4 @@
-# WasmWiz Production Deployment Checklist
+# Wasm Wizard Production Deployment Checklist
 
 ## Pre-Deployment Requirements
 
@@ -80,9 +80,9 @@ docker-compose -f docker-compose.production.yml ps
 kubectl apply -f k8s/
 
 # Check deployment status
-kubectl get pods -n wasmwiz-production
-kubectl get services -n wasmwiz-production
-kubectl get ingress -n wasmwiz-production
+kubectl get pods -n wasm-wizard-production
+kubectl get services -n wasm-wizard-production
+kubectl get ingress -n wasm-wizard-production
 ```
 
 ## Post-Deployment Validation
@@ -259,10 +259,10 @@ kubectl get ingress -n wasmwiz-production
 docker-compose -f docker-compose.production.yml ps
 
 # View logs
-docker-compose -f docker-compose.production.yml logs -f wasmwiz
+docker-compose -f docker-compose.production.yml logs -f wasm-wizard
 
 # Scale services
-docker-compose -f docker-compose.production.yml up --scale wasmwiz=3
+docker-compose -f docker-compose.production.yml up --scale wasm-wizard=3
 
 # Database migration
 cargo run -- --migrate
@@ -271,4 +271,4 @@ cargo run -- --migrate
 ./scripts/generate_secrets.sh
 ```
 
-This checklist ensures a comprehensive, production-ready deployment of WasmWiz with enterprise-grade security, monitoring, and operational procedures.
+This checklist ensures a comprehensive, production-ready deployment of Wasm Wizard with enterprise-grade security, monitoring, and operational procedures.

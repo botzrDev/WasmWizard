@@ -1,6 +1,6 @@
-# WasmWiz Production Operations Guide
+# Wasm Wizard Production Operations Guide
 
-This guide provides everything needed to operate WasmWiz in production environments.
+This guide provides everything needed to operate Wasm Wizard in production environments.
 
 ## Quick Start
 
@@ -35,7 +35,7 @@ curl http://localhost:8080/health
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Load Balancer │────│   WasmWiz App   │────│   PostgreSQL    │
+│   Load Balancer │────│   Wasm Wizard App   │────│   PostgreSQL    │
 │    (nginx)      │    │   (Rust/Actix)  │    │   (Database)    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │
@@ -47,7 +47,7 @@ curl http://localhost:8080/health
 
 ## Key Components
 
-### WasmWiz Application
+### Wasm Wizard Application
 - **Technology**: Rust with Actix Web framework
 - **Features**: WebAssembly execution, REST API, authentication
 - **Port**: 8080 (internal), 443 (external via reverse proxy)
@@ -76,7 +76,7 @@ curl http://localhost:8080/health
 
 ```bash
 # Database
-DATABASE_URL=postgresql://user:password@host:5432/wasmwiz
+DATABASE_URL=postgresql://user:password@host:5432/wasm-wizard
 
 # Redis
 REDIS_URL=redis://host:6379
@@ -126,11 +126,11 @@ PRO_TIER_RATE_DAY=50000
 docker-compose -f docker-compose.production.yml up -d
 
 # View logs
-docker-compose logs -f wasmwiz
+docker-compose logs -f wasm-wizard
 
 # Update application
-docker-compose pull wasmwiz
-docker-compose up -d wasmwiz
+docker-compose pull wasm-wizard
+docker-compose up -d wasm-wizard
 ```
 
 ### Kubernetes (Recommended for multi-node)
@@ -140,13 +140,13 @@ docker-compose up -d wasmwiz
 kubectl apply -f k8s/
 
 # Check deployment status
-kubectl get pods -n wasmwiz
+kubectl get pods -n wasm-wizard
 
 # View logs
-kubectl logs -l app=wasmwiz -n wasmwiz -f
+kubectl logs -l app=wasm-wizard -n wasm-wizard -f
 
 # Update deployment
-kubectl set image deployment/wasmwiz wasmwiz=wasmwiz:new-tag -n wasmwiz
+kubectl set image deployment/wasm-wizard wasm-wizard=wasm-wizard:new-tag -n wasm-wizard
 ```
 
 ## Monitoring and Alerting
@@ -154,10 +154,10 @@ kubectl set image deployment/wasmwiz wasmwiz=wasmwiz:new-tag -n wasmwiz
 ### Key Metrics to Monitor
 
 #### Application Metrics
-- `wasmwiz_http_requests_total` - HTTP request count
-- `wasmwiz_http_request_duration_seconds` - Response times
-- `wasmwiz_wasm_executions_total` - WASM execution count
-- `wasmwiz_database_connections_active` - Database connections
+- `wasm-wizard_http_requests_total` - HTTP request count
+- `wasm-wizard_http_request_duration_seconds` - Response times
+- `wasm-wizard_wasm_executions_total` - WASM execution count
+- `wasm-wizard_database_connections_active` - Database connections
 
 #### System Metrics
 - CPU usage (target: <80%)
@@ -197,13 +197,13 @@ Access Grafana at `http://localhost:3000` with admin credentials from secrets.
 
 ```bash
 # Run daily backups (add to crontab)
-0 2 * * * /opt/wasmwiz/scripts/backup.sh
+0 2 * * * /opt/wasm-wizard/scripts/backup.sh
 
 # Manual backup
 ./scripts/backup.sh
 
 # List available backups
-ls -la /opt/wasmwiz/backups/
+ls -la /opt/wasm-wizard/backups/
 ```
 
 ### Disaster Recovery
@@ -323,16 +323,16 @@ save 60 10000
 
 ```bash
 # View application logs
-docker-compose logs wasmwiz | grep ERROR
+docker-compose logs wasm-wizard | grep ERROR
 
 # Monitor real-time logs
-docker-compose logs -f wasmwiz
+docker-compose logs -f wasm-wizard
 
 # Search for specific patterns
-docker-compose logs wasmwiz | grep "execution_timeout"
+docker-compose logs wasm-wizard | grep "execution_timeout"
 
 # Export logs for analysis
-docker-compose logs --since 24h wasmwiz > /tmp/wasmwiz.log
+docker-compose logs --since 24h wasm-wizard > /tmp/wasm-wizard.log
 ```
 
 ### Performance Testing
@@ -376,7 +376,7 @@ wrk -t12 -c400 -d30s http://localhost:8080/metrics
 
 ```bash
 # Collect diagnostic information
-./scripts/collect-logs.sh > wasmwiz-debug-$(date +%Y%m%d).tar.gz
+./scripts/collect-logs.sh > wasm-wizard-debug-$(date +%Y%m%d).tar.gz
 ```
 
 ### Emergency Contacts

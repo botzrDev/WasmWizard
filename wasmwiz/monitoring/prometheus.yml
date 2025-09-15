@@ -12,9 +12,9 @@ alerting:
           - alertmanager:9093
 
 scrape_configs:
-  - job_name: 'wasmwiz'
+  - job_name: 'wasm-wizard'
     static_configs:
-      - targets: ['wasmwiz:8080']
+      - targets: ['wasm-wizard:8080']
     metrics_path: /metrics
     scrape_interval: 15s
     scrape_timeout: 10s

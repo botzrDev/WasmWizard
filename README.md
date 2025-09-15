@@ -1,8 +1,8 @@
-# WasmWiz
+# Wasm Wizard
 
 A **production-ready** WebAssembly management and execution platform with enterprise-grade security, monitoring, and scalability.
 
-![Build Status](https://img.shields.io/github/workflow/status/botzrDev/WasmWiz/CI)
+![Build Status](https://img.shields.io/github/workflow/status/botzrDev/Wasm Wizard/CI)
 ![Security](https://img.shields.io/badge/security-hardened-green)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-ready-blue)
@@ -46,8 +46,8 @@ A **production-ready** WebAssembly management and execution platform with enterp
 
 ```bash
 # Clone the repository
-git clone https://github.com/botzrDev/WasmWiz.git
-cd WasmWiz/wasmwiz
+git clone https://github.com/botzrDev/Wasm Wizard.git
+cd Wasm Wizard/wasm-wizard
 
 # Generate production secrets
 ./scripts/generate_secrets.sh
@@ -63,7 +63,7 @@ curl http://localhost:8080/health
 
 ```bash
 # Create secrets
-kubectl create secret generic wasmwiz-secrets \
+kubectl create secret generic wasm-wizard-secrets \
   --from-file=api-salt=secrets/api_salt.txt \
   --from-file=database-url=secrets/database_url.txt
 
@@ -71,14 +71,14 @@ kubectl create secret generic wasmwiz-secrets \
 kubectl apply -f k8s/
 
 # Check status
-kubectl get pods -l app=wasmwiz
+kubectl get pods -l app=wasm-wizard
 ```
 
 ### 🔧 Development Setup
 
 ```bash
 # Set environment variables
-export DATABASE_URL="postgresql://wasmwiz:password@localhost/wasmwiz"
+export DATABASE_URL="postgresql://wasm-wizard:password@localhost/wasm-wizard"
 export API_SALT="development-salt-change-in-production"
 export REDIS_URL="redis://127.0.0.1:6379"
 
@@ -93,16 +93,16 @@ cargo run
 ## 📚 Documentation
 
 ### Production Operations
-- **[Production Deployment Guide](wasmwiz/PRODUCTION_DEPLOYMENT.md)** - Complete deployment procedures
-- **[Operations Manual](wasmwiz/OPERATIONS.md)** - Day-to-day operations and maintenance
-- **[Troubleshooting Guide](wasmwiz/TROUBLESHOOTING.md)** - Common issues and solutions
-- **[Security Checklist](wasmwiz/SECURITY.md)** - Security hardening and compliance
+- **[Production Deployment Guide](wasm-wizard/PRODUCTION_DEPLOYMENT.md)** - Complete deployment procedures
+- **[Operations Manual](wasm-wizard/OPERATIONS.md)** - Day-to-day operations and maintenance
+- **[Troubleshooting Guide](wasm-wizard/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Security Checklist](wasm-wizard/SECURITY.md)** - Security hardening and compliance
 
 ### Development
-- **[API Documentation](wasmwiz/API.md)** - Complete REST API reference with examples
-- **[Configuration Guide](wasmwiz/CONFIGURATION.md)** - Environment variables and setup
-- **[Development Guide](wasmwiz/DEVELOPMENT.md)** - Setup and contribution guidelines
-- **[Troubleshooting Guide](wasmwiz/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[API Documentation](wasm-wizard/API.md)** - Complete REST API reference with examples
+- **[Configuration Guide](wasm-wizard/CONFIGURATION.md)** - Environment variables and setup
+- **[Development Guide](wasm-wizard/DEVELOPMENT.md)** - Setup and contribution guidelines
+- **[Troubleshooting Guide](wasm-wizard/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ## 🔗 API Endpoints
 
@@ -203,7 +203,7 @@ Automated alerts for:
 ### Automated Backup Strategy
 ```bash
 # Daily automated backups
-0 2 * * * /opt/wasmwiz/scripts/backup.sh
+0 2 * * * /opt/wasm-wizard/scripts/backup.sh
 
 # Backup verification
 ./scripts/backup.sh --verify
@@ -252,8 +252,8 @@ cargo audit
 ### Development Workflow
 ```bash
 # Setup development environment
-git clone https://github.com/botzrDev/WasmWiz.git
-cd WasmWiz/wasmwiz
+git clone https://github.com/botzrDev/Wasm Wizard.git
+cd Wasm Wizard/wasm-wizard
 
 # Install dependencies
 cargo build
@@ -308,14 +308,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 ### Documentation
-- **[Production Deployment Guide](wasmwiz/PRODUCTION_DEPLOYMENT.md)**
-- **[Troubleshooting Guide](wasmwiz/TROUBLESHOOTING.md)**
-- **[Security Guidelines](wasmwiz/SECURITY.md)**
-- **[Operations Manual](wasmwiz/OPERATIONS.md)**
+- **[Production Deployment Guide](wasm-wizard/PRODUCTION_DEPLOYMENT.md)**
+- **[Troubleshooting Guide](wasm-wizard/TROUBLESHOOTING.md)**
+- **[Security Guidelines](wasm-wizard/SECURITY.md)**
+- **[Operations Manual](wasm-wizard/OPERATIONS.md)**
 
 ### Getting Help
-- **Issues**: [GitHub Issues](https://github.com/botzrDev/WasmWiz/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/botzrDev/WasmWiz/discussions)
+- **Issues**: [GitHub Issues](https://github.com/botzrDev/Wasm Wizard/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/botzrDev/Wasm Wizard/discussions)
 - **Security**: security@your-domain.com
 - **Commercial Support**: Available upon request
 
@@ -327,4 +327,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**WasmWiz** - Production-ready WebAssembly execution platform built with Rust for enterprise security, performance, and scalability.
+**Wasm Wizard** - Production-ready WebAssembly execution platform built with Rust for enterprise security, performance, and scalability.

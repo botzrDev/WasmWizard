@@ -2,11 +2,11 @@ services:
   # PostgreSQL database for development (Port 7432)
   postgres_dev:
     image: postgres:15
-    container_name: wasmwiz_dev_postgres
+    container_name: wasm-wizard_dev_postgres
     environment:
-      POSTGRES_DB: wasmwiz_dev
-      POSTGRES_USER: wasmwiz
-      POSTGRES_PASSWORD: wasmwiz
+      POSTGRES_DB: wasm-wizard_dev
+      POSTGRES_USER: wasm-wizard
+      POSTGRES_PASSWORD: wasm-wizard
     ports:
       - "7432:5432"
     volumes:
@@ -14,7 +14,7 @@ services:
       # Mount init scripts if needed
       - ./scripts/init-dev-db.sql:/docker-entrypoint-initdb.d/init-dev-db.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wasmwiz -d wasmwiz_dev"]
+      test: ["CMD-SHELL", "pg_isready -U wasm-wizard -d wasm-wizard_dev"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,7 +23,7 @@ services:
   # Redis for rate limiting (Port 7379)
   redis_dev:
     image: redis:7-alpine
-    container_name: wasmwiz_dev_redis
+    container_name: wasm-wizard_dev_redis
     ports:
       - "7379:6379"
     command: redis-server --appendonly yes
@@ -39,9 +39,9 @@ services:
   # pgAdmin for database management (Port 7050)
   pgadmin_dev:
     image: dpage/pgadmin4:latest
-    container_name: wasmwiz_dev_pgadmin
+    container_name: wasm-wizard_dev_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@wasmwiz.dev
+      PGADMIN_DEFAULT_EMAIL: admin@wasm-wizard.dev
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
@@ -66,4 +66,4 @@ volumes:
 
 networks:
   default:
-    name: wasmwiz_dev_network
+    name: wasm-wizard_dev_network

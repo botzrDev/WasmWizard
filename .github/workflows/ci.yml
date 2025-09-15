@@ -64,9 +64,9 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_PASSWORD: wasmwiz
-          POSTGRES_USER: wasmwiz
-          POSTGRES_DB: wasmwiz_test
+          POSTGRES_PASSWORD: wasm_wizard
+          POSTGRES_USER: wasm_wizard
+          POSTGRES_DB: wasm_wizard_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -111,7 +111,7 @@ jobs:
 
     - name: Set up environment
       run: |
-        echo "DATABASE_URL=postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_test" >> $GITHUB_ENV
+        echo "DATABASE_URL=postgres://wasm_wizard:wasm_wizard@localhost:5432/wasm_wizard_test" >> $GITHUB_ENV
         echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
         echo "ENVIRONMENT=test" >> $GITHUB_ENV
         echo "AUTH_REQUIRED=false" >> $GITHUB_ENV
@@ -162,12 +162,12 @@ jobs:
     - name: Build Docker image
       run: |
         cd wasmwiz
-        docker build -t wasmwiz:${{ env.IMAGE_TAG }} -t wasmwiz:${{ github.sha }} .
+        docker build -t wasm-wizard:${{ env.IMAGE_TAG }} -t wasm-wizard:${{ github.sha }} .
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'wasmwiz:${{ github.sha }}'
+        image-ref: 'wasm-wizard:${{ github.sha }}'
         format: 'sarif'
         output: 'trivy-results.sarif'
 
@@ -189,7 +189,7 @@ jobs:
     - name: Deploy to production
       run: |
         echo "🚀 Deploying to production environment"
-        echo "Image: wasmwiz:latest"
+        echo "Image: wasm-wizard:latest"
         echo "Environment: production"
         # Add actual deployment commands here (kubectl, docker-compose, etc.)
 
@@ -205,7 +205,7 @@ jobs:
     - name: Deploy to staging
       run: |
         echo "🧪 Deploying to staging environment"
-        echo "Image: wasmwiz:staging"
+        echo "Image: wasm-wizard:staging"
         echo "Environment: staging"
         # Add actual deployment commands here
 
@@ -221,6 +221,6 @@ jobs:
     - name: Deploy to research environment
       run: |
         echo "🔬 Deploying to research environment"
-        echo "Image: wasmwiz:research"
+        echo "Image: wasm-wizard:research"
         echo "Environment: development"
         # Add actual deployment commands here

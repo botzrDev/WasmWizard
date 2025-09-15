@@ -162,7 +162,7 @@ fn generate_api_key() -> String {
         .map(char::from)
         .collect();
 
-    format!("ww_{}", key) // Prefix with "ww_" for WasmWiz
+    format!("ww_{}", key) // Prefix with "ww_" for Wasm Wizard
 }
 
 fn hash_api_key(api_key: &str) -> String {

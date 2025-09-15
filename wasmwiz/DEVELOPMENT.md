@@ -1,4 +1,4 @@
-# WasmWiz Development Setup
+# Wasm Wizard Development Setup
 
 ## Quick Start
 
@@ -34,7 +34,7 @@ The application uses environment-based configuration:
 
 | Variable | Development Default | Description |
 |----------|-------------------|-------------|
-| `DATABASE_URL` | `postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev` | Database connection |
+| `DATABASE_URL` | `postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev` | Database connection |
 | `AUTH_REQUIRED` | `false` | Enable/disable authentication |
 | `ENVIRONMENT` | `development` | Runtime environment |
 | `LOG_LEVEL` | `debug` | Logging verbosity |
@@ -49,7 +49,7 @@ docker-compose -f docker-compose.dev.yml up -d db redis
 **View database (optional):**
 ```bash
 docker-compose -f docker-compose.dev.yml --profile tools up -d pgadmin
-# Visit http://localhost:5050 (admin@wasmwiz.dev / admin)
+# Visit http://localhost:5050 (admin@wasm-wizard.dev / admin)
 ```
 
 **Reset database:**

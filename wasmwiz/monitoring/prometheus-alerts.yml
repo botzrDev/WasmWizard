@@ -1,5 +1,5 @@
 groups:
-  - name: wasmwiz-alerts
+  - name: wasm-wizard-alerts
     rules:
       # High error rate alert
       - alert: HighErrorRate
@@ -68,5 +68,5 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "WasmWiz service is down"
-          description: "WasmWiz service has been down for more than 30 seconds"
+          summary: "Wasm Wizard service is down"
+          description: "Wasm Wizard service has been down for more than 30 seconds"

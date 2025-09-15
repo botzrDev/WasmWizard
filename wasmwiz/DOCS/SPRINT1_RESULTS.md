@@ -52,7 +52,7 @@
 - [x] Screen reader friendly structure
 
 ### ✅ JavaScript Architecture
-- [x] Modular class-based JavaScript (WasmWizApp)
+- [x] Modular class-based JavaScript (Wasm WizardApp)
 - [x] Event-driven architecture
 - [x] Local storage for preferences
 - [x] Error handling and validation
@@ -97,4 +97,4 @@
 6. Test language selector and notifications
 7. Verify mobile responsiveness
 
-Sprint 1 successfully delivers a modern, accessible, and user-friendly frontend foundation for WasmWiz!
+Sprint 1 successfully delivers a modern, accessible, and user-friendly frontend foundation for Wasm Wizard!

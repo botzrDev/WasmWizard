@@ -1,15 +1,15 @@
 #!/bin/bash
-# WasmWiz Production Backup Script
+# Wasm Wizard Production Backup Script
 # This script creates backups of the PostgreSQL database and important files
 
 set -euo pipefail
 
 # Configuration
-BACKUP_DIR="${BACKUP_DIR:-/opt/wasmwiz/backups}"
+BACKUP_DIR="${BACKUP_DIR:-/opt/wasm-wizard/backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-7}"
-POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-wasmwiz_postgres_1}"
-DATABASE_NAME="${DATABASE_NAME:-wasmwiz}"
-DATABASE_USER="${DATABASE_USER:-wasmwiz}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-wasm-wizard_postgres_1}"
+DATABASE_NAME="${DATABASE_NAME:-wasm-wizard}"
+DATABASE_USER="${DATABASE_USER:-wasm-wizard}"
 
 # Create backup directory if it doesn't exist
 mkdir -p "$BACKUP_DIR"
@@ -51,7 +51,7 @@ backup_config() {
     log "Creating configuration backup: $config_backup"
     
     tar -czf "$config_backup" \
-        -C /opt/wasmwiz \
+        -C /opt/wasm-wizard \
         docker-compose.yml \
         docker-compose.production.yml \
         .env \
@@ -117,7 +117,7 @@ send_notification() {
     if [[ -n "${WEBHOOK_URL:-}" ]]; then
         curl -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d "{\"text\": \"WasmWiz Backup $status: $message\"}" \
+            -d "{\"text\": \"Wasm Wizard Backup $status: $message\"}" \
             >/dev/null 2>&1 || true
     fi
 }
@@ -126,7 +126,7 @@ send_notification() {
 main() {
     local start_time=$(date +%s)
     
-    log "Starting WasmWiz backup process"
+    log "Starting Wasm Wizard backup process"
     
     # Check if PostgreSQL container is running
     if ! docker ps | grep -q "$POSTGRES_CONTAINER"; then

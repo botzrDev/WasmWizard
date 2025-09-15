@@ -2,7 +2,7 @@
 //!
 //! This module defines the data structures used for API request and response payloads.
 //! These models ensure type-safe serialization and deserialization of JSON data
-//! exchanged between clients and the WasmWiz API.
+//! exchanged between clients and the Wasm Wizard API.
 //!
 //! ## Request/Response Flow
 //!
@@ -36,7 +36,7 @@
 //!
 //! // Response
 //! {
-//!   "api_key": "wasmwiz_abc123def456...",
+//!   "api_key": "wasm-wizard_abc123def456...",
 //!   "api_key_id": "550e8400-e29b-41d4-a716-446655440000"
 //! }
 //! ```
@@ -52,7 +52,7 @@ use uuid::Uuid;
 /// # Examples
 ///
 /// ```rust
-/// use wasmwiz::models::api_payloads::ExecuteResponse;
+/// use wasm-wizard::models::api_payloads::ExecuteResponse;
 ///
 /// // Successful execution
 /// let success = ExecuteResponse {
@@ -85,7 +85,7 @@ pub struct ExecuteResponse {
 /// # Examples
 ///
 /// ```rust
-/// use wasmwiz::models::api_payloads::GenerateApiKeyRequest;
+/// use wasm-wizard::models::api_payloads::GenerateApiKeyRequest;
 ///
 /// // Currently empty - self-service generation
 /// let request = GenerateApiKeyRequest {};
@@ -106,11 +106,11 @@ pub struct GenerateApiKeyRequest {
 /// # Examples
 ///
 /// ```rust
-/// use wasmwiz::models::api_payloads::GenerateApiKeyResponse;
+/// use wasm-wizard::models::api_payloads::GenerateApiKeyResponse;
 /// use uuid::Uuid;
 ///
 /// let response = GenerateApiKeyResponse {
-///     api_key: "wasmwiz_abc123def456...".to_string(),
+///     api_key: "wasm-wizard_abc123def456...".to_string(),
 ///     api_key_id: Uuid::new_v4(),
 /// };
 ///

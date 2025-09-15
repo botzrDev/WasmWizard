@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WasmWiz is a production-ready WebAssembly management and execution platform built with Rust. It provides secure WASM module execution with enterprise-grade security, monitoring, and scalability features.
+Wasm Wizard is a production-ready WebAssembly management and execution platform built with Rust. It provides secure WASM module execution with enterprise-grade security, monitoring, and scalability features.
 
 ## Core Architecture
 
@@ -21,7 +21,7 @@ WasmWiz is a production-ready WebAssembly management and execution platform buil
 ### Building and Running
 ```bash
 # Start development environment with database
-cd wasmwiz
+cd wasm-wizard
 docker-compose -f docker-compose.dev.yml up -d
 
 # Set up environment
@@ -93,7 +93,7 @@ docker-compose -f docker-compose.dev.yml up -d
 
 # Access pgAdmin (optional)
 docker-compose -f docker-compose.dev.yml --profile tools up -d pgadmin
-# Visit http://localhost:5050 (admin@wasmwiz.dev / admin)
+# Visit http://localhost:5050 (admin@wasm-wizard.dev / admin)
 ```
 
 ### Production Deployment
@@ -116,7 +116,7 @@ kubectl apply -f k8s/
 
 ## Project Structure
 
-- `wasmwiz/src/` - Main Rust application code
+- `wasm-wizard/src/` - Main Rust application code
   - `app.rs` - Application setup and configuration
   - `config.rs` - Configuration management
   - `handlers/` - HTTP request handlers
@@ -124,11 +124,11 @@ kubectl apply -f k8s/
   - `models/` - Database models and domain types
   - `services/` - WASM execution, database operations
   - `monitoring/` - Metrics, health checks, observability
-- `wasmwiz/migrations/` - SQLx database migrations
-- `wasmwiz/templates/` - Askama HTML templates
-- `wasmwiz/scripts/` - Deployment and operational scripts
-- `wasmwiz/k8s/` - Kubernetes manifests
-- `wasmwiz/tests/` - Integration tests
+- `wasm-wizard/migrations/` - SQLx database migrations
+- `wasm-wizard/templates/` - Askama HTML templates
+- `wasm-wizard/scripts/` - Deployment and operational scripts
+- `wasm-wizard/k8s/` - Kubernetes manifests
+- `wasm-wizard/tests/` - Integration tests
 
 ## Key Implementation Details
 
@@ -205,7 +205,7 @@ kubectl apply -f k8s/
 ## Security & Dependency Management
 
 ### Known Vulnerabilities (Monitored)
-WasmWiz currently has documented low-risk vulnerabilities from transitive dependencies:
+Wasm Wizard currently has documented low-risk vulnerabilities from transitive dependencies:
 - RUSTSEC-2023-0071 (rsa): Timing attack - mitigated by network security
 - RUSTSEC-2024-0421 (idna): Punycode vulnerability - no direct usage
 - RUSTSEC-2024-0437 (protobuf): Crash vulnerability - metrics only, isolated

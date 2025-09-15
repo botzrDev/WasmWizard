@@ -1,4 +1,4 @@
-You're helping me develop WasmWiz, a WebAssembly Compilation and Execution API built in Rust.
+You're helping me develop Wasm Wizard, a WebAssembly Compilation and Execution API built in Rust.
 
 Project Architecture:
 - Rust-based web service using Actix-web framework
