@@ -1,0 +1,20 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://wasmwizard.dev/docs
+    about: Check our documentation for help and guides
+  - name: 💬 Community Discussion
+    url: https://github.com/botzrDev/WasmWiz/discussions
+    about: Start a discussion for questions, ideas, or general topics
+  - name: 🐛 Security Vulnerability
+    url: https://github.com/botzrDev/WasmWiz/security/advisories/new
+    about: Report security vulnerabilities privately
+  - name: 💬 Discord Community
+    url: https://discord.gg/wasmwizard
+    about: Join our Discord community for real-time help (if available)
+  - name: 📧 Support Email
+    url: mailto:support@wasmwizard.dev
+    about: Contact our support team for enterprise inquiries
+  - name: 🏢 Enterprise Support
+    url: https://wasmwizard.dev/enterprise
+    about: Enterprise support and custom solutions
