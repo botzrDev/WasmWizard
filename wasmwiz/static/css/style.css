@@ -21,6 +21,28 @@
     --gradient-hover: linear-gradient(135deg, var(--primary-hover), var(--secondary-hover));
 }
 
+/* Dark Mode Variables */
+:root[data-theme="dark"] {
+    --primary-color: #60a5fa;        /* Lighter blue for dark mode */
+    --primary-hover: #3b82f6;        /* Medium blue */
+    --secondary-color: #a78bfa;      /* Lighter purple for dark mode */
+    --secondary-hover: #8b5cf6;      /* Medium purple */
+    --accent-color: #c4b5fd;         /* Light purple accent */
+    --success-color: #34d399;
+    --error-color: #f87171;
+    --warning-color: #fbbf24;
+    --info-color: #60a5fa;
+    --background-color: #0f172a;     /* Very dark blue-grey */
+    --surface-color: #1e293b;        /* Dark surface */
+    --text-primary: #f1f5f9;         /* Light text */
+    --text-secondary: #94a3b8;       /* Medium grey text */
+    --border-color: #334155;         /* Dark border */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    --gradient-hover: linear-gradient(135deg, var(--primary-hover), var(--secondary-hover));
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -32,6 +54,7 @@ body {
     line-height: 1.6;
     color: var(--text-primary);
     background-color: var(--background-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Navigation */
@@ -54,17 +77,26 @@ body {
 }
 
 .nav-logo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--secondary-color);
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    transition: all 0.2s ease;
 }
 
 .nav-logo:hover {
-    color: var(--secondary-hover);
+    transform: translateY(-1px);
+}
+
+.logo-img {
+    height: 6rem;
+    width: auto;
+    max-width: 18rem;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+.nav-logo:hover .logo-img {
+    transform: scale(1.05);
 }
 
 .nav-menu {
@@ -1287,24 +1319,105 @@ body {
     }
 }
 
+/* Theme Toggle Button */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.125rem;
+    transition: all 0.3s ease;
+    background: var(--surface-color);
+    border: 2px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+}
+
+.theme-icon {
+    transition: transform 0.3s ease;
+}
+
+:root[data-theme="dark"] .theme-icon::before {
+    content: "☀️";
+}
+
+:root .theme-icon::before {
+    content: "🌙";
+}
+
+/* Dark mode specific adjustments */
+:root[data-theme="dark"] .file-upload {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .file-upload:hover {
+    background-color: rgba(96, 165, 250, 0.1);
+}
+
+:root[data-theme="dark"] .execution-options {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .sample-gallery {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .footer {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .result-section {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .result-metadata {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .api-keys-table th {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .api-key-display {
+    background-color: #0f172a;
+}
+
+:root[data-theme="dark"] .code-output {
+    background-color: #000;
+    color: #00ff00;
+}
+
+:root[data-theme="dark"] .error-output {
+    background-color: #1a0a0a;
+    color: #ff6b6b;
+}
+
 /* Print Styles */
 @media print {
     .navbar, .footer, .btn, .file-upload, form {
         display: none !important;
     }
-    
+
     body, .main-content {
         background-color: white;
         color: black;
         margin: 0;
         padding: 0;
     }
-    
+
     .execution-result-card {
         box-shadow: none;
         border: 1px solid #ccc;
     }
-    
+
     .code-output {
         background-color: #f5f5f5;
         color: black;

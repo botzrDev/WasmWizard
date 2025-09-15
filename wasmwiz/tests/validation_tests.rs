@@ -1,15 +1,19 @@
 // Comprehensive input validation tests
-use wasmwiz::middleware::input_validation::InputValidationMiddleware;
-use actix_web::{test, web, App, HttpResponse, http::{header, Method}};
 use actix_web::http::StatusCode;
+use actix_web::{
+    http::{header, Method},
+    test, web, App, HttpResponse,
+};
+use wasmwiz::middleware::input_validation::InputValidationMiddleware;
 
 #[actix_web::test]
 async fn test_request_size_validation() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::post().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::post().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
     // Test normal request - should pass
     let req = test::TestRequest::post()
@@ -26,8 +30,9 @@ async fn test_suspicious_user_agent_blocked() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
     let suspicious_agents = vec![
         "sqlmap/1.0",
@@ -46,8 +51,12 @@ async fn test_suspicious_user_agent_blocked() {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST,
-                  "Should block suspicious User-Agent: {}", user_agent);
+        assert_eq!(
+            resp.status(),
+            StatusCode::BAD_REQUEST,
+            "Should block suspicious User-Agent: {}",
+            user_agent
+        );
     }
 }
 
@@ -56,8 +65,9 @@ async fn test_legitimate_user_agent_allowed() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
     let legitimate_agents = vec![
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -75,8 +85,12 @@ async fn test_legitimate_user_agent_allowed() {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::OK,
-                  "Should allow legitimate User-Agent: {}", user_agent);
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "Should allow legitimate User-Agent: {}",
+            user_agent
+        );
     }
 }
 
@@ -85,12 +99,11 @@ async fn test_missing_user_agent_allowed() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
-    let req = test::TestRequest::get()
-        .uri("/test")
-        .to_request();
+    let req = test::TestRequest::get().uri("/test").to_request();
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
@@ -101,8 +114,9 @@ async fn test_case_insensitive_user_agent_detection() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
     let case_variants = vec![
         "SQLMAP/1.0",
@@ -120,8 +134,12 @@ async fn test_case_insensitive_user_agent_detection() {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST,
-                  "Should block case-insensitive suspicious User-Agent: {}", user_agent);
+        assert_eq!(
+            resp.status(),
+            StatusCode::BAD_REQUEST,
+            "Should block case-insensitive suspicious User-Agent: {}",
+            user_agent
+        );
     }
 }
 
@@ -130,8 +148,9 @@ async fn test_partial_match_user_agent() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
     // Test that partial matches within larger strings are caught
     let embedded_suspicious = vec![
@@ -147,26 +166,38 @@ async fn test_partial_match_user_agent() {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST,
-                  "Should block User-Agent with embedded suspicious pattern: {}", user_agent);
+        assert_eq!(
+            resp.status(),
+            StatusCode::BAD_REQUEST,
+            "Should block User-Agent with embedded suspicious pattern: {}",
+            user_agent
+        );
     }
 }
 
 #[actix_web::test]
 async fn test_common_methods_allowed() {
     let app = test::init_service(
-        App::new()
-            .wrap(InputValidationMiddleware::new())
-            .route("/test", web::route()
+        App::new().wrap(InputValidationMiddleware::new()).route(
+            "/test",
+            web::route()
                 .method(Method::GET)
                 .method(Method::POST)
                 .method(Method::PUT)
                 .method(Method::DELETE)
                 .method(Method::PATCH)
-                .to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+                .to(|| async { HttpResponse::Ok().body("success") }),
+        ),
+    )
+    .await;
 
-    let methods = vec![Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH];
+    let methods = vec![
+        Method::GET,
+        Method::POST,
+        Method::PUT,
+        Method::DELETE,
+        Method::PATCH,
+    ];
 
     for method in methods {
         let req = test::TestRequest::default()
@@ -175,8 +206,7 @@ async fn test_common_methods_allowed() {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::OK,
-                  "Method {:?} should be allowed", method);
+        assert_eq!(resp.status(), StatusCode::OK, "Method {:?} should be allowed", method);
     }
 }
 
@@ -187,8 +217,9 @@ async fn test_health_endpoint_bypassed() {
             .wrap(InputValidationMiddleware::new())
             .route("/health", web::get().to(|| async { HttpResponse::Ok().body("healthy") }))
             .route("/health/live", web::get().to(|| async { HttpResponse::Ok().body("alive") }))
-            .route("/health/ready", web::get().to(|| async { HttpResponse::Ok().body("ready") }))
-    ).await;
+            .route("/health/ready", web::get().to(|| async { HttpResponse::Ok().body("ready") })),
+    )
+    .await;
 
     let health_endpoints = vec!["/health", "/health/live", "/health/ready"];
 
@@ -200,8 +231,12 @@ async fn test_health_endpoint_bypassed() {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::OK,
-                  "Health endpoint {} should bypass validation", endpoint);
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "Health endpoint {} should bypass validation",
+            endpoint
+        );
     }
 }
 
@@ -210,8 +245,9 @@ async fn test_empty_user_agent_header() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/test")
@@ -227,8 +263,9 @@ async fn test_whitespace_only_user_agent() {
     let app = test::init_service(
         App::new()
             .wrap(InputValidationMiddleware::new())
-            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") }))
-    ).await;
+            .route("/test", web::get().to(|| async { HttpResponse::Ok().body("success") })),
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/test")

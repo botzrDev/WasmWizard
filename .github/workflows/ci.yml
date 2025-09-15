@@ -26,8 +26,19 @@ jobs:
         crate: cargo-audit
         version: latest
     - name: Run cargo audit
-      run: cd wasmwiz && cargo audit
-      continue-on-error: true  # Don't fail CI for known issues we're tracking
+      run: |
+        cd wasmwiz
+        # Run audit and capture output
+        cargo audit --format json > audit-results.json || echo "Audit found vulnerabilities"
+        # Check for high/critical vulnerabilities that should fail CI
+        if cargo audit --format json | jq -e '.vulnerabilities[] | select(.advisory.severity == "critical" or .advisory.severity == "high")' > /dev/null 2>&1; then
+          echo "Critical or high severity vulnerabilities found!"
+          cargo audit
+          exit 1
+        else
+          echo "Only medium/low vulnerabilities found - continuing with known tracked issues"
+          cargo audit
+        fi
 
   # Linting and formatting
   lint:
@@ -132,3 +143,16 @@ jobs:
       run: |
         cd wasmwiz
         docker build -t wasmwiz:${{ github.sha }} .
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'wasmwiz:${{ github.sha }}'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'

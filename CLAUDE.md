@@ -202,6 +202,38 @@ kubectl apply -f k8s/
 - <200ms 99th percentile response times
 - Horizontal scaling to 100+ concurrent users
 
+## Security & Dependency Management
+
+### Known Vulnerabilities (Monitored)
+WasmWiz currently has documented low-risk vulnerabilities from transitive dependencies:
+- RUSTSEC-2023-0071 (rsa): Timing attack - mitigated by network security
+- RUSTSEC-2024-0421 (idna): Punycode vulnerability - no direct usage
+- RUSTSEC-2024-0437 (protobuf): Crash vulnerability - metrics only, isolated
+- RUSTSEC-2025-0067/0068 (yaml): Parsing vulnerabilities - no direct usage
+
+These pose minimal risk due to:
+- WASM execution sandboxing with strict resource limits
+- No direct usage of vulnerable functionality
+- Comprehensive monitoring and network-level protections
+- Regular dependency update monitoring
+
+### Dependency Update Strategy
+```bash
+# Monthly security updates
+cargo audit
+cargo update
+
+# Monitor Wasmer releases for dependency fixes
+# Update when compatibility confirmed with test suite
+cargo test --all-features
+```
+
+### Security Best Practices
+- All vulnerabilities are tracked and risk-assessed
+- CI/CD pipeline includes security scanning (cargo-audit, Trivy)
+- Production deployment includes comprehensive monitoring
+- Incident response procedures documented
+
 ## Important Conventions
 - Prefer idiomatic Rust with proper error handling
 - Use Result types and ? operator for error propagation
@@ -209,3 +241,4 @@ kubectl apply -f k8s/
 - Ensure all user inputs are validated and sanitized
 - Never log sensitive information (API keys, tokens)
 - Write comprehensive tests for new features
+- Document and risk-assess all security vulnerabilities

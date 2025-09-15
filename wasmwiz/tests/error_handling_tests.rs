@@ -1,7 +1,7 @@
 // Comprehensive error handling tests
-use wasmwiz::errors::ApiError;
 use actix_web::http::StatusCode;
 use std::fmt::Write;
+use wasmwiz::errors::ApiError;
 
 #[test]
 fn test_api_error_bad_request() {
@@ -152,8 +152,7 @@ fn test_api_error_status_codes_unique() {
     let mut status_codes = Vec::new();
     for error in errors {
         let status = error.status_code();
-        assert!(!status_codes.contains(&status),
-               "Duplicate status code found: {:?}", status);
+        assert!(!status_codes.contains(&status), "Duplicate status code found: {:?}", status);
         status_codes.push(status);
     }
 }

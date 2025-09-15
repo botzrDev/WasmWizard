@@ -357,12 +357,28 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('wasmwiz-language', language);
             showToast(`Language set to ${language}`, 'info');
         });
-        
+
         // Load saved language
         const savedLanguage = localStorage.getItem('wasmwiz-language');
         if (savedLanguage) {
             languageSelector.value = savedLanguage;
         }
+    }
+
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        // Load saved theme
+        const savedTheme = localStorage.getItem('wasmwiz-theme') || 'light';
+        setTheme(savedTheme);
+
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+            localStorage.setItem('wasmwiz-theme', newTheme);
+            showToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`, 'info');
+        });
     }
     
     // Sign-in link
@@ -1352,3 +1368,12 @@ window.addEventListener('unhandledrejection', function(event) {
     reportError(event.reason || new Error('Unhandled Promise Rejection'), 'Unhandled Promise Rejection');
     event.preventDefault();
 });
+
+// Theme management functions
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+}

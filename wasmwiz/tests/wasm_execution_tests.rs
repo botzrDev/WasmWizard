@@ -11,11 +11,14 @@ fn test_is_valid_wasm() {
         let path = Path::new("tests/wasm_modules").join(module_name);
         assert!(path.exists(), "Test WASM module {} should exist", module_name);
 
-        let wasm_bytes = fs::read(&path)
-            .unwrap_or_else(|_| panic!("Should be able to read {}", module_name));
+        let wasm_bytes =
+            fs::read(&path).unwrap_or_else(|_| panic!("Should be able to read {}", module_name));
 
-        assert!(is_valid_wasm_format(&wasm_bytes),
-               "Module {} should have valid WASM format", module_name);
+        assert!(
+            is_valid_wasm_format(&wasm_bytes),
+            "Module {} should have valid WASM format",
+            module_name
+        );
     }
 }
 
@@ -39,8 +42,7 @@ fn test_invalid_wasm_formats() {
     ];
 
     for (i, invalid_wasm) in invalid_samples.iter().enumerate() {
-        assert!(!is_valid_wasm_format(invalid_wasm),
-               "Sample {} should be invalid WASM", i);
+        assert!(!is_valid_wasm_format(invalid_wasm), "Sample {} should be invalid WASM", i);
     }
 }
 
@@ -63,11 +65,13 @@ fn test_wasm_file_size_validation() {
         let wasm_bytes = fs::read(&path).unwrap();
 
         // Should be at least 4 bytes (magic) but not too large for tests
-        assert!(wasm_bytes.len() >= 4,
-               "WASM module {} is too small", module_name);
-        assert!(wasm_bytes.len() < 1024 * 1024, // Less than 1MB for test modules
-               "WASM module {} is unexpectedly large: {} bytes",
-               module_name, wasm_bytes.len());
+        assert!(wasm_bytes.len() >= 4, "WASM module {} is too small", module_name);
+        assert!(
+            wasm_bytes.len() < 1024 * 1024, // Less than 1MB for test modules
+            "WASM module {} is unexpectedly large: {} bytes",
+            module_name,
+            wasm_bytes.len()
+        );
 
         println!("✓ {} is {} bytes", module_name, wasm_bytes.len());
     }
@@ -83,15 +87,12 @@ fn test_wasm_test_inputs_and_outputs_exist() {
     ];
 
     for (module_name, _expected_input) in &test_cases {
-        let input_path = Path::new("tests/wasm_modules")
-            .join(format!("{}_input.txt", module_name));
-        let output_path = Path::new("tests/wasm_modules")
-            .join(format!("{}_output.txt", module_name));
+        let input_path = Path::new("tests/wasm_modules").join(format!("{}_input.txt", module_name));
+        let output_path =
+            Path::new("tests/wasm_modules").join(format!("{}_output.txt", module_name));
 
-        assert!(input_path.exists(),
-               "Input file should exist for {}", module_name);
-        assert!(output_path.exists(),
-               "Output file should exist for {}", module_name);
+        assert!(input_path.exists(), "Input file should exist for {}", module_name);
+        assert!(output_path.exists(), "Output file should exist for {}", module_name);
 
         let input_content = fs::read_to_string(&input_path)
             .unwrap_or_else(|_| panic!("Should read input for {}", module_name));
@@ -100,14 +101,24 @@ fn test_wasm_test_inputs_and_outputs_exist() {
 
         // Input and output should not be empty strings (except for hello_world input)
         if *module_name != "hello_world" {
-            assert!(!input_content.trim().is_empty(),
-                   "Input should not be empty for {}", module_name);
+            assert!(
+                !input_content.trim().is_empty(),
+                "Input should not be empty for {}",
+                module_name
+            );
         }
-        assert!(!output_content.trim().is_empty(),
-               "Output should not be empty for {}", module_name);
+        assert!(
+            !output_content.trim().is_empty(),
+            "Output should not be empty for {}",
+            module_name
+        );
 
-        println!("✓ {} has input: '{}' and expected output: '{}'",
-                module_name, input_content.trim(), output_content.trim());
+        println!(
+            "✓ {} has input: '{}' and expected output: '{}'",
+            module_name,
+            input_content.trim(),
+            output_content.trim()
+        );
     }
 }
 
@@ -136,16 +147,18 @@ fn test_wasm_module_exports_analysis() {
                         export_count += 1;
                         println!("  Export: {} -> {:?}", export.name, export.kind);
                     }
-                    assert!(export_count > 0,
-                           "Module {} should have at least one export", module_name);
+                    assert!(
+                        export_count > 0,
+                        "Module {} should have at least one export",
+                        module_name
+                    );
                 }
                 wasmparser::Payload::ImportSection(imports) => {
                     let mut import_count = 0;
                     for import in imports {
                         let import = import.unwrap();
                         import_count += 1;
-                        println!("  Import: {}::{} -> {:?}",
-                               import.module, import.name, import.ty);
+                        println!("  Import: {}::{} -> {:?}", import.module, import.name, import.ty);
                     }
                     if import_count > 0 {
                         println!("✓ {} has {} imports", module_name, import_count);
@@ -186,15 +199,21 @@ fn test_wasm_security_constraints() {
                         let initial_pages = memory.initial;
                         let max_mb = initial_pages * 64 / 1024; // 64KB per page -> MB
 
-                        assert!(max_mb <= 128,
-                               "Module {} has excessive initial memory: {}MB",
-                               module_name, max_mb);
+                        assert!(
+                            max_mb <= 128,
+                            "Module {} has excessive initial memory: {}MB",
+                            module_name,
+                            max_mb
+                        );
 
                         if let Some(max_pages) = memory.maximum {
                             let max_mb = max_pages * 64 / 1024;
-                            assert!(max_mb <= 256,
-                                   "Module {} has excessive max memory: {}MB",
-                                   module_name, max_mb);
+                            assert!(
+                                max_mb <= 256,
+                                "Module {} has excessive max memory: {}MB",
+                                module_name,
+                                max_mb
+                            );
                         }
                     }
                 }
@@ -205,16 +224,21 @@ fn test_wasm_security_constraints() {
                     }
 
                     // Reasonable limit on globals
-                    assert!(global_count < 100,
-                           "Module {} has too many globals: {}",
-                           module_name, global_count);
+                    assert!(
+                        global_count < 100,
+                        "Module {} has too many globals: {}",
+                        module_name,
+                        global_count
+                    );
                 }
                 _ => {}
             }
         }
 
-        println!("✓ {} security check: {} memory, {} globals",
-                module_name, memory_count, global_count);
+        println!(
+            "✓ {} security check: {} memory, {} globals",
+            module_name, memory_count, global_count
+        );
     }
 }
 
@@ -248,18 +272,28 @@ mod input_size_tests {
     #[test]
     fn test_unicode_input_handling() {
         let unicode_inputs = vec![
-            "Hello, 世界! 🌍", // Mixed ASCII, Chinese, emoji
+            "Hello, 世界! 🌍",       // Mixed ASCII, Chinese, emoji
             "Тест на русском языке", // Cyrillic
-            "مرحبا بالعالم", // Arabic
-            "🚀🎉🔥💻⚡", // Only emoji
-            "Iñtërnâtiônàlizætiøn", // Latin with diacritics
+            "مرحبا بالعالم",         // Arabic
+            "🚀🎉🔥💻⚡",            // Only emoji
+            "Iñtërnâtiônàlizætiøn",  // Latin with diacritics
         ];
 
         for input in unicode_inputs {
-            assert!(input.is_ascii() || input.chars().all(|c| c.is_alphabetic() || c.is_numeric() || c.is_whitespace() || !c.is_control()),
-                   "Input should contain valid Unicode: {}", input);
-            assert!(std::str::from_utf8(input.as_bytes()).is_ok(),
-                   "Input should be valid UTF-8: {}", input);
+            assert!(
+                input.is_ascii()
+                    || input.chars().all(|c| c.is_alphabetic()
+                        || c.is_numeric()
+                        || c.is_whitespace()
+                        || !c.is_control()),
+                "Input should contain valid Unicode: {}",
+                input
+            );
+            assert!(
+                std::str::from_utf8(input.as_bytes()).is_ok(),
+                "Input should be valid UTF-8: {}",
+                input
+            );
         }
     }
 }
