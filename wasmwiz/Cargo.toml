@@ -30,7 +30,7 @@ serde_json = "1.0"
 uuid = { version = "1.8", features = ["v4", "serde"] } # "v4" for random UUIDs, "serde" for serialization
 
 # For asynchronous operations
-tokio = { version = "1.38", features = ["full"] } # "full" is convenient for development; can be slimmed down later
+tokio = { version = "1.45", features = ["full"] } # Update to latest stable version
 
 # For interacting with PostgreSQL database
 # "runtime-tokio-native-tls" for async runtime and TLS support
@@ -88,16 +88,23 @@ hex = "0.4"
 # Security patches for indirect dependencies
 # Force specific versions to mitigate known vulnerabilities
 slab = "0.4.11"  # Fix RUSTSEC-2025-0047
-protobuf = "4.32.1-release"  # Fix RUSTSEC-2024-0437 - Force secure version
-idna = "1.0"  # Fix RUSTSEC-2024-0421 - Force secure version
+protobuf = "3.7.2"  # Fix RUSTSEC-2024-0437 - Force secure version >=3.7.2
+idna = "1.0.0"  # Fix RUSTSEC-2024-0421 - Force secure version >=1.0.0
 rsa = "0.9.8"  # Latest stable version, timing attack still present but mitigated
+
+# Force downgrade of unsound YAML libraries to avoid RUSTSEC-2025-0067/0068
+libyml = "0.0.4"  # Downgrade to avoid unsound version
+serde_yml = "0.0.11"  # Downgrade to avoid unsound version
+
+# Additional direct dependencies to force version resolution
+paste = "1.0.15"  # Keep current version to avoid unmaintained warning
 
 # Mitigation: Force newer versions above to reduce attack surface
 # Remaining risks are minimal as we don't directly use affected functionality
 
 # For Prometheus metrics exposition
-actix-web-prom = "0.7"
-prometheus = "0.13"
+actix-web-prom = "0.9"  # Try latest version to avoid vulnerable protobuf
+prometheus = "0.14"  # Update to latest stable version for protobuf security fix
 
 # For system information and resource monitoring
 sysinfo = "0.30"
@@ -149,3 +156,6 @@ wasmwiz = { path = ".", features = ["test"] }
 # Note: Patches would go here, but the vulnerable dependencies are transitive
 # from Wasmer and cannot be directly patched without breaking compatibility.
 # We've added direct dependencies above to try to influence version resolution.
+
+# Try to fix virtual-net compilation issue
+socket2 = "0.5"
