@@ -1,0 +1,17 @@
+name: "CodeQL Configuration"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+  - uses: security-experimental
+
+paths-ignore:
+  - "**/target/**"
+  - "**/node_modules/**"
+  - "**/*.test.rs"
+  - "**/tests/**"
+
+paths:
+  - "wasmwiz/src"
+  - "wasmwiz/Cargo.toml"

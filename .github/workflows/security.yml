@@ -1,0 +1,307 @@
+name: Security Scan
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  push:
+    branches: [ master, development ]
+  pull_request:
+    branches: [ master, development ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Comprehensive security audit
+  security-audit:
+    name: 🔒 Comprehensive Security Audit
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install security tools
+      run: |
+        cargo install cargo-audit
+        cargo install cargo-deny
+        cargo install cargo-tarpaulin
+
+    - name: Run cargo audit (comprehensive)
+      run: |
+        cd wasmwiz
+        cargo audit --format json > audit-results.json || echo "Audit found vulnerabilities"
+        # For scheduled runs, be more strict
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          if cargo audit --format json | jq -e '.vulnerabilities[] | select(.advisory.severity == "critical" or .advisory.severity == "high" or .advisory.severity == "medium")' > /dev/null 2>&1; then
+            echo "❌ Medium or higher severity vulnerabilities found in scheduled run!"
+            cargo audit
+            exit 1
+          fi
+        else
+          # For PR/push, only fail on critical/high
+          if cargo audit --format json | jq -e '.vulnerabilities[] | select(.advisory.severity == "critical" or .advisory.severity == "high")' > /dev/null 2>&1; then
+            echo "❌ Critical or high severity vulnerabilities found!"
+            cargo audit
+            exit 1
+          fi
+        fi
+        echo "✅ Security audit passed"
+
+    - name: Run cargo deny checks
+      run: |
+        cd wasmwiz
+        cargo deny check
+
+    - name: Run cargo deny advisories
+      run: |
+        cd wasmwiz
+        cargo deny check advisories
+
+    - name: Upload security audit results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-audit-results
+        path: |
+          wasmwiz/audit-results.json
+          wasmwiz/cargo-deny-report.txt
+
+  # CodeQL security analysis
+  codeql-analysis:
+    name: 🔍 CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: rust
+        config-file: ./.github/codeql-config.yml
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Build project
+      run: |
+        cd wasmwiz
+        cargo build --release
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:rust"
+
+  # Dependency vulnerability scan
+  dependency-scan:
+    name: 📦 Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Scan for outdated dependencies
+      run: |
+        cd wasmwiz
+        cargo install cargo-outdated
+        cargo outdated --exit-code 1 || echo "Some dependencies are outdated"
+
+    - name: Check for unused dependencies
+      run: |
+        cd wasmwiz
+        cargo install cargo-udeps
+        cargo +nightly udeps --all-targets || echo "Unused dependencies found"
+
+    - name: Generate dependency tree
+      run: |
+        cd wasmwiz
+        cargo tree > dependency-tree.txt
+
+    - name: Upload dependency analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-analysis
+        path: |
+          wasmwiz/dependency-tree.txt
+
+  # Container security scan
+  container-scan:
+    name: 🐳 Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image for scanning
+      run: |
+        cd wasmwiz
+        docker build -t wasm-wizard-scan .
+
+    - name: Run Trivy container scan
+      uses: aquasecurity/trivy-action@0.24.0
+      with:
+        scan-type: 'image'
+        scan-ref: 'wasm-wizard-scan'
+        format: 'sarif'
+        output: 'trivy-container.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-container.sarif'
+
+    - name: Run Dockle (Docker image linter)
+      uses: goodwithtech/dockle-action@v1
+      with:
+        image: 'wasm-wizard-scan'
+        format: 'sarif'
+        output: 'dockle-results.sarif'
+
+    - name: Upload Dockle results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'dockle-results.sarif'
+
+  # Secret scanning
+  secret-scan:
+    name: 🔐 Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  # License compliance check
+  license-check:
+    name: 📄 License Compliance
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Check license compatibility
+      run: |
+        cd wasmwiz
+        cargo install cargo-license
+        cargo license --json > licenses.json
+
+    - name: Check for forbidden licenses
+      run: |
+        cd wasmwiz
+        # Check for GPL licenses which might be problematic
+        if jq -e '.[] | select(.license == "GPL-3.0" or .license == "GPL-2.0")' licenses.json > /dev/null; then
+          echo "⚠️  GPL licensed dependencies found - review for compatibility"
+          jq '.[] | select(.license == "GPL-3.0" or .license == "GPL-2.0")' licenses.json
+        else
+          echo "✅ No GPL licenses found"
+        fi
+
+    - name: Upload license report
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-report
+        path: wasmwiz/licenses.json
+
+  # Security scorecard
+  scorecard:
+    name: 📊 Security Scorecard
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Run analysis
+      uses: ossf/scorecard-action@v2.3.3
+      with:
+        results_file: results.sarif
+        results_format: sarif
+        publish_results: true
+
+    - name: Upload results
+      uses: actions/upload-artifact@v4
+      with:
+        name: scorecard-results
+        path: results.sarif
+
+  # Notify on security issues
+  notify-security:
+    name: 📢 Security Notification
+    runs-on: ubuntu-latest
+    needs: [security-audit, codeql-analysis, dependency-scan, container-scan, secret-scan, license-check]
+    if: failure() && (github.event_name == 'schedule' || github.event_name == 'push')
+    steps:
+    - name: Create security issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = `🚨 Security Scan Failed - ${new Date().toISOString().split('T')[0]}`
+          const body = `
+          ## Security Scan Failure
+
+          One or more security checks have failed. Please review the workflow run for details:
+
+          🔗 [View Security Scan Results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ### Failed Checks:
+          - [ ] Security Audit (cargo audit)
+          - [ ] CodeQL Analysis
+          - [ ] Dependency Scan
+          - [ ] Container Security Scan
+          - [ ] Secret Scanning
+          - [ ] License Compliance
+
+          ### Next Steps:
+          1. Review the failed security checks
+          2. Address any critical or high-severity issues
+          3. Update dependencies if needed
+          4. Re-run security scans
+
+          ---
+          *This issue was automatically created by the Security Scan workflow*
+          `
+
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['security', 'automated', 'urgent']
+          })

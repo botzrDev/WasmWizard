@@ -5,26 +5,29 @@ on:
     branches: [ master, development, research ]
   pull_request:
     branches: [ master, development ]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  RUST_VERSION: 1.81.0
 
 jobs:
   # Security and dependency audit
   security-audit:
-    name: Security Audit
+    name: 🔒 Security Audit
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions-rs/toolchain@v1
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
-        override: true
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-audit
-        version: latest
+
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+
     - name: Run cargo audit
       run: |
         cd wasmwiz
@@ -32,37 +35,57 @@ jobs:
         cargo audit --format json > audit-results.json || echo "Audit found vulnerabilities"
         # Check for high/critical vulnerabilities that should fail CI
         if cargo audit --format json | jq -e '.vulnerabilities[] | select(.advisory.severity == "critical" or .advisory.severity == "high")' > /dev/null 2>&1; then
-          echo "Critical or high severity vulnerabilities found!"
+          echo "❌ Critical or high severity vulnerabilities found!"
           cargo audit
           exit 1
         else
-          echo "Only medium/low vulnerabilities found - continuing with known tracked issues"
+          echo "✅ Only medium/low vulnerabilities found - continuing with known tracked issues"
           cargo audit
         fi
 
+    - name: Upload audit results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: cargo-audit-results
+        path: wasmwiz/audit-results.json
+
   # Linting and formatting
   lint:
-    name: Lint and Format Check
+    name: 🎨 Lint and Format Check
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions-rs/toolchain@v1
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        override: true
         components: rustfmt, clippy
+
     - name: Check formatting
       run: cd wasmwiz && cargo fmt -- --check
-    - name: Run clippy
-      run: cd wasmwiz && cargo clippy -- -D warnings
 
-  # Build and test
+    - name: Run clippy
+      run: cd wasmwiz && cargo clippy -- -D warnings -- -W clippy::pedantic -W clippy::nursery
+
+  # Multi-platform build and test
   test:
-    name: Test Suite
-    runs-on: ubuntu-latest
+    name: 🧪 Test Suite (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
     services:
       postgres:
-        image: postgres:14
+        image: postgres:15
         env:
           POSTGRES_PASSWORD: wasm_wizard
           POSTGRES_USER: wasm_wizard
@@ -86,52 +109,91 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions-rs/toolchain@v1
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        override: true
+        targets: ${{ matrix.target }}
 
     - name: Cache cargo registry
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-    - name: Cache cargo index
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
 
     - name: Cache cargo build
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: wasmwiz/target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-target-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-target-${{ matrix.target }}-
+          ${{ runner.os }}-target-
 
-    - name: Set up environment
+    - name: Set up environment (Linux)
+      if: runner.os == 'Linux'
       run: |
         echo "DATABASE_URL=postgres://wasm_wizard:wasm_wizard@localhost:5432/wasm_wizard_test" >> $GITHUB_ENV
         echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
         echo "ENVIRONMENT=test" >> $GITHUB_ENV
         echo "AUTH_REQUIRED=false" >> $GITHUB_ENV
 
-    - name: Run database migrations
+    - name: Set up environment (macOS/Windows)
+      if: runner.os != 'Linux'
+      run: |
+        echo "DATABASE_URL=postgres://wasm_wizard:wasm_wizard@localhost:5432/wasm_wizard_test" >> $GITHUB_ENV
+        echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
+        echo "ENVIRONMENT=test" >> $GITHUB_ENV
+        echo "AUTH_REQUIRED=false" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Install SQLx CLI (Linux)
+      if: runner.os == 'Linux'
       run: |
         cd wasmwiz
         cargo install sqlx-cli --no-default-features --features postgres
+
+    - name: Run database migrations (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        cd wasmwiz
         sqlx migrate run
 
     - name: Build
-      run: cd wasmwiz && cargo build --verbose
+      run: cd wasmwiz && cargo build --verbose --target ${{ matrix.target }}
 
     - name: Run tests
-      run: cd wasmwiz && cargo test --verbose
+      run: cd wasmwiz && cargo test --verbose --target ${{ matrix.target }}
 
-  # Docker build and scan with branch-specific strategies
+    - name: Run integration tests (Linux only)
+      if: runner.os == 'Linux'
+      run: cd wasmwiz && cargo test --test integration_tests --verbose
+
+    - name: Generate test coverage (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        cd wasmwiz
+        cargo install cargo-tarpaulin
+        cargo tarpaulin --out Xml --output-dir coverage
+
+    - name: Upload coverage to Codecov (Linux)
+      if: runner.os == 'Linux'
+      uses: codecov/codecov-action@v4
+      with:
+        file: wasmwiz/coverage/cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  # Docker build and security scan
   docker:
-    name: Docker Build and Security Scan
+    name: 🐳 Docker Build and Security Scan
     runs-on: ubuntu-latest
+    needs: [security-audit, lint, test]
     if: github.event_name == 'push'
     steps:
     - uses: actions/checkout@v4
@@ -139,88 +201,125 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Set environment variables based on branch
-      run: |
-        case "${{ github.ref_name }}" in
-          master)
-            echo "ENVIRONMENT=production" >> $GITHUB_ENV
-            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
-            echo "DEPLOY_TARGET=production" >> $GITHUB_ENV
-            ;;
-          development)
-            echo "ENVIRONMENT=staging" >> $GITHUB_ENV
-            echo "IMAGE_TAG=staging" >> $GITHUB_ENV
-            echo "DEPLOY_TARGET=staging" >> $GITHUB_ENV
-            ;;
-          research)
-            echo "ENVIRONMENT=development" >> $GITHUB_ENV
-            echo "IMAGE_TAG=research" >> $GITHUB_ENV
-            echo "DEPLOY_TARGET=development" >> $GITHUB_ENV
-            ;;
-        esac
+    - name: Log in to Docker Hub
+      if: github.ref == 'refs/heads/master'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build Docker image
-      run: |
-        cd wasmwiz
-        docker build -t wasm-wizard:${{ env.IMAGE_TAG }} -t wasm-wizard:${{ github.sha }} .
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: botzrdev/wasm-wizard
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./wasmwiz
+        push: ${{ github.ref == 'refs/heads/master' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.24.0
       with:
-        image-ref: 'wasm-wizard:${{ github.sha }}'
+        scan-type: 'image'
+        scan-ref: 'botzrdev/wasm-wizard:${{ github.sha }}'
         format: 'sarif'
         output: 'trivy-results.sarif'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
 
-  # Production deployment (master branch only)
-  deploy-production:
-    name: Deploy to Production
+  # Performance benchmarking
+  benchmark:
+    name: 📊 Performance Benchmark
     runs-on: ubuntu-latest
-    needs: [security-audit, lint, test, docker]
+    needs: [security-audit, lint, test]
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    environment: production
     steps:
     - uses: actions/checkout@v4
-    - name: Deploy to production
-      run: |
-        echo "🚀 Deploying to production environment"
-        echo "Image: wasm-wizard:latest"
-        echo "Environment: production"
-        # Add actual deployment commands here (kubectl, docker-compose, etc.)
 
-  # Staging deployment (development branch only)
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo build
+      uses: actions/cache@v4
+      with:
+        path: wasmwiz/target
+        key: ${{ runner.os }}-bench-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Run benchmarks
+      run: |
+        cd wasmwiz
+        cargo install cargo-criterion
+        cargo criterion --message-format=json > benchmark-results.json
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: wasmwiz/benchmark-results.json
+
+  # Deploy to staging (development branch)
   deploy-staging:
-    name: Deploy to Staging
+    name: 🚀 Deploy to Staging
     runs-on: ubuntu-latest
     needs: [security-audit, lint, test, docker]
     if: github.ref == 'refs/heads/development' && github.event_name == 'push'
     environment: staging
     steps:
     - uses: actions/checkout@v4
+
     - name: Deploy to staging
       run: |
         echo "🧪 Deploying to staging environment"
-        echo "Image: wasm-wizard:staging"
+        echo "Image: botzrdev/wasm-wizard:development-${{ github.sha }}"
         echo "Environment: staging"
         # Add actual deployment commands here
 
-  # Research environment (research branch only)
+  # Deploy to production (master branch)
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [security-audit, lint, test, docker, benchmark]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    environment: production
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying to production environment"
+        echo "Image: botzrdev/wasm-wizard:latest"
+        echo "Environment: production"
+        # Add actual deployment commands here
+
+  # Research environment deployment
   deploy-research:
-    name: Deploy to Research Environment
+    name: 🔬 Deploy to Research
     runs-on: ubuntu-latest
     needs: [security-audit, lint, test, docker]
     if: github.ref == 'refs/heads/research' && github.event_name == 'push'
     environment: research
     steps:
     - uses: actions/checkout@v4
+
     - name: Deploy to research environment
       run: |
         echo "🔬 Deploying to research environment"
-        echo "Image: wasm-wizard:research"
+        echo "Image: botzrdev/wasm-wizard:research-${{ github.sha }}"
         echo "Environment: development"
         # Add actual deployment commands here
