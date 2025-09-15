@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Wasm Wizard production deployment with security hardening
 # Stage 1: Build environment
-FROM rust:1.81-slim-bookworm AS builder
+FROM rust:1.89-slim-bookworm AS builder
 
 # Install system dependencies required for building
 RUN apt-get update && apt-get install -y \
