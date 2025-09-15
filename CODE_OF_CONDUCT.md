@@ -37,7 +37,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at:
-- **GitHub Issues**: [Create an issue](https://github.com/botsrDev/WasmWiz/issues) with the label "code-of-conduct-report"
+- **GitHub Issues**: [Create an issue](https://github.com/botzrDev/WasmWizard/issues) with the label "code-of-conduct-report"
 - **Email**: conduct@wasmwizard.dev (if available)
 
 All complaints will be reviewed and investigated promptly and fairly.

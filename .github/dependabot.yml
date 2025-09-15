@@ -2,7 +2,7 @@ version: 2
 updates:
   # Rust dependencies
   - package-ecosystem: "cargo"
-    directory: "/wasmwiz"
+    directory: "/wasmwizard"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -48,7 +48,7 @@ updates:
 
   # Docker
   - package-ecosystem: "docker"
-    directory: "/wasmwiz"
+    directory: "/wasmwizard"
     schedule:
       interval: "weekly"
       day: "monday"

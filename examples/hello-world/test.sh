@@ -14,7 +14,7 @@ fi
 # Check if Wasm Wizard is running
 if ! curl -s http://localhost:8080/health > /dev/null; then
     echo "❌ Wasm Wizard is not running. Please start it first:"
-    echo "   cd ../../wasmwiz"
+    echo "   cd ../../wasmwizard"
     echo "   docker-compose -f docker-compose.dev.yml up -d"
     echo "   cargo run"
     exit 1

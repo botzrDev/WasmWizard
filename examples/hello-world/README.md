@@ -35,7 +35,7 @@ This will create `hello_world.wasm` in the current directory.
 Make sure Wasm Wizard is running:
 
 ```bash
-cd ../../wasmwiz
+cd ../../wasmwizard
 docker-compose -f docker-compose.dev.yml up -d
 cargo run
 ```

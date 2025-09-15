@@ -68,4 +68,4 @@ What would need to be true for this feature to be considered complete?
 - [ ] I have provided a clear problem statement and proposed solution
 - [ ] I have included use cases and implementation details where possible
 - [ ] I have considered security and performance implications
-- [ ] I have checked our [roadmap](https://github.com/botzrDev/WasmWiz/projects) for related plans
+- [ ] I have checked our [roadmap](https://github.com/botzrDev/WasmWizard/projects) for related plans

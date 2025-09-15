@@ -28,8 +28,8 @@ Before you begin, ensure you have the following installed:
 
 1. **Fork and Clone the Repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/WasmWiz.git
-   cd WasmWiz
+   git clone https://github.com/YOUR_USERNAME/WasmWizard.git
+   cd WasmWizard
    ```
 
 2. **Start the Development Environment**
@@ -81,7 +81,7 @@ cargo test -- --nocapture
 
 ### 1. Choose an Issue
 
-- Check the [Issues](https://github.com/botzrDev/WasmWiz/issues) page for open tasks
+- Check the [Issues](https://github.com/botzrDev/WasmWizard/issues) page for open tasks
 - Look for issues labeled `good first issue` or `help wanted`
 - Comment on the issue to indicate you're working on it
 

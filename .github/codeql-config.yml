@@ -13,5 +13,5 @@ paths-ignore:
   - "**/tests/**"
 
 paths:
-  - "wasmwiz/src"
-  - "wasmwiz/Cargo.toml"
+  - "wasmwizard/src"
+  - "wasmwizard/Cargo.toml"

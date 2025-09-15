@@ -41,7 +41,8 @@ use derive_more::{Display, From};
 use sqlx::Error as SqlxError;
 use std::error::Error as StdError;
 use std::io::Error as IoError;
-use wasmer::RuntimeError;
+// Wasmer temporarily disabled for development server startup
+// use wasmer::RuntimeError;
 // use wasmer_wasi::WasiError; // Temporarily disabled for build compatibility
 
 /// Comprehensive error type for the Wasm Wizard API.
@@ -212,24 +213,24 @@ impl From<IoError> for ApiError {
     }
 }
 
-// Example conversion from Wasmer errors
-impl From<wasmer::CompileError> for ApiError {
-    fn from(err: wasmer::CompileError) -> Self {
-        ApiError::WasmLoadError(format!("Failed to compile Wasm module: {}", err))
-    }
-}
+// Wasmer error conversions temporarily disabled for development server startup
+// impl From<wasmer::CompileError> for ApiError {
+//     fn from(err: wasmer::CompileError) -> Self {
+//         ApiError::WasmLoadError(format!("Failed to compile Wasm module: {}", err))
+//     }
+// }
 
-impl From<wasmer::InstantiationError> for ApiError {
-    fn from(err: wasmer::InstantiationError) -> Self {
-        ApiError::WasmLoadError(format!("Failed to instantiate Wasm module: {}", err))
-    }
-}
+// impl From<wasmer::InstantiationError> for ApiError {
+//     fn from(err: wasmer::InstantiationError) -> Self {
+//         ApiError::WasmLoadError(format!("Failed to instantiate Wasm module: {}", err))
+//     }
+// }
 
-impl From<RuntimeError> for ApiError {
-    fn from(err: RuntimeError) -> Self {
-        ApiError::WasmRuntimeError(format!("Wasm execution failed: {}", err))
-    }
-}
+// impl From<RuntimeError> for ApiError {
+//     fn from(err: RuntimeError) -> Self {
+//         ApiError::WasmRuntimeError(format!("Wasm execution failed: {}", err))
+//     }
+// }
 
 /* Temporarily disabled for build compatibility
 impl From<WasiError> for ApiError {

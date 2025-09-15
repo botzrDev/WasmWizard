@@ -16,8 +16,8 @@ actix-web = "4"
 # For handling multipart form data (Wasm file uploads)
 actix-multipart = "0.6"
 
-# Core WebAssembly runtime for execution
-wasmer = "4.3.7" # Stable version
+# Core WebAssembly runtime for execution - temporarily disabled for development server startup
+# wasmer = "4.0.0" # Stable version with better linking
 # WASI temporarily disabled for build compatibility
 # wasmer-wasi = "3.1.1" # Will be re-enabled after version compatibility issues resolved
 

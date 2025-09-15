@@ -1,4 +1,4 @@
-# 🚀 WasmWiz
+# 🚀 WasmWizard
 
 **Execute WebAssembly modules with enterprise-grade security and lightning-fast performance**
 
@@ -8,18 +8,18 @@
 - **⚡ Wasmer**: WebAssembly runtime engine
 - **🐘 PostgreSQL**: Data persistence and metadata
 - **🔴 Redis**: Caching and rate limiting
-- **📊 Prometheus**: Metrics and monitoringw/status/botzrDev/WasmWiz/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWiz/actions)
+- **📊 Prometheus**: Metrics and monitoringw/status/botzrDev/WasmWizard/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWizard/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Docker Ready](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Stars](https://img.shields.io/github/stars/botzrDev/WasmWiz?style=for-the-badge)](https://github.com/botzrDev/WasmWiz/stargazers)
-[![Contributors](https://img.shields.io/github/contributors/botzrDev/WasmWiz?style=for-the-badge)](https://github.com/botzrDev/WasmWiz/graphs/contributors)
+[![Stars](https://img.shields.io/github/stars/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/stargazers)
+[![Contributors](https://img.shields.io/github/contributors/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/graphs/contributors)
 
 > A production-ready WebAssembly execution platform that makes running WASM modules as easy as calling an API. Built with Rust for maximum performance and security.
 
-## ✨ What is WasmWiz?
+## ✨ What is WasmWizard?
 
-WasmWiz is an open-source platform that lets you **execute WebAssembly modules securely and efficiently** through a simple REST API. Whether you're building serverless functions, running computational workloads, or deploying portable code, WasmWiz provides the infrastructure you need.
+WasmWizard is an open-source platform that lets you **execute WebAssembly modules securely and efficiently** through a simple REST API. Whether you're building serverless functions, running computational workloads, or deploying portable code, WasmWizard provides the infrastructure you need.
 
 ### 🎯 Perfect for:
 - **Serverless Platforms** - Run WASM functions at scale
@@ -34,12 +34,12 @@ Get up and running in under 2 minutes:
 
 ```bash
 # One-liner setup with Docker
-docker run -p 8080:8080 botzrdev/wasmwiz:latest
+docker run -p 8080:8080 botzrdev/wasmwizard:latest
 
 # Execute your first WASM module
 curl -X POST http://localhost:8080/api/wasm/execute \
   -F "wasm_file=@your-module.wasm" \
-  -F "input_data={\"message\": \"Hello WasmWiz!\"}"
+  -F "input_data={\"message\": \"Hello WasmWizard!\"}"
 ```
 
 That's it! 🎉 Your WebAssembly execution platform is ready.
@@ -83,7 +83,7 @@ Dive into practical examples to get started quickly:
 
 ## 🤝 Community & Contributing
 
-WasmWiz is an **open-source project** built by and for the developer community. We believe in the power of WebAssembly to revolutionize how we build and deploy software.
+WasmWizard is an **open-source project** built by and for the developer community. We believe in the power of WebAssembly to revolutionize how we build and deploy software.
 
 ### 🌟 Why Contribute?
 
@@ -97,19 +97,19 @@ WasmWiz is an **open-source project** built by and for the developer community. 
 **First-time contributors welcome!** Here's how to get started:
 
 1. **⭐ Star this repo** to show your support
-2. **🐛 [Report bugs](https://github.com/botzrDev/WasmWiz/issues)** or request features
-3. **📖 [Read the docs](./wasmwiz/API.md)** and try the examples
-4. **🔧 [Submit a PR](https://github.com/botzrDev/WasmWiz/pulls)** with your improvements
+2. **🐛 [Report bugs](https://github.com/botzrDev/WasmWizard/issues)** or request features
+3. **📖 [Read the docs](./wasmwizard/API.md)** and try the examples
+4. **🔧 [Submit a PR](https://github.com/botzrDev/WasmWizard/pulls)** with your improvements
 
 ### 📖 Documentation
 
 | Guide | Description |
 |-------|-------------|
-| [**API Reference**](./wasmwiz/API.md) | Complete REST API documentation |
-| [**Development Setup**](./wasmwiz/DEVELOPMENT.md) | Local development environment |
-| [**Configuration**](./wasmwiz/CONFIGURATION.md) | Environment variables and settings |
-| [**Troubleshooting**](./wasmwiz/TROUBLESHOOTING.md) | Common issues and solutions |
-| [**Security**](./wasmwiz/SECURITY.md) | Security best practices |
+| [**API Reference**](./wasmwizard/API.md) | Complete REST API documentation |
+| [**Development Setup**](./wasmwizard/DEVELOPMENT.md) | Local development environment |
+| [**Configuration**](./wasmwizard/CONFIGURATION.md) | Environment variables and settings |
+| [**Troubleshooting**](./wasmwizard/TROUBLESHOOTING.md) | Common issues and solutions |
+| [**Security**](./wasmwizard/SECURITY.md) | Security best practices |
 
 ## 🏗️ Architecture Overview
 
@@ -196,7 +196,7 @@ We're actively working on exciting features for the future:
 
 ## 🏆 Success Stories
 
-*"WasmWiz transformed our serverless architecture. We went from complex Docker deployments to simple API calls overnight."*
+*"WasmWizard transformed our serverless architecture. We went from complex Docker deployments to simple API calls overnight."*
 — Senior DevOps Engineer at TechCorp
 
 *"The security sandboxing gives us confidence to run user-submitted code safely. Game-changer for our platform."*
@@ -207,22 +207,22 @@ We're actively working on exciting features for the future:
 ### Docker (Easiest)
 
 ```bash
-docker run -d -p 8080:8080 --name wasmwiz botzrdev/wasmwiz:latest
+docker run -d -p 8080:8080 --name wasmwizard botzrdev/wasmwizard:latest
 ```
 
 ### Docker Compose (Development)
 
 ```bash
-git clone https://github.com/botzrDev/WasmWiz.git
-cd WasmWiz
+git clone https://github.com/botzrDev/WasmWizard.git
+cd WasmWizard
 docker-compose up -d
 ```
 
 ### From Source (Contributors)
 
 ```bash
-git clone https://github.com/botzrDev/WasmWiz.git
-cd WasmWiz/wasmwiz
+git clone https://github.com/botzrDev/WasmWizard.git
+cd WasmWizard/wasmwizard
 cargo build --release
 cargo run
 ```
@@ -266,15 +266,15 @@ curl http://localhost:8080/metrics
 
 ### 📞 Getting Help
 
-- **🐛 [Issues](https://github.com/botzrDev/WasmWiz/issues)**: Bug reports and feature requests
-- **💬 [Discussions](https://github.com/botzrDev/WasmWiz/discussions)**: General questions and ideas
-- **📧 [Security Issues](./wasmwiz/SECURITY.md)**: Report security vulnerabilities
+- **🐛 [Issues](https://github.com/botzrDev/WasmWizard/issues)**: Bug reports and feature requests
+- **💬 [Discussions](https://github.com/botzrDev/WasmWizard/discussions)**: General questions and ideas
+- **📧 [Security Issues](./wasmwizard/SECURITY.md)**: Report security vulnerabilities
 
 ### 🌍 Community Resources
 
-- **📚 [Documentation](./wasmwiz/API.md)**: Comprehensive API reference
+- **📚 [Documentation](./wasmwizard/API.md)**: Comprehensive API reference
 - **🎯 [Examples](./examples/)**: Working code samples
-- **🧪 [Tests](./wasmwiz/tests/)**: Quality assurance and examples
+- **🧪 [Tests](./wasmwizard/tests/)**: Quality assurance and examples
 - **📋 [Contributing Guide](./CONTRIBUTING.md)**: How to contribute
 
 ## 📄 License
@@ -303,7 +303,7 @@ limitations under the License.
 
 **Built with ❤️ by the open-source community**
 
-[⭐ Star us on GitHub](https://github.com/botzrDev/WasmWiz) • [🐛 Report Issues](https://github.com/botzrDev/WasmWiz/issues) • [📖 Read the Docs](./wasmwiz/API.md)
+[⭐ Star us on GitHub](https://github.com/botzrDev/WasmWizard) • [🐛 Report Issues](https://github.com/botzrDev/WasmWizard/issues) • [📖 Read the Docs](./wasmwizard/API.md)
 
 *Ready to revolutionize your WebAssembly workflow? Get started today!*
 

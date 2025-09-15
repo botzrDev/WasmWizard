@@ -61,16 +61,16 @@ dist/
 build/
 out/
 
-# Rust (from wasmwiz subdirectory)
-wasmwiz/target/
-wasmwiz/Cargo.lock
-wasmwiz/.env
-wasmwiz/.env.local
+# Rust (from wasmwizard subdirectory)
+wasmwizard/target/
+wasmwizard/Cargo.lock
+wasmwizard/.env
+wasmwizard/.env.local
 
 # WASM temporary files
-wasmwiz/temp_wasm_src/*.wasm
-wasmwiz/temp_wasm_test/*.wasm
-wasmwiz/temp_wasm_modules/
+wasmwizard/temp_wasm_src/*.wasm
+wasmwizard/temp_wasm_test/*.wasm
+wasmwizard/temp_wasm_modules/
 
 # Docker volumes
 .docker/

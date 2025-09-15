@@ -65,4 +65,4 @@ Link any related issues or pull requests here.
 - [ ] I have included steps to reproduce the issue
 - [ ] I have included actual vs expected behavior
 - [ ] I have checked our [documentation](https://wasmwizard.dev/docs) for relevant information
-- [ ] I have checked our [troubleshooting guide](wasmwiz/TROUBLESHOOTING.md) for common solutions
+- [ ] I have checked our [troubleshooting guide](wasmwizard/TROUBLESHOOTING.md) for common solutions

@@ -4,10 +4,10 @@ contact_links:
     url: https://wasmwizard.dev/docs
     about: Check our documentation for help and guides
   - name: 💬 Community Discussion
-    url: https://github.com/botzrDev/WasmWiz/discussions
+    url: https://github.com/botzrDev/WasmWizard/discussions
     about: Start a discussion for questions, ideas, or general topics
   - name: 🐛 Security Vulnerability
-    url: https://github.com/botzrDev/WasmWiz/security/advisories/new
+    url: https://github.com/botzrDev/WasmWizard/security/advisories/new
     about: Report security vulnerabilities privately
   - name: 💬 Discord Community
     url: https://discord.gg/wasmwizard

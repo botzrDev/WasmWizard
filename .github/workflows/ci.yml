@@ -30,7 +30,7 @@ jobs:
 
     - name: Run cargo audit
       run: |
-        cd wasmwiz
+        cd wasmwizard
         # Run audit and capture output
         cargo audit --format json > audit-results.json || echo "Audit found vulnerabilities"
         # Check for high/critical vulnerabilities that should fail CI
@@ -48,7 +48,7 @@ jobs:
       if: always()
       with:
         name: cargo-audit-results
-        path: wasmwiz/audit-results.json
+        path: wasmwizard/audit-results.json
 
   # Linting and formatting
   lint:
@@ -63,10 +63,10 @@ jobs:
         components: rustfmt, clippy
 
     - name: Check formatting
-      run: cd wasmwiz && cargo fmt -- --check
+      run: cd wasmwizard && cargo fmt -- --check
 
     - name: Run clippy
-      run: cd wasmwiz && cargo clippy -- -D warnings -- -W clippy::pedantic -W clippy::nursery
+      run: cd wasmwizard && cargo clippy -- -D warnings -- -W clippy::pedantic -W clippy::nursery
 
   # Multi-platform build and test
   test:
@@ -128,7 +128,7 @@ jobs:
     - name: Cache cargo build
       uses: actions/cache@v4
       with:
-        path: wasmwiz/target
+        path: wasmwizard/target
         key: ${{ runner.os }}-target-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-target-${{ matrix.target }}-
@@ -154,29 +154,29 @@ jobs:
     - name: Install SQLx CLI (Linux)
       if: runner.os == 'Linux'
       run: |
-        cd wasmwiz
+        cd wasmwizard
         cargo install sqlx-cli --no-default-features --features postgres
 
     - name: Run database migrations (Linux)
       if: runner.os == 'Linux'
       run: |
-        cd wasmwiz
+        cd wasmwizard
         sqlx migrate run
 
     - name: Build
-      run: cd wasmwiz && cargo build --verbose --target ${{ matrix.target }}
+      run: cd wasmwizard && cargo build --verbose --target ${{ matrix.target }}
 
     - name: Run tests
-      run: cd wasmwiz && cargo test --verbose --target ${{ matrix.target }}
+      run: cd wasmwizard && cargo test --verbose --target ${{ matrix.target }}
 
     - name: Run integration tests (Linux only)
       if: runner.os == 'Linux'
-      run: cd wasmwiz && cargo test --test integration_tests --verbose
+      run: cd wasmwizard && cargo test --test integration_tests --verbose
 
     - name: Generate test coverage (Linux)
       if: runner.os == 'Linux'
       run: |
-        cd wasmwiz
+        cd wasmwizard
         cargo install cargo-tarpaulin
         cargo tarpaulin --out Xml --output-dir coverage
 
@@ -184,7 +184,7 @@ jobs:
       if: runner.os == 'Linux'
       uses: codecov/codecov-action@v4
       with:
-        file: wasmwiz/coverage/cobertura.xml
+        file: wasmwizard/coverage/cobertura.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
@@ -222,7 +222,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./wasmwiz
+        context: ./wasmwizard
         push: ${{ github.ref == 'refs/heads/master' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -258,12 +258,12 @@ jobs:
     - name: Cache cargo build
       uses: actions/cache@v4
       with:
-        path: wasmwiz/target
+        path: wasmwizard/target
         key: ${{ runner.os }}-bench-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Run benchmarks
       run: |
-        cd wasmwiz
+        cd wasmwizard
         cargo install cargo-criterion
         cargo criterion --message-format=json > benchmark-results.json
 
@@ -271,7 +271,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: benchmark-results
-        path: wasmwiz/benchmark-results.json
+        path: wasmwizard/benchmark-results.json
 
   # Deploy to staging (development branch)
   deploy-staging:

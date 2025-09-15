@@ -123,7 +123,7 @@ fn validate_wasm_input(input: &str) -> Result<(), ValidationError> {
 #### Deployment Security
 
 - **Keep Updated**: Always use the latest version with security patches
-- **Secure Configuration**: Follow the security checklist in `wasmwiz/SECURITY.md`
+- **Secure Configuration**: Follow the security checklist in `wasmwizard/SECURITY.md`
 - **Network Security**: Deploy behind firewalls and use TLS
 - **Access Control**: Implement proper authentication and authorization
 - **Monitoring**: Enable logging and monitoring for security events

@@ -12,7 +12,7 @@ Welcome to the Wasm Wizard examples! This directory contains practical examples 
 
 1. **Start Wasm Wizard** (if not already running):
    ```bash
-   cd wasmwiz
+   cd wasmwizard
    docker-compose -f docker-compose.dev.yml up -d
    cargo run
    ```
@@ -132,8 +132,8 @@ Want to add your own example? See our [Contributing Guide](../CONTRIBUTING.md) f
 ## 📞 Support
 
 - **Documentation**: [Wasm Wizard Docs](https://wasmwizard.dev/docs)
-- **Issues**: [GitHub Issues](https://github.com/botzrDev/WasmWiz/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/botzrDev/WasmWiz/discussions)
+- **Issues**: [GitHub Issues](https://github.com/botzrDev/WasmWizard/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/botzrDev/WasmWizard/discussions)
 
 ## 📈 Example Metrics
 
