@@ -54,7 +54,6 @@ use actix_web::{web, HttpRequest, HttpResponse, ResponseError, Result as ActixRe
 use bytes::BytesMut;
 use futures_util::StreamExt;
 use futures_util::TryStreamExt;
-use serde::Deserialize;
 use std::time::Duration;
 use std::time::Instant;
 use tokio::time::timeout;
@@ -479,80 +478,6 @@ pub async fn execute_wasm_no_auth(
             };
 
             Ok(HttpResponse::BadRequest().json(response))
-        }
-    }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct DebugForm {
-    pub wasm: Option<String>,
-    pub input: Option<String>,
-}
-
-/// Debug endpoint to test multipart and urlencoded handling
-pub async fn debug_execute(mut payload: Multipart) -> ActixResult<HttpResponse, ApiError> {
-    let mut fields = Vec::new();
-    let start_time = Instant::now();
-
-    // Handle multipart form data using the proper extractor
-    let parse_timeout = Duration::from_secs(10);
-    let parse_result = timeout(parse_timeout, async {
-        let mut found_field = false;
-        while let Some(field_result) = payload.next().await {
-            let field = field_result.map_err(|e| {
-                error!("Failed to parse multipart data: {}", e);
-                ApiError::BadRequest("Failed to parse multipart data".to_string())
-            })?;
-
-            found_field = true;
-            let content_disposition = field.content_disposition().clone();
-            let field_name = content_disposition
-                .get_name()
-                .unwrap_or("unknown")
-                .to_string();
-            info!("DEBUG FIELD NAME: {}", field_name);
-
-            let field_start = Instant::now();
-            let field_size = field
-                .try_fold(0, |acc, chunk| async move { Ok(acc + chunk.len()) })
-                .await
-                .unwrap_or(0);
-
-            let field_duration = field_start.elapsed();
-            fields.push(format!(
-                "{}: {} bytes ({}ms)",
-                field_name,
-                field_size,
-                field_duration.as_millis()
-            ));
-            info!("Received field: {} ({} bytes) in {:?}", field_name, field_size, field_duration);
-        }
-
-        if !found_field {
-            warn!("No fields found in multipart upload");
-        }
-        Ok::<(), ApiError>(())
-    })
-    .await;
-
-    let total_duration = start_time.elapsed();
-    match parse_result {
-        Ok(Ok(())) => {
-            let response = serde_json::json!({
-                "status": "debug_success",
-                "fields": fields,
-                "parse_duration_ms": total_duration.as_millis()
-            });
-            Ok(HttpResponse::Ok().json(response))
-        }
-        Ok(Err(e)) => Err(e),
-        Err(_) => {
-            let response = serde_json::json!({
-                "status": "debug_timeout",
-                "fields": fields,
-                "parse_duration_ms": total_duration.as_millis()
-            });
-            Ok(HttpResponse::RequestTimeout().json(response))
         }
     }
 }

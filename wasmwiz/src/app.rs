@@ -118,9 +118,7 @@ pub fn create_app(
                 // Add rate limiting even for non-auth mode (based on IP address)
                 .app_data(web::Data::new(rate_limit_service.clone()))
                 .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
-                .service(
-                    web::resource("/debug-execute").route(web::post().to(execute::debug_execute)),
-                ),
+                // Debug endpoint removed for public release
         );
     }
 
