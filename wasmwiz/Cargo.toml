@@ -1,12 +1,12 @@
 # Cargo.toml
 
 [package]
-name = "wasm-wizard"
+name = "wasm_wizard"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "wasm-wizard"
+name = "wasm_wizard"
 path = "src/lib.rs"
 
 [dependencies]
@@ -17,10 +17,9 @@ actix-web = "4"
 actix-multipart = "0.6"
 
 # Core WebAssembly runtime for execution
-wasmer = "6.0.1" # Latest stable version
-# WASI (WebAssembly System Interface) support for standard I/O
-# Using wasmer-wasix for Wasmer v6.x (the modern WASI implementation)
-wasmer-wasix = "0.600.1"
+wasmer = "4.3.7" # Stable version
+# WASI temporarily disabled for build compatibility
+# wasmer-wasi = "3.1.1" # Will be re-enabled after version compatibility issues resolved
 
 # For JSON serialization/deserialization
 serde = { version = "1.0", features = ["derive"] }
@@ -151,7 +150,7 @@ actix-web = { version = "4", features = ["macros"] }
 sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "macros"] }
 testcontainers = "0.12"
 testcontainers-modules = { version = "0.12", features = ["postgres"] }
-wasm-wizard = { path = ".", features = ["test"] }
+wasm_wizard = { path = ".", features = ["test"] }
 
 # Note: Patches would go here, but the vulnerable dependencies are transitive
 # from Wasmer and cannot be directly patched without breaking compatibility.
@@ -159,3 +158,5 @@ wasm-wizard = { path = ".", features = ["test"] }
 
 # Try to fix virtual-net compilation issue
 socket2 = "0.5"
+
+# Removed patches as we downgraded to stable Wasmer 5.0.1

@@ -42,7 +42,7 @@ use sqlx::Error as SqlxError;
 use std::error::Error as StdError;
 use std::io::Error as IoError;
 use wasmer::RuntimeError;
-use wasmer_wasix::WasiError;
+// use wasmer_wasi::WasiError; // Temporarily disabled for build compatibility
 
 /// Comprehensive error type for the Wasm Wizard API.
 ///
@@ -231,11 +231,13 @@ impl From<RuntimeError> for ApiError {
     }
 }
 
+/* Temporarily disabled for build compatibility
 impl From<WasiError> for ApiError {
     fn from(err: WasiError) -> Self {
         ApiError::WasmRuntimeError(format!("WASI error during execution: {}", err))
     }
 }
+*/ // End temporarily disabled block
 
 impl From<actix_multipart::MultipartError> for ApiError {
     fn from(err: actix_multipart::MultipartError) -> Self {
