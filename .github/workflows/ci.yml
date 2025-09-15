@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, development, research ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master, development ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -128,21 +128,41 @@ jobs:
     - name: Run tests
       run: cd wasmwiz && cargo test --verbose
 
-  # Docker build and scan (simplified version of original)
+  # Docker build and scan with branch-specific strategies
   docker:
     name: Docker Build and Security Scan
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+
+    - name: Set environment variables based on branch
+      run: |
+        case "${{ github.ref_name }}" in
+          master)
+            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+            echo "DEPLOY_TARGET=production" >> $GITHUB_ENV
+            ;;
+          development)
+            echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+            echo "IMAGE_TAG=staging" >> $GITHUB_ENV
+            echo "DEPLOY_TARGET=staging" >> $GITHUB_ENV
+            ;;
+          research)
+            echo "ENVIRONMENT=development" >> $GITHUB_ENV
+            echo "IMAGE_TAG=research" >> $GITHUB_ENV
+            echo "DEPLOY_TARGET=development" >> $GITHUB_ENV
+            ;;
+        esac
 
     - name: Build Docker image
       run: |
         cd wasmwiz
-        docker build -t wasmwiz:${{ github.sha }} .
+        docker build -t wasmwiz:${{ env.IMAGE_TAG }} -t wasmwiz:${{ github.sha }} .
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -156,3 +176,51 @@ jobs:
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
+
+  # Production deployment (master branch only)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [security-audit, lint, test, docker]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    environment: production
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying to production environment"
+        echo "Image: wasmwiz:latest"
+        echo "Environment: production"
+        # Add actual deployment commands here (kubectl, docker-compose, etc.)
+
+  # Staging deployment (development branch only)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [security-audit, lint, test, docker]
+    if: github.ref == 'refs/heads/development' && github.event_name == 'push'
+    environment: staging
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy to staging
+      run: |
+        echo "🧪 Deploying to staging environment"
+        echo "Image: wasmwiz:staging"
+        echo "Environment: staging"
+        # Add actual deployment commands here
+
+  # Research environment (research branch only)
+  deploy-research:
+    name: Deploy to Research Environment
+    runs-on: ubuntu-latest
+    needs: [security-audit, lint, test, docker]
+    if: github.ref == 'refs/heads/research' && github.event_name == 'push'
+    environment: research
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy to research environment
+      run: |
+        echo "🔬 Deploying to research environment"
+        echo "Image: wasmwiz:research"
+        echo "Environment: development"
+        # Add actual deployment commands here
