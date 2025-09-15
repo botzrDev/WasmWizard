@@ -88,8 +88,8 @@ hex = "0.4"
 # Security patches for indirect dependencies
 # Force specific versions to mitigate known vulnerabilities
 slab = "0.4.11"  # Fix RUSTSEC-2025-0047
-protobuf = "4.32.1-release"  # Fix RUSTSEC-2024-0437
-idna = "1.0"  # Fix RUSTSEC-2024-0421
+protobuf = "4.32.1-release"  # Fix RUSTSEC-2024-0437 - Force secure version
+idna = "1.0"  # Fix RUSTSEC-2024-0421 - Force secure version
 rsa = "0.9.8"  # Latest stable version, timing attack still present but mitigated
 
 # Mitigation: Force newer versions above to reduce attack surface
@@ -145,3 +145,7 @@ sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", 
 testcontainers = "0.12"
 testcontainers-modules = { version = "0.12", features = ["postgres"] }
 wasmwiz = { path = ".", features = ["test"] }
+
+# Note: Patches would go here, but the vulnerable dependencies are transitive
+# from Wasmer and cannot be directly patched without breaking compatibility.
+# We've added direct dependencies above to try to influence version resolution.

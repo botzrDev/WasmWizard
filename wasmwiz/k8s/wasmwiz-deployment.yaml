@@ -25,10 +25,15 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
+      # Enhanced security context for pod-level security
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
+        runAsGroup: 1001
         fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+        supplementalGroups: [1001]
       containers:
       - name: wasmwiz
         image: wasmwiz:latest
@@ -52,7 +57,10 @@ spec:
               name: wasmwiz-secrets
               key: database-url
         - name: REDIS_URL
-          value: "redis://redis-service:6379"
+          valueFrom:
+            secretKeyRef:
+              name: wasmwiz-secrets
+              key: redis-url
         - name: API_SALT
           valueFrom:
             secretKeyRef:
@@ -91,18 +99,35 @@ spec:
           failureThreshold: 3
         volumeMounts:
         - name: wasm-temp
-          mountPath: /tmp/wasm_modules
+          mountPath: /app/wasm_modules
+        - name: tmp
+          mountPath: /tmp
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
           capabilities:
             drop:
             - ALL
+            - NET_RAW
+            - SYS_ADMIN
+          seccompProfile:
+            type: RuntimeDefault
+          procMount: Default
       volumes:
       - name: wasm-temp
         emptyDir:
           sizeLimit: "1Gi"
+          medium: Memory  # Use memory-backed storage for performance
+      - name: tmp
+        emptyDir:
+          sizeLimit: "100Mi"  # Minimal tmp for system operations
       restartPolicy: Always
+      # Network policies and service account
+      serviceAccountName: wasmwiz-sa
+      automountServiceAccountToken: false
 ---
 apiVersion: v1
 kind: Service
@@ -129,6 +154,18 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/rate-limit: "100"
     nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';";
+    # SSL configuration
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.3"
+    nginx.ingress.kubernetes.io/ssl-ciphers: "TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_AES_128_GCM_SHA256"
 spec:
   tls:
   - hosts:

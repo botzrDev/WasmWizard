@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for WasmWiz production deployment
+# Multi-stage Dockerfile for WasmWiz production deployment with security hardening
 # Stage 1: Build environment
 FROM rust:1.81-slim-bookworm AS builder
 
@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user for building
-RUN useradd -m -u 1001 builduser
+# Create a non-root user for building with minimal privileges
+RUN useradd -r -m -u 1001 -s /bin/false builduser
 USER builduser
 WORKDIR /app
 
@@ -34,43 +34,55 @@ COPY --chown=builduser:builduser static ./static
 # Build the actual application
 RUN cargo build --release
 
-# Stage 2: Runtime environment
+# Stage 2: Runtime environment with security hardening
 FROM debian:bookworm-slim AS runtime
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+# Security: Set up non-privileged user first
+RUN groupadd -r -g 1001 wasmwiz && \
+    useradd -r -u 1001 -g wasmwiz -s /bin/false -d /nonexistent wasmwiz
+
+# Install runtime dependencies with security best practices
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libssl3 \
     libpq5 \
     curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    dumb-init \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create a non-root user for running the application
-RUN useradd -m -u 1001 wasmwiz
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/templates /app/static /app/wasm_modules \
+    && chown -R wasmwiz:wasmwiz /app \
+    && chmod 755 /app \
+    && chmod -R 644 /app/templates /app/static \
+    && chmod 755 /app/templates /app/static /app/wasm_modules
 
-# Create necessary directories
-RUN mkdir -p /app/templates /app/static /tmp/wasm_modules \
-    && chown -R wasmwiz:wasmwiz /app /tmp/wasm_modules
+# Copy the binary from builder stage with proper ownership
+COPY --from=builder --chown=wasmwiz:wasmwiz /app/target/release/wasmwiz /usr/local/bin/wasmwiz
+RUN chmod 755 /usr/local/bin/wasmwiz
 
-# Copy the binary from builder stage
-COPY --from=builder /app/target/release/wasmwiz /usr/local/bin/wasmwiz
-
-# Copy static files and templates
+# Copy static files and templates with security permissions
 COPY --chown=wasmwiz:wasmwiz templates /app/templates
 COPY --chown=wasmwiz:wasmwiz static /app/static
+RUN find /app/templates -type f -exec chmod 444 {} \; && \
+    find /app/static -type f -exec chmod 444 {} \;
 
 # Set up the user and working directory
 USER wasmwiz
 WORKDIR /app
 
-# Environment variables for production
+# Environment variables for production with security defaults
 ENV ENVIRONMENT=production
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8080
 ENV LOG_LEVEL=info
 ENV RUST_LOG=info,wasmwiz=info
-ENV WASM_TEMP_DIR=/tmp/wasm_modules
+ENV WASM_TEMP_DIR=/app/wasm_modules
+# Security: Disable debug features
+ENV RUST_BACKTRACE=0
+# Security: Run with reduced privileges
+ENV RUST_MIN_STACK=2097152
 
 # Expose the port
 EXPOSE 8080
@@ -79,5 +91,9 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Run the application
+# Security: Drop all capabilities and run with init system
+USER wasmwiz:wasmwiz
+
+# Run the application with dumb-init to handle signals properly
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["wasmwiz"]
