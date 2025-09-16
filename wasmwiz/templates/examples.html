@@ -626,7 +626,7 @@ int main() {
 }
 
 .example-card {
-    background: white;
+    background: var(--surface-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
@@ -676,9 +676,9 @@ int main() {
     text-transform: uppercase;
 }
 
-.language-tag.rust { background: #ddd6fe; color: #7c3aed; }
-.language-tag.c { background: #dbeafe; color: #1e40af; }
-.language-tag.cpp { background: #fef3c7; color: #d97706; }
+.language-tag.rust { background: rgba(139, 92, 246, 0.1); color: var(--accent-color); }
+.language-tag.c { background: rgba(59, 130, 246, 0.1); color: var(--info-color); }
+.language-tag.cpp { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
 
 .complexity {
     padding: 0.25rem 0.5rem;
@@ -687,13 +687,13 @@ int main() {
     font-weight: 500;
 }
 
-.complexity.beginner { background: #dcfce7; color: #166534; }
-.complexity.intermediate { background: #ffedd5; color: #9a3412; }
-.complexity.advanced { background: #fee2e2; color: #991b1b; }
+.complexity.beginner { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+.complexity.intermediate { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+.complexity.advanced { background: rgba(239, 68, 68, 0.1); color: var(--error-color); }
 
 .size {
     padding: 0.25rem 0.5rem;
-    background: #f3f4f6;
+    background: var(--border-color);
     color: var(--text-secondary);
     border-radius: 4px;
     font-size: 0.75rem;
@@ -756,7 +756,7 @@ int main() {
 
 .btn-view-source.secondary,
 .btn-download.secondary {
-    background: white;
+    background: var(--surface-color);
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
 }
@@ -850,13 +850,13 @@ int main() {
 }
 
 .btn-run-demo:disabled {
-    background: #ccc;
+    background: var(--border-color);
     cursor: not-allowed;
     transform: none;
 }
 
 .btn-clear.secondary {
-    background: white;
+    background: var(--surface-color);
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
 }
@@ -867,7 +867,7 @@ int main() {
 
 .demo-results {
     margin-top: 2rem;
-    background: white;
+    background: var(--surface-color);
     border-radius: var(--border-radius);
     padding: 1.5rem;
     box-shadow: var(--shadow);
@@ -908,8 +908,8 @@ int main() {
 
 .result-output pre,
 .result-logs pre {
-    background: #1f2937;
-    color: #e5e7eb;
+    background: var(--surface-color);
+    color: var(--text-primary);
     padding: 1rem;
     border-radius: var(--border-radius);
     overflow-x: auto;
@@ -917,6 +917,7 @@ int main() {
     font-size: 0.875rem;
     line-height: 1.4;
     margin: 0;
+    border: 1px solid var(--border-color);
 }
 
 /* Tutorials Section */
@@ -938,7 +939,7 @@ int main() {
 }
 
 .tutorial-card {
-    background: white;
+    background: var(--surface-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
@@ -1028,7 +1029,7 @@ int main() {
 }
 
 .snippet-card {
-    background: white;
+    background: var(--surface-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
@@ -1067,12 +1068,14 @@ int main() {
 .snippet-card pre {
     margin: 0;
     padding: 1.5rem;
-    background: #1f2937;
-    color: #e5e7eb;
+    background: var(--surface-color);
+    color: var(--text-primary);
     font-family: 'Fira Code', monospace;
     font-size: 0.825rem;
     line-height: 1.4;
     overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
 }
 
 /* Resources Section */
@@ -1097,7 +1100,7 @@ int main() {
 }
 
 .resource-card {
-    background: white;
+    background: var(--surface-color);
     padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
@@ -1350,10 +1353,10 @@ function copyCode(elementId) {
         const button = event.target;
         const originalText = button.textContent;
         button.textContent = 'Copied!';
-        button.style.background = '#10b981';
+        button.classList.add('copy-feedback');
         setTimeout(() => {
             button.textContent = originalText;
-            button.style.background = '';
+            button.classList.remove('copy-feedback');
         }, 2000);
     });
 }

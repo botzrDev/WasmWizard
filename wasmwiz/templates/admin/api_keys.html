@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <h1>API Key Management</h1>
+    <p>Logged in as: {{ admin_email }}</p>
+    <p>Total API Keys: {{ api_keys|length }}</p>
+    <a href="/admin">← Back to Dashboard</a>
+</body>
+</html>

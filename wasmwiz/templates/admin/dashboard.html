@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <style>
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        .admin-sidebar {
+            background: #2d3748;
+            color: white;
+            padding: 1rem;
+        }
+        .admin-content {
+            padding: 2rem;
+            background: #f7fafc;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #4299e1;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            color: #718096;
+            margin-top: 0.5rem;
+        }
+        .nav-link {
+            display: block;
+            color: #cbd5e0;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .nav-link:hover {
+            background: #4a5568;
+            color: white;
+        }
+        .admin-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin: -2rem -2rem 2rem -2rem;
+        }
+        .admin-role {
+            display: inline-block;
+            background: #e6fffa;
+            color: #234e52;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <div class="admin-sidebar">
+            <h2 style="margin-bottom: 2rem;">WasmWiz Admin</h2>
+            <nav>
+                <a href="/admin" class="nav-link">🏠 Dashboard</a>
+                <a href="/admin/users" class="nav-link">👥 Users</a>
+                <a href="/admin/api-keys" class="nav-link">🔑 API Keys</a>
+                <a href="/admin/analytics" class="nav-link">📊 Analytics</a>
+                <a href="/admin/tiers" class="nav-link">⭐ Tiers</a>
+                <a href="/admin/system" class="nav-link">⚙️ System</a>
+                <hr style="margin: 1rem 0; border-color: #4a5568;">
+                <a href="/" class="nav-link">← Back to Site</a>
+            </nav>
+        </div>
+
+        <div class="admin-content">
+            <div class="admin-header">
+                <h1>Admin Dashboard</h1>
+                <p>Welcome, {{ admin_email }} <span class="admin-role">{{ admin_role }}</span></p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_api_keys }}</div>
+                    <div class="stat-label">Active API Keys</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_executions_today }}</div>
+                    <div class="stat-label">Executions Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ active_users_today }}</div>
+                    <div class="stat-label">Active Users Today</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h3>Quick Actions</h3>
+                    <div style="margin-top: 1rem;">
+                        <a href="/admin/users/create" style="display: inline-block; background: #4299e1; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-right: 1rem;">Create User</a>
+                        <a href="/admin/tiers" style="display: inline-block; background: #48bb78; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Manage Tiers</a>
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h3>System Status</h3>
+                    <div style="margin-top: 1rem;">
+                        <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="width: 10px; height: 10px; background: #48bb78; border-radius: 50%; margin-right: 0.5rem;"></span>
+                            Database: Connected
+                        </div>
+                        <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="width: 10px; height: 10px; background: #48bb78; border-radius: 50%; margin-right: 0.5rem;"></span>
+                            API: Operational
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span style="width: 10px; height: 10px; background: #ed8936; border-radius: 50%; margin-right: 0.5rem;"></span>
+                            Redis: Optional
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,8 +1,8 @@
 // src/app.rs
 use crate::config::Config;
-use crate::handlers::{api_keys, execute, health, web as web_handlers};
+use crate::handlers::{admin, api_keys, execute, health, web as web_handlers};
 use crate::middleware::pre_auth::PreAuth;
-use crate::middleware::{InputValidationMiddleware, SecurityHeadersMiddleware};
+use crate::middleware::{InputValidationMiddleware, MasterAdminMiddleware, RequiredTier, SecurityHeadersMiddleware, TierAccessMiddleware};
 use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{web, App};
@@ -103,29 +103,98 @@ pub fn create_app(
         // Static file serving (no auth required)
         .service(fs::Files::new("/static", "./static").show_files_listing());
 
-    // Add API routes conditionally
+    // Add API routes with proper authentication and tier-based access
     if config.auth_required {
-        app = app.service(
-            web::scope("/api")
-                .wrap(PreAuth::new(db_service.clone()))
-                // Add the rate limit service to app data for middleware to use
-                .app_data(web::Data::new(rate_limit_service.clone()))
-                .service(web::resource("/execute").post(execute::execute_wasm)),
-        );
+        app = app
+            .service(
+                web::scope("/api")
+                    .wrap(PreAuth::new(db_service.clone()))
+                    .app_data(web::Data::new(rate_limit_service.clone()))
+                    // Public API endpoints (require auth but any tier)
+                    .service(
+                        web::resource("/execute")
+                            .post(execute::execute_wasm)
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Free))
+                    )
+                    // Basic tier endpoints
+                    .service(
+                        web::scope("/modules")
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Basic))
+                            // Module management endpoints would go here
+                    )
+                    // Pro tier endpoints
+                    .service(
+                        web::scope("/analytics")
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Pro))
+                            // Analytics endpoints would go here
+                    )
+                    // Enterprise tier endpoints
+                    .service(
+                        web::scope("/enterprise")
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Enterprise))
+                            // Enterprise features would go here
+                    )
+            )
+            // Admin portal (master admin only)
+            .service(
+                web::scope("/admin")
+                    .wrap(MasterAdminMiddleware::support_admin_or_above())
+                    .wrap(PreAuth::new(db_service.clone()))
+                    // Dashboard
+                    .service(web::resource("").get(admin::admin_dashboard))
+                    .service(web::resource("/").get(admin::admin_dashboard))
+                    // User Management (System Admin or above)
+                    .service(
+                        web::scope("/users")
+                            .wrap(MasterAdminMiddleware::system_admin_or_above())
+                            .service(web::resource("").get(admin::admin_users))
+                            .service(web::resource("/").get(admin::admin_users))
+                            .service(web::resource("/create").post(admin::create_user))
+                            .service(web::resource("/{user_id}/tier").put(admin::update_user_tier))
+                    )
+                    // API Key Management (System Admin or above)
+                    .service(
+                        web::scope("/api-keys")
+                            .wrap(MasterAdminMiddleware::system_admin_or_above())
+                            .service(web::resource("").get(admin::admin_api_keys))
+                            .service(web::resource("/").get(admin::admin_api_keys))
+                            .service(web::resource("/create").post(api_keys::create_api_key))
+                            .service(web::resource("/{email}").get(api_keys::list_api_keys))
+                            .service(web::resource("/{id}/deactivate").post(api_keys::deactivate_api_key))
+                    )
+                    // Analytics (Support Admin or above)
+                    .service(web::resource("/analytics").get(admin::admin_analytics))
+                    // Tier Management (Master Admin only)
+                    .service(
+                        web::scope("/tiers")
+                            .wrap(MasterAdminMiddleware::master_only())
+                            .service(web::resource("").get(admin::admin_tiers))
+                            .service(web::resource("/").get(admin::admin_tiers))
+                            .service(web::resource("/create").post(admin::create_tier))
+                    )
+                    // System Control (Master Admin only)
+                    .service(
+                        web::scope("/system")
+                            .wrap(MasterAdminMiddleware::master_only())
+                            .service(web::resource("/status").get(admin::system_status))
+                            .service(web::resource("/emergency-shutdown").post(admin::emergency_shutdown))
+                    )
+            );
     } else {
-        app = app.service(
-            web::scope("/api")
-                // Add rate limiting even for non-auth mode (based on IP address)
-                .app_data(web::Data::new(rate_limit_service.clone()))
-                .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
-                // Debug endpoint removed for public release
-        );
+        // Development mode - no auth required
+        app = app
+            .service(
+                web::scope("/api")
+                    .app_data(web::Data::new(rate_limit_service.clone()))
+                    .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
+            )
+            .service(
+                web::scope("/admin")
+                    .service(web::resource("/api-keys").post(api_keys::create_api_key))
+                    .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
+                    .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key)),
+            );
     }
 
-    app.service(
-        web::scope("/admin")
-            .service(web::resource("/api-keys").post(api_keys::create_api_key))
-            .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
-            .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key)),
-    )
+    app
 }

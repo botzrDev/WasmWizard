@@ -49,6 +49,7 @@
 //! - **Authorization**: Permission checks based on user roles/tiers
 //! - **Audit Logging**: All operations are logged for compliance
 
+pub mod admin;
 pub mod api_keys;
 pub mod execute;
 pub mod health;

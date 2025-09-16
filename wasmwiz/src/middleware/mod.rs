@@ -52,20 +52,23 @@
 //! - Security headers are configurable
 //! - CSRF protection is environment-aware
 
+pub mod admin_auth;
 pub mod auth;
 pub mod csrf;
 pub mod distributed_rate_limit;
 pub mod input_validation;
+pub mod master_admin;
 pub mod pre_auth;
 pub mod rate_limit;
 pub mod rate_limit_middleware;
 pub mod redis_rate_limit;
 pub mod security;
+pub mod tier_access;
 
-pub use auth::{hash_api_key, AuthContext, AuthMiddleware};
+pub use admin_auth::AdminAuthMiddleware;
+pub use auth::AuthContext;
 pub use csrf::generate_csrf_token;
-pub use distributed_rate_limit::{create_rate_limiter, RateLimitService, RateLimiter};
 pub use input_validation::InputValidationMiddleware;
-pub use rate_limit::{RateLimit, RateLimitMiddleware, TokenBucket};
-pub use rate_limit_middleware::RateLimitMiddleware as DistributedRateLimitMiddleware;
+pub use master_admin::{AdminRole, MasterAdminMiddleware};
 pub use security::SecurityHeadersMiddleware;
+pub use tier_access::{RequiredTier, TierAccessMiddleware};

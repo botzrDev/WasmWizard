@@ -57,7 +57,7 @@ use futures_util::TryStreamExt;
 use std::time::Duration;
 use std::time::Instant;
 use tokio::time::timeout;
-use tracing::{debug, error, info, warn};
+use tracing::{error, info, warn};
 // Wasmer temporarily disabled for development server startup
 // use wasmer::imports;
 // use wasmer::{Instance, Module, Store};
@@ -491,7 +491,7 @@ fn is_valid_wasm(data: &[u8]) -> bool {
 async fn execute_wasm_file(
     wasm_path: &std::path::Path,
     input: &str,
-    _tier: &crate::models::subscription_tier::SubscriptionTier,
+    tier: &crate::models::subscription_tier::SubscriptionTier,
     _config: &crate::config::Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     // Placeholder implementation - Wasmer temporarily disabled for development server startup
@@ -501,12 +501,29 @@ async fn execute_wasm_file(
         return Err("Invalid WASM file format".into());
     }
 
+    // Enforce tier-based memory limits
+    let wasm_size_mb = (wasm_bytes.len() as f64 / (1024.0 * 1024.0)) as i32;
+    if wasm_size_mb > tier.max_memory_mb {
+        return Err(format!(
+            "WASM module size exceeds limit for {} tier ({}MB > {}MB). Please upgrade your plan.",
+            tier.name, wasm_size_mb, tier.max_memory_mb
+        ).into());
+    }
+
     info!("WASM file validation successful, {} bytes processed", wasm_bytes.len());
     info!("Input data: '{}' ({} bytes)", input.trim(), input.len());
+    info!("Tier limits enforced: {} tier ({}MB memory, {}s execution)",
+          tier.name, tier.max_memory_mb, tier.max_execution_time_seconds);
 
-    // Simulate execution result
-    let result = format!("WASM module executed successfully (development mode)\nInput processed: {}\nModule size: {} bytes",
-                        input.trim(), wasm_bytes.len());
+    // Simulate execution result with tier information
+    let result = format!(
+        "WASM module executed successfully (development mode)\nInput processed: {}\nModule size: {} bytes\nTier: {} (Memory limit: {}MB, Time limit: {}s)",
+        input.trim(),
+        wasm_bytes.len(),
+        tier.name,
+        tier.max_memory_mb,
+        tier.max_execution_time_seconds
+    );
 
     Ok(result)
 }

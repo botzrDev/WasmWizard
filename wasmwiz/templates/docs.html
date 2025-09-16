@@ -788,7 +788,7 @@ npm run asbuild</code></pre>
     position: sticky;
     top: 80px;
     height: fit-content;
-    background: white;
+    background: var(--surface-color);
     border-radius: var(--border-radius);
     padding: 1.5rem;
     box-shadow: var(--shadow);
@@ -919,12 +919,13 @@ npm run asbuild</code></pre>
 }
 
 .code-block {
-    background: #1f2937;
-    color: #e5e7eb;
+    background: var(--surface-color);
+    color: var(--text-primary);
     padding: 1.5rem;
     border-radius: var(--border-radius);
     overflow-x: auto;
     margin: 1rem 0;
+    border: 1px solid var(--border-color);
 }
 
 .code-block pre {
@@ -957,9 +958,9 @@ npm run asbuild</code></pre>
     text-transform: uppercase;
 }
 
-.method.get { background: #dcfce7; color: #166534; }
-.method.post { background: #dbeafe; color: #1e40af; }
-.method.delete { background: #fee2e2; color: #991b1b; }
+.method.get { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+.method.post { background: rgba(59, 130, 246, 0.1); color: var(--info-color); }
+.method.delete { background: rgba(239, 68, 68, 0.1); color: var(--error-color); }
 
 .endpoint {
     font-family: 'Fira Code', monospace;
@@ -976,7 +977,7 @@ npm run asbuild</code></pre>
 }
 
 .troubleshooting-item {
-    background: #fff;
+    background: var(--surface-color);
     border: 1px solid var(--border-color);
     padding: 1.5rem;
     border-radius: var(--border-radius);
@@ -1009,7 +1010,7 @@ npm run asbuild</code></pre>
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #10b981;
+    background: var(--success-color);
     animation: pulse 2s infinite;
 }
 
@@ -1123,10 +1124,9 @@ document.querySelectorAll('.code-block').forEach(block => {
         const code = this.querySelector('code').innerText;
         navigator.clipboard.writeText(code).then(() => {
             // Show feedback
-            const original = this.style.background;
-            this.style.background = '#059669';
+            this.classList.add('copy-feedback');
             setTimeout(() => {
-                this.style.background = original;
+                this.classList.remove('copy-feedback');
             }, 200);
         });
     });

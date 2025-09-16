@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <h1>Analytics Dashboard</h1>
+    <p>Logged in as: {{ admin_email }}</p>
+    <p>Total Executions: {{ usage_stats.total_executions }}</p>
+    <p>Success Rate: {{ usage_stats.success_rate }}%</p>
+    <p>Recent Executions: {{ recent_executions|length }}</p>
+    <a href="/admin">← Back to Dashboard</a>
+</body>
+</html>
