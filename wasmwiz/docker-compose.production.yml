@@ -53,8 +53,9 @@ services:
       dockerfile: Dockerfile
     environment:
       # Database configuration
-      DATABASE_URL: postgresql://wasmwiz:${POSTGRES_PASSWORD}@postgres:5432/wasmwiz
+      DATABASE_URL_FILE: /run/secrets/database_url
       REDIS_URL: redis://redis:6379
+      REDIS_ENABLED: "true"
       
       # Server configuration
       SERVER_HOST: 0.0.0.0
@@ -86,6 +87,7 @@ services:
     restart: unless-stopped
     secrets:
       - api_salt
+      - database_url
     networks:
       - wasmwiz-network
     deploy:
@@ -161,6 +163,8 @@ secrets:
     file: ./secrets/db_password.txt
   api_salt:
     file: ./secrets/api_salt.txt
+  database_url:
+    file: ./secrets/database_url.txt
   grafana_password:
     file: ./secrets/grafana_password.txt
 

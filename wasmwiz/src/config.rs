@@ -34,7 +34,7 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use std::env;
+use std::{env, fs};
 
 /// Central configuration structure for the WasmWiz application.
 ///
@@ -135,6 +135,21 @@ impl Config {
             _ => Environment::Development,
         };
 
+        let database_url_value = load_env_var("DATABASE_URL")?;
+        let redis_url_value = load_env_var("REDIS_URL")?;
+        let redis_enabled_value = load_env_var("REDIS_ENABLED")?;
+        let server_host_value = load_env_var("SERVER_HOST")?;
+        let server_port_value = load_env_var("SERVER_PORT")?;
+        let api_salt_value = load_env_var("API_SALT")?;
+        let max_wasm_size_value = load_env_var("MAX_WASM_SIZE")?;
+        let max_input_size_value = load_env_var("MAX_INPUT_SIZE")?;
+        let execution_timeout_value = load_env_var("EXECUTION_TIMEOUT")?;
+        let memory_limit_value = load_env_var("MEMORY_LIMIT")?;
+        let log_level_value = load_env_var("LOG_LEVEL")?;
+        let auth_required_value = load_env_var("AUTH_REQUIRED")?;
+        let csp_report_uri = load_env_var("CSP_REPORT_URI")?;
+        let csp_enable_nonce_value = load_env_var("CSP_ENABLE_NONCE")?;
+
         // Professional defaults based on environment
         let (default_host, default_log_level, default_auth) = match environment {
             Environment::Production => ("0.0.0.0", "info", true),
@@ -143,52 +158,50 @@ impl Config {
         };
 
         // Default to local PostgreSQL for development
-        let default_database_url = match environment {
-            Environment::Development => {
+        let database_url = match environment {
+            Environment::Development => database_url_value.unwrap_or_else(|| {
                 "postgres://wasmwiz:wasmwiz@localhost:5432/wasmwiz_dev".to_string()
-            }
-            _ => env::var("DATABASE_URL").map_err(|_| {
-                ConfigError::Missing("DATABASE_URL must be set for production/staging")
-            })?,
+            }),
+            _ => database_url_value
+                .ok_or(ConfigError::Missing("DATABASE_URL must be set for production/staging"))?,
         };
 
         Ok(Config {
-            database_url: env::var("DATABASE_URL").unwrap_or(default_database_url),
-            redis_url: env::var("REDIS_URL")
-                .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
-            redis_enabled: env::var("REDIS_ENABLED")
+            database_url,
+            redis_url: redis_url_value.unwrap_or_else(|| "redis://127.0.0.1:6379".to_string()),
+            redis_enabled: redis_enabled_value
                 .map(|v| v.parse().unwrap_or(false))
                 .unwrap_or(false), // Default to memory-based rate limiting
-            server_host: env::var("SERVER_HOST").unwrap_or_else(|_| default_host.to_string()),
-            server_port: env::var("SERVER_PORT")
-                .unwrap_or_else(|_| "8080".to_string())
+            server_host: server_host_value.unwrap_or_else(|| default_host.to_string()),
+            server_port: server_port_value
+                .unwrap_or_else(|| "8080".to_string())
                 .parse()
                 .map_err(|_| ConfigError::Invalid("SERVER_PORT must be a valid port number"))?,
-            api_salt: env::var("API_SALT")
-                .unwrap_or_else(|_| "dev-salt-please-change-in-production".to_string()),
-            max_wasm_size: env::var("MAX_WASM_SIZE")
-                .unwrap_or_else(|_| "10485760".to_string()) // 10MB
+            api_salt: api_salt_value
+                .unwrap_or_else(|| "dev-salt-please-change-in-production".to_string()),
+            max_wasm_size: max_wasm_size_value
+                .unwrap_or_else(|| "10485760".to_string()) // 10MB
                 .parse()
                 .map_err(|_| ConfigError::Invalid("MAX_WASM_SIZE must be a valid number"))?,
-            max_input_size: env::var("MAX_INPUT_SIZE")
-                .unwrap_or_else(|_| "1048576".to_string()) // 1MB
+            max_input_size: max_input_size_value
+                .unwrap_or_else(|| "1048576".to_string()) // 1MB
                 .parse()
                 .map_err(|_| ConfigError::Invalid("MAX_INPUT_SIZE must be a valid number"))?,
-            execution_timeout: env::var("EXECUTION_TIMEOUT")
-                .unwrap_or_else(|_| "5".to_string())
+            execution_timeout: execution_timeout_value
+                .unwrap_or_else(|| "5".to_string())
                 .parse()
                 .map_err(|_| ConfigError::Invalid("EXECUTION_TIMEOUT must be a valid number"))?,
-            memory_limit: env::var("MEMORY_LIMIT")
-                .unwrap_or_else(|_| "134217728".to_string()) // 128MB
+            memory_limit: memory_limit_value
+                .unwrap_or_else(|| "134217728".to_string()) // 128MB
                 .parse()
                 .map_err(|_| ConfigError::Invalid("MEMORY_LIMIT must be a valid number"))?,
-            log_level: env::var("LOG_LEVEL").unwrap_or_else(|_| default_log_level.to_string()),
+            log_level: log_level_value.unwrap_or_else(|| default_log_level.to_string()),
             environment,
-            auth_required: env::var("AUTH_REQUIRED")
+            auth_required: auth_required_value
                 .map(|v| v.parse().unwrap_or(default_auth))
                 .unwrap_or(default_auth),
-            csp_report_uri: env::var("CSP_REPORT_URI").ok(),
-            csp_enable_nonce: env::var("CSP_ENABLE_NONCE")
+            csp_report_uri,
+            csp_enable_nonce: csp_enable_nonce_value
                 .map(|v| v.parse().unwrap_or(false))
                 .unwrap_or(false),
         })
@@ -313,7 +326,87 @@ pub enum ConfigError {
     #[error("Missing required environment variable: {0}")]
     Missing(&'static str),
 
+    /// Failed to read the file specified by a `*_FILE` environment variable.
+    #[error("Failed to read environment file for {0}")]
+    FileRead(&'static str, #[source] std::io::Error),
+
     /// A configuration value is invalid.
     #[error("Invalid configuration: {0}")]
     Invalid(&'static str),
+}
+
+fn load_env_var(key: &'static str) -> Result<Option<String>, ConfigError> {
+    if let Ok(value) = env::var(key) {
+        return Ok(Some(value));
+    }
+
+    let file_key = format!("{}_FILE", key);
+    if let Ok(path) = env::var(&file_key) {
+        let contents = fs::read_to_string(&path).map_err(|err| ConfigError::FileRead(key, err))?;
+        let value = contents
+            .trim_end_matches(|c| c == '\n' || c == '\r')
+            .to_string();
+        return Ok(Some(value));
+    }
+
+    Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use once_cell::sync::Lazy;
+    use std::{io::Write, sync::Mutex};
+    use uuid::Uuid;
+
+    static ENV_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+    fn write_secret_file(prefix: &str, value: &str) -> std::path::PathBuf {
+        let path = std::env::temp_dir().join(format!("{}_{}", prefix, Uuid::new_v4()));
+        let mut file = std::fs::File::create(&path).expect("failed to create secret file");
+        writeln!(file, "{}", value).expect("failed to write secret value");
+        path
+    }
+
+    #[test]
+    fn loads_configuration_from_file_based_secrets() {
+        let _guard = ENV_MUTEX.lock().unwrap();
+
+        std::env::remove_var("DATABASE_URL");
+        std::env::remove_var("DATABASE_URL_FILE");
+        std::env::remove_var("API_SALT");
+        std::env::remove_var("API_SALT_FILE");
+        std::env::remove_var("REDIS_URL");
+        std::env::remove_var("REDIS_ENABLED");
+        std::env::remove_var("ENVIRONMENT");
+
+        let database_secret_path = write_secret_file(
+            "wasmwiz_database_url",
+            "postgres://wasmwiz:secret@postgres:5432/wasmwiz",
+        );
+        let api_salt_path = write_secret_file("wasmwiz_api_salt", "super-secure-api-salt-value");
+
+        std::env::set_var("ENVIRONMENT", "production");
+        std::env::set_var("DATABASE_URL_FILE", &database_secret_path);
+        std::env::set_var("API_SALT_FILE", &api_salt_path);
+        std::env::set_var("REDIS_URL", "redis://redis:6379");
+        std::env::set_var("REDIS_ENABLED", "true");
+
+        let config = Config::from_env().expect("config should load from file secrets");
+        assert_eq!(config.database_url, "postgres://wasmwiz:secret@postgres:5432/wasmwiz",);
+        assert_eq!(config.api_salt, "super-secure-api-salt-value");
+        assert!(config.redis_enabled);
+        assert!(config.is_production());
+        config
+            .validate()
+            .expect("production config should validate");
+
+        std::fs::remove_file(database_secret_path).ok();
+        std::fs::remove_file(api_salt_path).ok();
+        std::env::remove_var("DATABASE_URL_FILE");
+        std::env::remove_var("API_SALT_FILE");
+        std::env::remove_var("REDIS_URL");
+        std::env::remove_var("REDIS_ENABLED");
+        std::env::remove_var("ENVIRONMENT");
+    }
 }

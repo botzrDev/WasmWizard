@@ -12,6 +12,12 @@ echo "Generating production secrets for WasmWiz..."
 # Generate database password (32 characters)
 echo "Generating database password..."
 openssl rand -base64 32 > "$SECRETS_DIR/db_password.txt"
+DB_PASSWORD="$(tr -d '\n' < "$SECRETS_DIR/db_password.txt")"
+
+# Generate database URL secret for application containers
+echo "Creating database URL secret..."
+printf "postgres://wasmwiz:%s@postgres:5432/wasmwiz\n" "$DB_PASSWORD" > \
+  "$SECRETS_DIR/database_url.txt"
 
 # Generate API salt (48 characters for extra security)
 echo "Generating API salt..."
