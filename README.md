@@ -77,10 +77,8 @@ kubectl get pods -l app=wasmwiz
 ### 🔧 Development Setup
 
 ```bash
-# Set environment variables
-export DATABASE_URL="postgresql://wasmwiz:password@localhost/wasmwiz"
-export API_SALT="development-salt-change-in-production"
-export REDIS_URL="redis://127.0.0.1:6379"
+# Copy the development template and adjust as needed
+cp wasmwiz/.env.development wasmwiz/.env
 
 # Run database migrations
 cargo install sqlx-cli --no-default-features --features postgres
