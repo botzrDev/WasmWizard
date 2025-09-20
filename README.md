@@ -49,8 +49,11 @@ A **production-ready** WebAssembly management and execution platform with enterp
 git clone https://github.com/botzrDev/WasmWiz.git
 cd WasmWiz/wasmwiz
 
-# Generate production secrets
+# Generate production secrets (creates db_password, database_url, api_salt, grafana password)
 ./scripts/generate_secrets.sh
+
+# Confirm secrets exist (DATABASE_URL is provided via database_url.txt)
+ls secrets/
 
 # Start production stack
 docker-compose -f docker-compose.production.yml up -d
