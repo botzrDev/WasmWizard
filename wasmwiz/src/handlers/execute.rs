@@ -50,7 +50,9 @@
 //! - Rate limiting violations
 
 use actix_multipart::Multipart;
-use actix_web::{web, HttpRequest, HttpResponse, ResponseError, Result as ActixResult};
+use actix_web::{
+    http::StatusCode, web, HttpRequest, HttpResponse, ResponseError, Result as ActixResult,
+};
 use bytes::BytesMut;
 use futures_util::StreamExt;
 use futures_util::TryStreamExt;
@@ -237,16 +239,17 @@ pub async fn execute_wasm(
         }
     }
 
-    if wasm_data.is_none() {
-        let error_msg = "Missing 'wasm' field";
-        let usage_log = UsageLog::error(auth_context.api_key.id, error_msg.to_string())
-            .with_execution_duration(start_time.elapsed().as_millis() as i32)
-            .with_file_sizes(wasm_size as i32, input_size as i32);
-        let _ = app_state.db_service.create_usage_log(&usage_log).await;
-        return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": error_msg})));
-    }
-
-    let wasm_data = wasm_data.unwrap();
+    let wasm_data = match wasm_data {
+        Some(data) => data,
+        None => {
+            let error_msg = "Missing 'wasm' field";
+            let usage_log = UsageLog::error(auth_context.api_key.id, error_msg.to_string())
+                .with_execution_duration(start_time.elapsed().as_millis() as i32)
+                .with_file_sizes(wasm_size as i32, input_size as i32);
+            let _ = app_state.db_service.create_usage_log(&usage_log).await;
+            return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": error_msg})));
+        }
+    };
     let input_data = input_data.unwrap_or_default();
 
     let temp_path = match file_system::create_unique_wasm_file_path().await {
@@ -303,17 +306,14 @@ pub async fn execute_wasm(
                 || err_str.contains("unexpected character")
                 || err_str.contains("translation error")
             {
-                (400, "Invalid WASM file format".to_string())
+                (StatusCode::BAD_REQUEST, "Invalid WASM file format".to_string())
             } else {
-                (422, format!("Execution failed: {}", err_str))
+                (StatusCode::UNPROCESSABLE_ENTITY, format!("Execution failed: {}", err_str))
             };
             let usage_log = UsageLog::error(auth_context.api_key.id, error_msg.clone())
                 .with_execution_duration(execution_time_ms)
                 .with_file_sizes(wasm_size as i32, input_size as i32);
-            let response = HttpResponse::build(
-                actix_web::http::StatusCode::from_u16(status).unwrap(),
-            )
-            .json(ExecuteResponse {
+            let response = HttpResponse::build(status).json(ExecuteResponse {
                 output: None,
                 error: Some(error_msg.clone()),
             });

@@ -9,25 +9,26 @@ use base64::Engine;
 use futures_util::future::LocalBoxFuture;
 use rand::{thread_rng, Rng};
 use std::future::{ready, Ready};
+use std::sync::Arc;
 
 pub struct SecurityHeadersMiddleware {
-    config: Config,
+    config: Arc<Config>,
 }
 
 impl Default for SecurityHeadersMiddleware {
     fn default() -> Self {
-        Self::new(Config::from_env().unwrap_or_default())
+        Self::new(Arc::new(Config::from_env().unwrap_or_default()))
     }
 }
 
 impl SecurityHeadersMiddleware {
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: Arc<Config>) -> Self {
         Self { config }
     }
 
     fn generate_nonce() -> String {
         let mut rng = thread_rng();
-        let bytes: [u8; 16] = rng.r#gen();
+        let bytes: [u8; 16] = rng.gen();
         base64::engine::general_purpose::STANDARD.encode(bytes)
     }
 }
@@ -47,14 +48,14 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         ready(Ok(SecurityHeadersService {
             service,
-            config: self.config.clone(),
+            config: Arc::clone(&self.config),
         }))
     }
 }
 
 pub struct SecurityHeadersService<S> {
     service: S,
-    config: Config,
+    config: Arc<Config>,
 }
 
 impl<S, B> Service<ServiceRequest> for SecurityHeadersService<S>
@@ -81,7 +82,7 @@ where
             req.extensions_mut().insert(nonce.clone());
         }
 
-        let config = self.config.clone();
+        let config = Arc::clone(&self.config);
         let fut = self.service.call(req);
 
         Box::pin(async move {

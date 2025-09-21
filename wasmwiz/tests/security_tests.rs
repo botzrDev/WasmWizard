@@ -1,13 +1,13 @@
 use actix_web::{test, web, App};
 use sqlx::PgPool;
-use wasm-wizard::{
+use std::time::Duration;
+use tokio::time::sleep;
+use wasm_wizard::{
     app::configure_app,
     config::Settings,
     middleware::auth::ApiKey,
     models::{ExecuteRequest, UploadResponse},
 };
-use std::time::Duration;
-use tokio::time::sleep;
 
 #[actix_web::test]
 async fn test_sql_injection_prevention() {
@@ -20,8 +20,9 @@ async fn test_sql_injection_prevention() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     // Test SQL injection attempts in various endpoints
     let injection_payloads = vec![
@@ -64,8 +65,9 @@ async fn test_xss_prevention() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     let xss_payloads = vec![
         "<script>alert('XSS')</script>",
@@ -109,8 +111,9 @@ async fn test_command_injection_prevention() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     let injection_payloads = vec![
         "; ls -la",
@@ -152,8 +155,9 @@ async fn test_rate_limiting_effectiveness() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings.clone()))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     // Test that rate limiting blocks excessive requests
     let api_key = "test-rate-limit-key";
@@ -182,8 +186,10 @@ async fn test_rate_limiting_effectiveness() {
     }
 
     assert!(rate_limited_count > 0, "Rate limiting should trigger for excessive requests");
-    assert!(success_count <= settings.rate_limit.requests_per_minute,
-            "Should not exceed rate limit threshold");
+    assert!(
+        success_count <= settings.rate_limit.requests_per_minute,
+        "Should not exceed rate limit threshold"
+    );
 }
 
 #[actix_web::test]
@@ -197,8 +203,9 @@ async fn test_authentication_bypass_attempts() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     // Test various authentication bypass attempts
     let bypass_attempts = vec![
@@ -217,8 +224,12 @@ async fn test_authentication_bypass_attempts() {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), 401,
-                   "Authentication bypass attempt '{}' should be rejected", description);
+        assert_eq!(
+            resp.status(),
+            401,
+            "Authentication bypass attempt '{}' should be rejected",
+            description
+        );
     }
 
     // Test missing header
@@ -241,8 +252,9 @@ async fn test_path_traversal_prevention() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     let traversal_payloads = vec![
         "../../../etc/passwd",
@@ -281,8 +293,9 @@ async fn test_resource_exhaustion_prevention() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings.clone()))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     // Test large payload rejection
     let large_input = "A".repeat(settings.wasm.max_input_size + 1);
@@ -316,8 +329,9 @@ async fn test_sensitive_data_exposure() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     // Test that errors don't leak sensitive information
     let req = test::TestRequest::get()
@@ -347,8 +361,9 @@ async fn test_csrf_protection() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     // Test that state-changing operations require proper authentication
     // and can't be triggered by simple GET requests
@@ -385,17 +400,18 @@ async fn test_timing_attack_mitigation() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(settings))
-            .configure(configure_app)
-    ).await;
+            .configure(configure_app),
+    )
+    .await;
 
     // Test that authentication timing doesn't reveal information
     let mut timings = Vec::new();
 
     for i in 0..10 {
         let key = if i < 5 {
-            "aaaaaaaaaaaaaaaa"  // Wrong key starting with 'a'
+            "aaaaaaaaaaaaaaaa" // Wrong key starting with 'a'
         } else {
-            "zzzzzzzzzzzzzzzz"  // Wrong key starting with 'z'
+            "zzzzzzzzzzzzzzzz" // Wrong key starting with 'z'
         };
 
         let start = std::time::Instant::now();
@@ -414,9 +430,12 @@ async fn test_timing_attack_mitigation() {
     let avg_a = timings[..5].iter().sum::<Duration>() / 5;
     let avg_z = timings[5..].iter().sum::<Duration>() / 5;
 
-    let diff = if avg_a > avg_z { avg_a - avg_z } else { avg_z - avg_a };
+    let diff = if avg_a > avg_z {
+        avg_a - avg_z
+    } else {
+        avg_z - avg_a
+    };
 
     // Timing difference should be negligible (< 10ms)
-    assert!(diff.as_millis() < 10,
-            "Authentication should use constant-time comparison");
+    assert!(diff.as_millis() < 10, "Authentication should use constant-time comparison");
 }

@@ -4,8 +4,8 @@ use sqlx::{migrate::Migrator, PgPool};
 use std::{env, path::Path, sync::Once};
 use testcontainers::{clients, images::postgres::Postgres, Docker};
 use uuid::Uuid;
-use wasm-wizard::app::create_app;
-use wasm-wizard::{establish_connection_pool, Config};
+use wasm_wizard::app::create_app;
+use wasm_wizard::{establish_connection_pool, Config};
 
 static INIT: Once = Once::new();
 
@@ -14,7 +14,7 @@ async fn setup_test_environment() -> PgPool {
         // Set up tracing for tests if not already set up
         if env::var("RUST_LOG").is_err() {
             unsafe {
-                env::set_var("RUST_LOG", "debug,sqlx=warn,wasm-wizard=debug");
+                env::set_var("RUST_LOG", "debug,sqlx=warn,wasm_wizard=debug");
             }
         }
         tracing_subscriber::fmt::init();

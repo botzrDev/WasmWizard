@@ -4,7 +4,7 @@ use actix_web::{
     http::{header, Method},
     test, web, App, HttpResponse,
 };
-use wasm-wizard::middleware::input_validation::InputValidationMiddleware;
+use wasm_wizard::middleware::input_validation::InputValidationMiddleware;
 
 #[actix_web::test]
 async fn test_request_size_validation() {
