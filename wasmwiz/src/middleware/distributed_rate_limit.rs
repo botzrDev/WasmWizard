@@ -19,6 +19,9 @@ pub trait RateLimiter: Send + Sync {
     ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>>;
 }
 
+/// Shared pointer type for rate limiters used by the middleware.
+pub type SharedRateLimiter = Arc<dyn RateLimiter + Send + Sync + 'static>;
+
 // Redis-based rate limiter
 pub struct RedisRateLimiter {
     client: Client,
@@ -143,7 +146,7 @@ impl RateLimiter for MemoryRateLimiter {
 
 // Rate limiting middleware
 pub struct RateLimitService {
-    limiter: Arc<dyn RateLimiter>,
+    pub(crate) limiter: SharedRateLimiter,
 }
 
 impl Clone for RateLimitService {
@@ -155,7 +158,7 @@ impl Clone for RateLimitService {
 }
 
 impl RateLimitService {
-    pub fn new(limiter: Arc<dyn RateLimiter>) -> Self {
+    pub fn new(limiter: SharedRateLimiter) -> Self {
         Self { limiter }
     }
 
@@ -264,7 +267,7 @@ impl RateLimitService {
 }
 
 // Factory function to create appropriate rate limiter based on configuration
-pub fn create_rate_limiter(redis_url: Option<&str>) -> Arc<dyn RateLimiter> {
+pub fn create_rate_limiter(redis_url: Option<&str>) -> SharedRateLimiter {
     match redis_url {
         Some(url) => match RedisRateLimiter::new(url) {
             Ok(redis_limiter) => {
@@ -289,11 +292,38 @@ mod tests {
 
     #[test]
     fn clones_share_limiter_instance() {
-        let limiter: Arc<dyn RateLimiter> = Arc::new(MemoryRateLimiter::new());
+        let limiter: SharedRateLimiter = Arc::new(MemoryRateLimiter::new());
         let service = RateLimitService::new(Arc::clone(&limiter));
         let cloned = service.clone();
 
         assert!(Arc::ptr_eq(&service.limiter, &cloned.limiter));
         assert!(Arc::ptr_eq(&service.limiter, &limiter));
+    }
+
+    #[tokio::test]
+    async fn clones_observe_shared_limits() {
+        let limiter: SharedRateLimiter = Arc::new(MemoryRateLimiter::new());
+        let service = RateLimitService::new(Arc::clone(&limiter));
+        let cloned = service.clone();
+
+        let key = "shared";
+        let limit = 2;
+        let window = Duration::from_secs(60);
+
+        assert!(service
+            .limiter
+            .check_rate_limit(key, limit, window)
+            .await
+            .unwrap());
+        assert!(cloned
+            .limiter
+            .check_rate_limit(key, limit, window)
+            .await
+            .unwrap());
+        assert!(!service
+            .limiter
+            .check_rate_limit(key, limit, window)
+            .await
+            .unwrap());
     }
 }

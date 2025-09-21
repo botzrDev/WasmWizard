@@ -1,8 +1,14 @@
 // src/app.rs
 use crate::config::Config;
 use crate::handlers::{admin, api_keys, execute, health, web as web_handlers};
+use crate::middleware::distributed_rate_limit::{
+    MemoryRateLimiter, RateLimitService, RedisRateLimiter, SharedRateLimiter,
+};
 use crate::middleware::pre_auth::PreAuth;
-use crate::middleware::{InputValidationMiddleware, MasterAdminMiddleware, RequiredTier, SecurityHeadersMiddleware, TierAccessMiddleware};
+use crate::middleware::{
+    InputValidationMiddleware, MasterAdminMiddleware, RequiredTier, SecurityHeadersMiddleware,
+    TierAccessMiddleware,
+};
 use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{web, App};
@@ -57,16 +63,13 @@ pub fn create_app(
     let rate_limit_service = if let Some(_redis) = redis_service.clone() {
         tracing::info!("Using Redis-based rate limiting");
         let redis_limiter =
-            crate::middleware::distributed_rate_limit::RedisRateLimiter::new(&config.redis_url)
-                .expect("Failed to create Redis rate limiter");
-        let redis_limiter: Arc<dyn crate::middleware::distributed_rate_limit::RateLimiter> =
-            Arc::new(redis_limiter);
-        crate::middleware::distributed_rate_limit::RateLimitService::new(redis_limiter)
+            RedisRateLimiter::new(&config.redis_url).expect("Failed to create Redis rate limiter");
+        let redis_limiter: SharedRateLimiter = Arc::new(redis_limiter);
+        RateLimitService::new(redis_limiter)
     } else {
         tracing::warn!("Using in-memory rate limiting");
-        let memory_limiter: Arc<dyn crate::middleware::distributed_rate_limit::RateLimiter> =
-            Arc::new(crate::middleware::distributed_rate_limit::MemoryRateLimiter::new());
-        crate::middleware::distributed_rate_limit::RateLimitService::new(memory_limiter)
+        let memory_limiter: SharedRateLimiter = Arc::new(MemoryRateLimiter::new());
+        RateLimitService::new(memory_limiter)
     };
 
     let security_middleware = SecurityHeadersMiddleware::new(config.clone());
@@ -118,26 +121,21 @@ pub fn create_app(
                     .service(
                         web::resource("/execute")
                             .post(execute::execute_wasm)
-                            .wrap(TierAccessMiddleware::new(RequiredTier::Free))
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Free)),
                     )
                     // Basic tier endpoints
                     .service(
-                        web::scope("/modules")
-                            .wrap(TierAccessMiddleware::new(RequiredTier::Basic))
-                            // Module management endpoints would go here
+                        web::scope("/modules").wrap(TierAccessMiddleware::new(RequiredTier::Basic)), // Module management endpoints would go here
                     )
                     // Pro tier endpoints
                     .service(
-                        web::scope("/analytics")
-                            .wrap(TierAccessMiddleware::new(RequiredTier::Pro))
-                            // Analytics endpoints would go here
+                        web::scope("/analytics").wrap(TierAccessMiddleware::new(RequiredTier::Pro)), // Analytics endpoints would go here
                     )
                     // Enterprise tier endpoints
                     .service(
                         web::scope("/enterprise")
-                            .wrap(TierAccessMiddleware::new(RequiredTier::Enterprise))
-                            // Enterprise features would go here
-                    )
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Enterprise)), // Enterprise features would go here
+                    ),
             )
             // Admin portal (master admin only)
             .service(
@@ -154,7 +152,7 @@ pub fn create_app(
                             .service(web::resource("").get(admin::admin_users))
                             .service(web::resource("/").get(admin::admin_users))
                             .service(web::resource("/create").post(admin::create_user))
-                            .service(web::resource("/{user_id}/tier").put(admin::update_user_tier))
+                            .service(web::resource("/{user_id}/tier").put(admin::update_user_tier)),
                     )
                     // API Key Management (System Admin or above)
                     .service(
@@ -164,7 +162,10 @@ pub fn create_app(
                             .service(web::resource("/").get(admin::admin_api_keys))
                             .service(web::resource("/create").post(api_keys::create_api_key))
                             .service(web::resource("/{email}").get(api_keys::list_api_keys))
-                            .service(web::resource("/{id}/deactivate").post(api_keys::deactivate_api_key))
+                            .service(
+                                web::resource("/{id}/deactivate")
+                                    .post(api_keys::deactivate_api_key),
+                            ),
                     )
                     // Analytics (Support Admin or above)
                     .service(web::resource("/analytics").get(admin::admin_analytics))
@@ -174,15 +175,18 @@ pub fn create_app(
                             .wrap(MasterAdminMiddleware::master_only())
                             .service(web::resource("").get(admin::admin_tiers))
                             .service(web::resource("/").get(admin::admin_tiers))
-                            .service(web::resource("/create").post(admin::create_tier))
+                            .service(web::resource("/create").post(admin::create_tier)),
                     )
                     // System Control (Master Admin only)
                     .service(
                         web::scope("/system")
                             .wrap(MasterAdminMiddleware::master_only())
                             .service(web::resource("/status").get(admin::system_status))
-                            .service(web::resource("/emergency-shutdown").post(admin::emergency_shutdown))
-                    )
+                            .service(
+                                web::resource("/emergency-shutdown")
+                                    .post(admin::emergency_shutdown),
+                            ),
+                    ),
             );
     } else {
         // Development mode - no auth required
@@ -190,13 +194,16 @@ pub fn create_app(
             .service(
                 web::scope("/api")
                     .app_data(web::Data::new(rate_limit_service.clone()))
-                    .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
+                    .service(web::resource("/execute").post(execute::execute_wasm_no_auth)),
             )
             .service(
                 web::scope("/admin")
                     .service(web::resource("/api-keys").post(api_keys::create_api_key))
                     .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
-                    .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key)),
+                    .service(
+                        web::resource("/api-keys/{id}/deactivate")
+                            .post(api_keys::deactivate_api_key),
+                    ),
             );
     }
 
