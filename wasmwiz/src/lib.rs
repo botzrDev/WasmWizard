@@ -63,6 +63,7 @@ pub mod models;
 pub mod monitoring;
 pub mod services;
 pub mod utils;
+pub mod wasm;
 
 pub use app::{create_app, AppState};
 pub use config::{Config, Environment};
