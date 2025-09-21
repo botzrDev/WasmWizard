@@ -59,7 +59,10 @@ mod models;
 mod services;
 mod utils;
 
+use std::sync::Arc;
+
 use actix_web::HttpServer;
+use anyhow::{Context, Result};
 use dotenvy::dotenv;
 use tracing::{error, info};
 
@@ -71,27 +74,21 @@ use services::{cleanup, DatabaseService};
 use utils::file_system;
 
 #[actix_web::main] // Marks the main function as the Actix-web entry point
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     // 1. Load environment variables from .env file (for local development)
     if cfg!(debug_assertions) {
         dotenv().ok(); // Only load .env in development builds
     }
 
     // 2. Load and validate configuration
-    let config = Config::from_env().map_err(|e| {
-        eprintln!("Failed to load configuration: {:?}", e);
-        "Failed to load configuration"
-    })?;
-    config.validate().map_err(|e| {
-        eprintln!("Configuration validation failed: {:?}", e);
-        "Configuration validation failed"
-    })?;
+    let config = Config::from_env().context("failed to load application configuration")?;
+    config
+        .validate()
+        .context("configuration validation failed")?;
+    let config = Arc::new(config);
 
     // 3. Initialize logging based on environment
-    init_logging(&config).map_err(|e| {
-        eprintln!("Failed to initialize logging: {:?}", e);
-        "Failed to initialize logging"
-    })?;
+    init_logging(&config).context("failed to initialise structured logging")?;
 
     info!(
         environment = ?config.environment,
@@ -101,10 +98,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 4. Database connection and setup
     info!("Connecting to database: {}", &config.database_url);
-    let db_pool = establish_connection_pool(&config).await.map_err(|e| {
-        error!("Failed to connect to database: {:?}", e);
-        "Failed to connect to database"
-    })?;
+    let db_pool = establish_connection_pool(&config)
+        .await
+        .context("failed to create database connection pool")?;
     info!("Database connection pool established");
 
     // 5. Run database migrations (auto-run in development, manual in production)
@@ -113,9 +109,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         sqlx::migrate!("./migrations") // Path to your migrations directory
             .run(&db_pool)
             .await
-            .map_err(|e| {
-                error!("Failed to run database migrations: {:?}", e);
-                "Failed to run database migrations"
+            .map_err(|error| {
+                error!("Failed to run database migrations: {:?}", error);
+                error
             })?;
         info!("Database migrations complete");
     } else {
@@ -138,8 +134,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Starting Actix-web server"
     );
 
-    let server = HttpServer::new(move || create_app(db_pool.clone(), config.clone()))
-        .bind((server_host.as_str(), server_port))?;
+    let config_for_server = Arc::clone(&config);
+    let server =
+        HttpServer::new(move || create_app(db_pool.clone(), Arc::clone(&config_for_server)))
+            .bind((server_host.as_str(), server_port))
+            .with_context(|| format!("failed to bind server to {}:{}", server_host, server_port))?;
 
     // Production server settings
     let server = if is_production {
@@ -152,7 +151,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         server.workers(1) // Single worker for development
     };
 
-    server.run().await?;
+    server
+        .run()
+        .await
+        .context("Actix-web server terminated unexpectedly")?;
 
     info!("Server shut down gracefully");
     Ok(())

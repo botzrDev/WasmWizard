@@ -14,19 +14,20 @@ use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{web, App};
 use sqlx::PgPool;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
     pub db_pool: PgPool,             // Always required now
     pub db_service: DatabaseService, // Always required now
-    pub config: Config,
+    pub config: Arc<Config>,
     #[allow(dead_code)] // Reserved for future Redis integration
     pub redis_service: Option<RedisService>,
 }
 
 pub fn create_app(
     db_pool: PgPool, // No longer optional
-    config: Config,
+    config: Arc<Config>,
 ) -> App<
     impl actix_web::dev::ServiceFactory<
         actix_web::dev::ServiceRequest,
@@ -39,24 +40,29 @@ pub fn create_app(
     let db_service = DatabaseService::new(db_pool.clone());
 
     // Initialize Redis service if URL is available
-    let redis_service = match RedisService::new(&config.redis_url) {
-        Ok(service) => {
-            tracing::info!("Redis service initialized successfully");
-            Some(service)
-        }
-        Err(e) => {
-            if config.is_production() {
-                panic!(
-                    "FATAL: Redis is required in production but could not be initialized: {}",
-                    e
-                );
+    let redis_service = if config.redis_enabled {
+        match RedisService::new(&config.redis_url) {
+            Ok(service) => {
+                tracing::info!("Redis service initialized successfully");
+                Some(service)
             }
-            tracing::warn!(
-                "Failed to initialize Redis service, falling back to in-memory rate limiting: {}",
-                e
-            );
-            None
+            Err(error) => {
+                if config.is_production() {
+                    panic!(
+                        "FATAL: Redis is required in production but could not be initialized: {}",
+                        error
+                    );
+                }
+                tracing::warn!(
+                    "Failed to initialize Redis service, falling back to in-memory rate limiting: {}",
+                    error
+                );
+                None
+            }
         }
+    } else {
+        tracing::info!("Redis integration disabled via configuration");
+        None
     };
 
     // Create rate limit middleware with Redis if available
@@ -69,7 +75,7 @@ pub fn create_app(
     };
     let rate_limit_service = RateLimitService::new(shared_limiter);
 
-    let security_middleware = SecurityHeadersMiddleware::new(config.clone());
+    let security_middleware = SecurityHeadersMiddleware::new(Arc::clone(&config));
     let input_validation_middleware = InputValidationMiddleware::new();
     let rate_limit_data = web::Data::new(rate_limit_service.clone());
 
@@ -77,7 +83,7 @@ pub fn create_app(
         .app_data(web::Data::new(AppState {
             db_pool: db_pool.clone(),
             db_service: db_service.clone(),
-            config: config.clone(),
+            config: Arc::clone(&config),
             redis_service: redis_service.clone(),
         }))
         .app_data(rate_limit_data.clone())
@@ -193,10 +199,8 @@ pub fn create_app(
         app = app
             .service(
                 web::scope("/api")
-
                     .wrap(RateLimitMiddleware::new())
                     .app_data(rate_limit_data.clone())
-
                     .service(web::resource("/execute").post(execute::execute_wasm_no_auth)),
             )
             .service(

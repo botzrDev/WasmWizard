@@ -4,7 +4,10 @@ use crate::middleware::redis_rate_limit::RedisRateLimiter;
 use crate::services::RedisService;
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{HeaderName, HeaderValue},
+    http::{
+        header::{HeaderName, HeaderValue},
+        HeaderMap,
+    },
     Error, HttpMessage, HttpResponse, Result,
 };
 use futures_util::future::{ready, LocalBoxFuture, Ready};
@@ -182,15 +185,18 @@ where
         Box::pin(async move {
             // Extract AuthContext - if not present, let the request continue
             // so that PreAuth middleware can handle authentication
-            let auth_context_opt = req.extensions().get::<AuthContext>().cloned();
-            if auth_context_opt.is_none() {
-                tracing::debug!("Rate limit middleware: no auth context found, proceeding without rate limiting");
-                return service
-                    .call(req)
-                    .await
-                    .map(ServiceResponse::map_into_right_body);
-            }
-            let auth_context = auth_context_opt.unwrap();
+            let auth_context = match req.extensions().get::<AuthContext>().cloned() {
+                Some(context) => context,
+                None => {
+                    tracing::debug!(
+                        "Rate limit middleware: no auth context found, proceeding without rate limiting"
+                    );
+                    return service
+                        .call(req)
+                        .await
+                        .map(ServiceResponse::map_into_right_body);
+                }
+            };
 
             let api_key_id = auth_context.api_key.id;
             let rate_limit = RateLimit::from_tier_name(&auth_context.tier.name);
@@ -238,10 +244,11 @@ where
                 }));
 
                 if retry_after > 0 {
-                    response.headers_mut().insert(
-                        HeaderName::from_static("retry-after"),
-                        HeaderValue::from_str(&retry_after.to_string()).unwrap(),
-                    );
+                    if let Ok(value) = HeaderValue::from_str(&retry_after.to_string()) {
+                        response
+                            .headers_mut()
+                            .insert(HeaderName::from_static("retry-after"), value);
+                    }
                 }
 
                 return Ok(req.into_response(response).map_into_left_body());
@@ -252,23 +259,10 @@ where
 
             // Add rate limit information to response headers
             let headers = response.headers_mut();
-            headers.insert(
-                HeaderName::from_static("x-ratelimit-limit-minute"),
-                HeaderValue::from_str(&rate_limit.requests_per_minute.to_string()).unwrap(),
-            );
-            headers.insert(
-                HeaderName::from_static("x-ratelimit-limit-day"),
-                HeaderValue::from_str(&rate_limit.requests_per_day.to_string()).unwrap(),
-            );
-
-            headers.insert(
-                HeaderName::from_static("x-ratelimit-remaining-minute"),
-                HeaderValue::from_str(&remaining_minute.to_string()).unwrap(),
-            );
-            headers.insert(
-                HeaderName::from_static("x-ratelimit-remaining-day"),
-                HeaderValue::from_str(&remaining_day.to_string()).unwrap(),
-            );
+            insert_header(headers, "x-ratelimit-limit-minute", rate_limit.requests_per_minute);
+            insert_header(headers, "x-ratelimit-limit-day", rate_limit.requests_per_day);
+            insert_header(headers, "x-ratelimit-remaining-minute", remaining_minute);
+            insert_header(headers, "x-ratelimit-remaining-day", remaining_day);
 
             Ok(response)
         })
@@ -281,7 +275,13 @@ fn check_in_memory_rate_limit(
     api_key_id: Uuid,
     rate_limit: &RateLimit,
 ) -> (bool, u64, u32, u32) {
-    let mut state_guard = state.lock().unwrap();
+    let mut state_guard = match state.lock() {
+        Ok(guard) => guard,
+        Err(error) => {
+            tracing::error!("Rate limiter state lock poisoned: {}", error);
+            error.into_inner()
+        }
+    };
     let buckets = state_guard.entry(api_key_id).or_insert_with(|| {
         (
             TokenBucket::new(
@@ -312,6 +312,17 @@ fn check_in_memory_rate_limit(
     let remaining_day = buckets.1.tokens as u32;
 
     (allowed, retry_after, remaining_minute, remaining_day)
+}
+
+fn insert_header<T: ToString>(headers: &mut HeaderMap, name: &'static str, value: T) {
+    match HeaderValue::from_str(&value.to_string()) {
+        Ok(header_value) => {
+            headers.insert(HeaderName::from_static(name), header_value);
+        }
+        Err(error) => {
+            tracing::error!("Failed to insert rate limit header {}: {}", name, error);
+        }
+    }
 }
 
 #[cfg(test)]

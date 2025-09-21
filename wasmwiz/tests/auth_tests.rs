@@ -1,6 +1,6 @@
 // Comprehensive authentication tests
 use actix_web::http::{header, HeaderValue};
-use wasm-wizard::middleware::auth::{extract_api_key, hash_api_key};
+use wasm_wizard::middleware::auth::{extract_api_key, hash_api_key};
 
 #[test]
 fn test_extract_api_key_valid_bearer_token() {

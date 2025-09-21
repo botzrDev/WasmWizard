@@ -1,7 +1,7 @@
 // Comprehensive rate limiting tests
 use std::time::Duration;
 use tokio::time::sleep;
-use wasm-wizard::middleware::rate_limit::{RateLimit, TokenBucket};
+use wasm_wizard::middleware::rate_limit::{RateLimit, TokenBucket};
 
 #[test]
 fn test_rate_limit_from_tier_name() {

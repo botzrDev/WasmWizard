@@ -1,7 +1,7 @@
 // Comprehensive error handling tests
 use actix_web::http::StatusCode;
 use std::fmt::Write;
-use wasm-wizard::errors::ApiError;
+use wasm_wizard::errors::ApiError;
 
 #[test]
 fn test_api_error_bad_request() {
