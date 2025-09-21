@@ -6,6 +6,7 @@ use crate::middleware::pre_auth::AuthContext;
 use actix_web::{HttpMessage, HttpRequest, Result as ActixResult};
 use async_trait::async_trait;
 use redis::Client;
+use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, error, warn};
 
@@ -101,7 +102,6 @@ impl RateLimiter for RedisRateLimiter {
 
 // Fallback in-memory rate limiter
 use std::collections::HashMap;
-use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct MemoryRateLimiter {
@@ -146,7 +146,7 @@ impl RateLimiter for MemoryRateLimiter {
 
 // Rate limiting middleware
 pub struct RateLimitService {
-    pub(crate) limiter: SharedRateLimiter,
+    limiter: SharedRateLimiter,
 }
 
 impl Clone for RateLimitService {
@@ -266,6 +266,28 @@ impl RateLimitService {
     }
 }
 
+impl RateLimitService {
+    #[cfg(test)]
+    pub(crate) fn same_limiter_as(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.limiter, &other.limiter)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn shares_with(&self, other: &SharedRateLimiter) -> bool {
+        Arc::ptr_eq(&self.limiter, other)
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn check_limit_for_test(
+        &self,
+        key: &str,
+        limit: u32,
+        window: Duration,
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+        self.limiter.check_rate_limit(key, limit, window).await
+    }
+}
+
 // Factory function to create appropriate rate limiter based on configuration
 pub fn create_rate_limiter(redis_url: Option<&str>) -> SharedRateLimiter {
     match redis_url {
@@ -296,8 +318,8 @@ mod tests {
         let service = RateLimitService::new(Arc::clone(&limiter));
         let cloned = service.clone();
 
-        assert!(Arc::ptr_eq(&service.limiter, &cloned.limiter));
-        assert!(Arc::ptr_eq(&service.limiter, &limiter));
+        assert!(service.same_limiter_as(&cloned));
+        assert!(service.shares_with(&limiter));
     }
 
     #[tokio::test]
@@ -311,18 +333,48 @@ mod tests {
         let window = Duration::from_secs(60);
 
         assert!(service
-            .limiter
-            .check_rate_limit(key, limit, window)
+            .check_limit_for_test(key, limit, window)
             .await
             .unwrap());
         assert!(cloned
-            .limiter
-            .check_rate_limit(key, limit, window)
+            .check_limit_for_test(key, limit, window)
             .await
             .unwrap());
         assert!(!service
-            .limiter
-            .check_rate_limit(key, limit, window)
+            .check_limit_for_test(key, limit, window)
+            .await
+            .unwrap());
+    }
+
+    #[tokio::test]
+    async fn concurrent_clones_share_limits() {
+        let limiter: SharedRateLimiter = Arc::new(MemoryRateLimiter::new());
+        let service = RateLimitService::new(Arc::clone(&limiter));
+        let concurrent_clone = service.clone();
+
+        let key = "concurrent";
+        let limit = 3;
+        let window = Duration::from_secs(60);
+
+        let mut handles = Vec::new();
+        for _ in 0..limit {
+            let svc = service.clone();
+            let key = key.to_string();
+            handles.push(tokio::spawn(async move {
+                svc.check_limit_for_test(&key, limit, window).await.unwrap()
+            }));
+        }
+
+        let mut allowed = 0;
+        for handle in handles {
+            if handle.await.unwrap() {
+                allowed += 1;
+            }
+        }
+
+        assert_eq!(allowed, limit);
+        assert!(!concurrent_clone
+            .check_limit_for_test(key, limit, window)
             .await
             .unwrap());
     }
