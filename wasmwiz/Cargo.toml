@@ -151,6 +151,8 @@ sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", 
 testcontainers = "0.12"
 testcontainers-modules = { version = "0.12", features = ["postgres"] }
 wasm_wizard = { path = ".", features = ["test"] }
+tokio = { version = "1.45", features = ["rt-multi-thread", "macros"] }
+async-trait = "0.1"
 
 # Note: Patches would go here, but the vulnerable dependencies are transitive
 # from Wasmer and cannot be directly patched without breaking compatibility.
