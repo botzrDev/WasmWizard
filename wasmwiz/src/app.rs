@@ -7,6 +7,7 @@ use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{web, App};
 use sqlx::PgPool;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -58,11 +59,14 @@ pub fn create_app(
         let redis_limiter =
             crate::middleware::distributed_rate_limit::RedisRateLimiter::new(&config.redis_url)
                 .expect("Failed to create Redis rate limiter");
-        crate::middleware::distributed_rate_limit::RateLimitService::new(Box::new(redis_limiter))
+        let redis_limiter: Arc<dyn crate::middleware::distributed_rate_limit::RateLimiter> =
+            Arc::new(redis_limiter);
+        crate::middleware::distributed_rate_limit::RateLimitService::new(redis_limiter)
     } else {
         tracing::warn!("Using in-memory rate limiting");
-        let memory_limiter = crate::middleware::distributed_rate_limit::MemoryRateLimiter::new();
-        crate::middleware::distributed_rate_limit::RateLimitService::new(Box::new(memory_limiter))
+        let memory_limiter: Arc<dyn crate::middleware::distributed_rate_limit::RateLimiter> =
+            Arc::new(crate::middleware::distributed_rate_limit::MemoryRateLimiter::new());
+        crate::middleware::distributed_rate_limit::RateLimitService::new(memory_limiter)
     };
 
     let security_middleware = SecurityHeadersMiddleware::new(config.clone());

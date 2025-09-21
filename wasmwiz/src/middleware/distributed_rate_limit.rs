@@ -143,21 +143,19 @@ impl RateLimiter for MemoryRateLimiter {
 
 // Rate limiting middleware
 pub struct RateLimitService {
-    limiter: Box<dyn RateLimiter>,
+    limiter: Arc<dyn RateLimiter>,
 }
 
 impl Clone for RateLimitService {
     fn clone(&self) -> Self {
-        // Create a new instance with the same configuration
-        // This is a simplified approach - in a real system you might want to share the actual limiter
         Self {
-            limiter: Box::new(MemoryRateLimiter::new()),
+            limiter: Arc::clone(&self.limiter),
         }
     }
 }
 
 impl RateLimitService {
-    pub fn new(limiter: Box<dyn RateLimiter>) -> Self {
+    pub fn new(limiter: Arc<dyn RateLimiter>) -> Self {
         Self { limiter }
     }
 
@@ -266,21 +264,36 @@ impl RateLimitService {
 }
 
 // Factory function to create appropriate rate limiter based on configuration
-pub fn create_rate_limiter(redis_url: Option<&str>) -> Box<dyn RateLimiter> {
+pub fn create_rate_limiter(redis_url: Option<&str>) -> Arc<dyn RateLimiter> {
     match redis_url {
         Some(url) => match RedisRateLimiter::new(url) {
             Ok(redis_limiter) => {
                 debug!("Using Redis-based rate limiting");
-                Box::new(redis_limiter)
+                Arc::new(redis_limiter)
             }
             Err(e) => {
                 warn!("Failed to create Redis rate limiter: {}, falling back to memory", e);
-                Box::new(MemoryRateLimiter::new())
+                Arc::new(MemoryRateLimiter::new())
             }
         },
         None => {
             debug!("Using memory-based rate limiting");
-            Box::new(MemoryRateLimiter::new())
+            Arc::new(MemoryRateLimiter::new())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn clones_share_limiter_instance() {
+        let limiter: Arc<dyn RateLimiter> = Arc::new(MemoryRateLimiter::new());
+        let service = RateLimitService::new(Arc::clone(&limiter));
+        let cloned = service.clone();
+
+        assert!(Arc::ptr_eq(&service.limiter, &cloned.limiter));
+        assert!(Arc::ptr_eq(&service.limiter, &limiter));
     }
 }
