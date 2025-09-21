@@ -1,9 +1,7 @@
 // src/app.rs
 use crate::config::Config;
 use crate::handlers::{admin, api_keys, execute, health, web as web_handlers};
-use crate::middleware::distributed_rate_limit::{
-    MemoryRateLimiter, RateLimitService, RedisRateLimiter, SharedRateLimiter,
-};
+use crate::middleware::distributed_rate_limit::{create_rate_limiter, RateLimitService};
 use crate::middleware::pre_auth::PreAuth;
 use crate::middleware::{
     InputValidationMiddleware, MasterAdminMiddleware, RequiredTier, SecurityHeadersMiddleware,
@@ -13,7 +11,6 @@ use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{web, App};
 use sqlx::PgPool;
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -60,17 +57,14 @@ pub fn create_app(
     };
 
     // Create rate limit middleware with Redis if available
-    let rate_limit_service = if let Some(_redis) = redis_service.clone() {
+    let shared_limiter = if redis_service.is_some() {
         tracing::info!("Using Redis-based rate limiting");
-        let redis_limiter =
-            RedisRateLimiter::new(&config.redis_url).expect("Failed to create Redis rate limiter");
-        let redis_limiter: SharedRateLimiter = Arc::new(redis_limiter);
-        RateLimitService::new(redis_limiter)
+        create_rate_limiter(Some(config.redis_url.as_str()))
     } else {
         tracing::warn!("Using in-memory rate limiting");
-        let memory_limiter: SharedRateLimiter = Arc::new(MemoryRateLimiter::new());
-        RateLimitService::new(memory_limiter)
+        create_rate_limiter(None)
     };
+    let rate_limit_service = RateLimitService::new(shared_limiter);
 
     let security_middleware = SecurityHeadersMiddleware::new(config.clone());
     let input_validation_middleware = InputValidationMiddleware::new();
