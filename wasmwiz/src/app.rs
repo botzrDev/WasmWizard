@@ -2,7 +2,11 @@
 use crate::config::Config;
 use crate::handlers::{admin, api_keys, execute, health, web as web_handlers};
 use crate::middleware::pre_auth::PreAuth;
-use crate::middleware::{InputValidationMiddleware, MasterAdminMiddleware, RequiredTier, SecurityHeadersMiddleware, TierAccessMiddleware};
+use crate::middleware::rate_limit_middleware::RateLimitMiddleware;
+use crate::middleware::{
+    InputValidationMiddleware, MasterAdminMiddleware, RequiredTier, SecurityHeadersMiddleware,
+    TierAccessMiddleware,
+};
 use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{web, App};
@@ -67,6 +71,7 @@ pub fn create_app(
 
     let security_middleware = SecurityHeadersMiddleware::new(config.clone());
     let input_validation_middleware = InputValidationMiddleware::new();
+    let rate_limit_data = web::Data::new(rate_limit_service.clone());
 
     let mut app = App::new()
         .app_data(web::Data::new(AppState {
@@ -75,7 +80,7 @@ pub fn create_app(
             config: config.clone(),
             redis_service: redis_service.clone(),
         }))
-        .app_data(web::Data::new(rate_limit_service.clone()))
+        .app_data(rate_limit_data.clone())
         .wrap(security_middleware)
         .wrap(input_validation_middleware)
         // .wrap(DistributedRateLimitMiddleware::new()) // Temporarily disabled
@@ -108,8 +113,9 @@ pub fn create_app(
         app = app
             .service(
                 web::scope("/api")
+                    .wrap(RateLimitMiddleware::new())
                     .wrap(PreAuth::new(db_service.clone()))
-                    .app_data(web::Data::new(rate_limit_service.clone()))
+                    .app_data(rate_limit_data.clone())
                     // Public API endpoints (require auth but any tier)
                     .service(
                         web::resource("/execute")
@@ -138,6 +144,7 @@ pub fn create_app(
             // Admin portal (master admin only)
             .service(
                 web::scope("/admin")
+                    .wrap(RateLimitMiddleware::new())
                     .wrap(MasterAdminMiddleware::support_admin_or_above())
                     .wrap(PreAuth::new(db_service.clone()))
                     // Dashboard
@@ -185,11 +192,13 @@ pub fn create_app(
         app = app
             .service(
                 web::scope("/api")
-                    .app_data(web::Data::new(rate_limit_service.clone()))
-                    .service(web::resource("/execute").post(execute::execute_wasm_no_auth))
+                    .wrap(RateLimitMiddleware::new())
+                    .app_data(rate_limit_data.clone())
+                    .service(web::resource("/execute").post(execute::execute_wasm_no_auth)),
             )
             .service(
                 web::scope("/admin")
+                    .wrap(RateLimitMiddleware::new())
                     .service(web::resource("/api-keys").post(api_keys::create_api_key))
                     .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
                     .service(web::resource("/api-keys/{id}/deactivate").post(api_keys::deactivate_api_key)),
