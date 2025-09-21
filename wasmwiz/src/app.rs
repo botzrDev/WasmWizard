@@ -101,7 +101,7 @@ pub fn create_app(
         .service(web::resource("/generate-key").post(web_handlers::generate_key_form))
         .service(web::resource("/csrf-token").get(web_handlers::csrf_token))
         // Static file serving (no auth required)
-        .service(fs::Files::new("/static", "./static").show_files_listing());
+        .service(fs::Files::new("/static", "./static"));
 
     // Add API routes with proper authentication and tier-based access
     if config.auth_required {
