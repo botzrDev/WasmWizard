@@ -492,40 +492,17 @@ async fn execute_wasm_file(
     wasm_path: &std::path::Path,
     input: &str,
     tier: &crate::models::subscription_tier::SubscriptionTier,
-    _config: &crate::config::Config,
+    config: &crate::config::Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    // Placeholder implementation - Wasmer temporarily disabled for development server startup
     let wasm_bytes = fs::read(wasm_path)?;
 
-    if !is_valid_wasm(&wasm_bytes) {
-        return Err("Invalid WASM file format".into());
+    match crate::wasm::execute_wasm_bytes(&wasm_bytes, input, config, tier).await {
+        Ok(output) => Ok(output),
+        Err(err) => {
+            info!("WASM execution error: {}", err);
+            Err(Box::new(err))
+        }
     }
-
-    // Enforce tier-based memory limits
-    let wasm_size_mb = (wasm_bytes.len() as f64 / (1024.0 * 1024.0)) as i32;
-    if wasm_size_mb > tier.max_memory_mb {
-        return Err(format!(
-            "WASM module size exceeds limit for {} tier ({}MB > {}MB). Please upgrade your plan.",
-            tier.name, wasm_size_mb, tier.max_memory_mb
-        ).into());
-    }
-
-    info!("WASM file validation successful, {} bytes processed", wasm_bytes.len());
-    info!("Input data: '{}' ({} bytes)", input.trim(), input.len());
-    info!("Tier limits enforced: {} tier ({}MB memory, {}s execution)",
-          tier.name, tier.max_memory_mb, tier.max_execution_time_seconds);
-
-    // Simulate execution result with tier information
-    let result = format!(
-        "WASM module executed successfully (development mode)\nInput processed: {}\nModule size: {} bytes\nTier: {} (Memory limit: {}MB, Time limit: {}s)",
-        input.trim(),
-        wasm_bytes.len(),
-        tier.name,
-        tier.max_memory_mb,
-        tier.max_execution_time_seconds
-    );
-
-    Ok(result)
 }
 
 // Placeholder functions for Wasmer functionality - temporarily removed for development server
