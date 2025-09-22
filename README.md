@@ -2,9 +2,15 @@
 
 **Execute WebAssembly modules with enterprise-grade security and lightning-fast performance**
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/botzrDev/WasmWizard/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWizard/actions/workflows/ci.yml)
+[![Build Status](https://img.shields.io/github/actions/w### Core Components
+
+- **🚀 Actix-Web**: High-performance web framework
+- **⚡ Wasmer**: WebAssembly runtime engine
+- **🐘 PostgreSQL**: Data persistence and metadata
+- **🔴 Redis**: Caching and rate limiting
+- **📊 Prometheus**: Metrics and monitoringw/status/botzrDev/WasmWizard/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWizard/actions)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Docker Ready](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/botzrdev/wasmwizard)
+[![Docker Ready](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Stars](https://img.shields.io/github/stars/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/stargazers)
 [![Contributors](https://img.shields.io/github/contributors/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/graphs/contributors)
@@ -230,23 +236,9 @@ curl http://localhost:8080/metrics
 
 ## 📄 License
 
-**Apache 2.0 License** - Open source and free to use commercially.
+**Apache License 2.0** – Open source and free to use commercially.
 
-```text
-Copyright (c) 2024 Wasm Wizard Contributors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+See the [LICENSE](./LICENSE) file for the complete text.
 
 ---
 

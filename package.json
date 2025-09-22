@@ -12,5 +12,12 @@
   "bugs": {
     "url": "https://github.com/your-org/wasm-wizard/issues"
   },
-  "homepage": "https://github.com/your-org/wasm-wizard#readme"
+  "homepage": "https://github.com/your-org/wasm-wizard#readme",
+  "scripts": {
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
+  },
+  "devDependencies": {
+    "cypress": "^13.7.3"
+  }
 }
