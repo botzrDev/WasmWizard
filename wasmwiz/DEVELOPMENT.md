@@ -73,7 +73,7 @@ Run the Cypress smoke tests after the API is up and reachable at `http://localho
 1. **Install Node dependencies (from the repository root):**
    ```bash
    # Skip downloading the Cypress binary during dependency install in restricted environments
-   CYPRESS_INSTALL_BINARY=0 npm install
+   CYPRESS_INSTALL_BINARY=0 npm ci
    ```
    - Requires Node.js 18 or newer and npm 9+.
 2. **Start the WasmWizard application:** follow the steps in [Quick Start](#quick-start) above.
