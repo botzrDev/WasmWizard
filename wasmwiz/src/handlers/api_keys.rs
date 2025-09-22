@@ -10,6 +10,7 @@ use uuid::Uuid;
 use crate::{
     app::AppState,
     errors::ApiError,
+    middleware::{master_admin::AdminRole, pre_auth::AuthContext},
     models::{ApiKey, User},
 };
 
@@ -38,19 +39,39 @@ pub struct ApiKeyInfo {
 /// Generate a new API key for a user
 pub async fn create_api_key(
     app_state: web::Data<AppState>,
+    auth_context: AuthContext,
     req: web::Json<CreateApiKeyRequest>,
 ) -> ActixResult<HttpResponse, ApiError> {
-    info!("Creating API key for user: {}", req.user_email);
+    let mut payload = req.into_inner();
+    let target_email = payload.user_email.trim().to_ascii_lowercase();
+    let caller_email = auth_context.user.email.trim().to_ascii_lowercase();
+    let caller_has_privileged_access = caller_has_privileged_authority(&auth_context);
+
+    if target_email != caller_email && !caller_has_privileged_access {
+        return Err(ApiError::Forbidden(
+            "You do not have permission to create API keys for other users".to_string(),
+        ));
+    }
+
+    if is_privileged_email(&target_email) && !caller_has_privileged_access {
+        return Err(ApiError::Forbidden(
+            "Administrator email addresses require elevated credentials".to_string(),
+        ));
+    }
+
+    payload.user_email = target_email.clone();
+
+    info!("Creating API key for user: {}", payload.user_email);
 
     // Generate a secure random API key
     let api_key = generate_api_key();
     let key_hash = hash_api_key(&api_key);
 
     // Find or create user
-    let user = find_or_create_user(&app_state, &req.user_email).await?;
+    let user = find_or_create_user(&app_state, &payload.user_email, &auth_context).await?;
 
     // Find subscription tier
-    let tier = find_tier_by_name(&app_state, &req.tier_name).await?;
+    let tier = find_tier_by_name(&app_state, &payload.tier_name).await?;
 
     // Create API key record
     let api_key_record = ApiKey {
@@ -73,7 +94,7 @@ pub async fn create_api_key(
             ApiError::InternalError(anyhow::anyhow!("Failed to create API key"))
         })?;
 
-    info!("API key created successfully for user: {}", req.user_email);
+    info!("API key created successfully for user: {}", payload.user_email);
 
     Ok(HttpResponse::Created().json(CreateApiKeyResponse {
         api_key,
@@ -174,7 +195,14 @@ fn hash_api_key(api_key: &str) -> String {
 async fn find_or_create_user(
     app_state: &web::Data<AppState>,
     email: &str,
+    auth_context: &AuthContext,
 ) -> Result<User, ApiError> {
+    if is_privileged_email(email) && !caller_has_privileged_authority(auth_context) {
+        return Err(ApiError::Forbidden(
+            "Creating privileged accounts requires administrator credentials".to_string(),
+        ));
+    }
+
     // Try to find existing user
     if let Ok(Some(user)) = find_user_by_email(app_state, email).await {
         return Ok(user);
@@ -237,4 +265,16 @@ async fn find_tier_by_name(
     .ok_or_else(|| ApiError::BadRequest(format!("Invalid tier name: {}", tier_name)))?;
 
     Ok(tier)
+}
+
+fn is_privileged_email(email: &str) -> bool {
+    email.to_ascii_lowercase().ends_with("@wasm-wizard.dev")
+}
+
+fn caller_has_privileged_authority(auth_context: &AuthContext) -> bool {
+    let caller_email = auth_context.user.email.to_ascii_lowercase();
+
+    caller_email.ends_with("@wasm-wizard.dev")
+        || matches!(AdminRole::from_email(&caller_email), Some(_))
+        || auth_context.tier.name.eq_ignore_ascii_case("enterprise")
 }
