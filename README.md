@@ -2,19 +2,12 @@
 
 **Execute WebAssembly modules with enterprise-grade security and lightning-fast performance**
 
-[![Build Status](https://img.shields.io/github/actions/w### Core Components
-
-- **🚀 Actix-Web**: High-performance web framework
-- **⚡ Wasmer**: WebAssembly runtime engine
-- **🐘 PostgreSQL**: Data persistence and metadata
-- **🔴 Redis**: Caching and rate limiting
-- **📊 Prometheus**: Metrics and monitoringw/status/botzrDev/WasmWizard/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWizard/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/botzrDev/WasmWizard/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWizard/actions)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docker Ready](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Stars](https://img.shields.io/github/stars/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/stargazers)
 [![Contributors](https://img.shields.io/github/contributors/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/graphs/contributors)
-
 > A production-ready WebAssembly execution platform that makes running WASM modules as easy as calling an API. Built with Rust for maximum performance and security.
 
 ## ✨ What is WasmWizard?
@@ -44,7 +37,7 @@ curl -X POST http://localhost:8080/api/wasm/execute \
 
 That's it! 🎉 Your WebAssembly execution platform is ready.
 
-## � Examples
+## 📚 Examples
 
 Dive into practical examples to get started quickly:
 
@@ -69,7 +62,7 @@ Dive into practical examples to get started quickly:
 - **Rate limiting** with Redis-backed enforcement
 - **Audit logging** for compliance and monitoring
 
-### �️ Developer Experience
+### 🛠️ Developer Experience
 - **RESTful API** with comprehensive documentation
 - **Docker deployment** for easy containerization
 - **Kubernetes ready** with production manifests
@@ -137,48 +130,6 @@ graph TB
 - **📊 Prometheus**: Metrics and monitoring
 
 ## 📈 Roadmap
-
-### 🚧 In Development
-
-- **Multi-language WASM support** (Go, C++, AssemblyScript)
-- **Plugin system** for custom execution environments
-- **Advanced monitoring dashboard**
-- **WASM module marketplace**
-
-### 🔮 Future Vision
-
-- **Edge deployment** with serverless integration
-- **Real-time collaboration** features
-- **AI-powered optimization** suggestions
-- **Cross-platform mobile** execution
-
-## 🏗️ Architecture Overview
-
-```mermaid
-graph TB
-    A[Client Request] --> B[Wasm Wizard API]
-    B --> C{Authentication}
-    C --> D[Rate Limiting]
-    D --> E[WASM Validation]
-    E --> F[Wasmer Runtime]
-    F --> G[Execution Result]
-    G --> H[Response]
-
-    I[Monitoring] --> B
-    J[PostgreSQL] --> B
-    K[Redis] --> D
-```
-
-### Core Components:
-- **🚀 Actix-Web**: High-performance web framework
-- **⚡ Wasmer**: WebAssembly runtime engine
-- **� PostgreSQL**: Data persistence and metadata
-- **🔴 Redis**: Caching and rate limiting
-- **📊 Prometheus**: Metrics and monitoring
-
-## 📈 Project Roadmap
-
-We're actively working on exciting features for the future:
 
 ### 🚧 In Development
 
@@ -262,7 +213,7 @@ curl http://localhost:8080/metrics
 # Prometheus-formatted metrics
 ```
 
-## � Support & Community
+## 🤝 Support & Community
 
 ### 📞 Getting Help
 
