@@ -213,7 +213,7 @@ curl http://localhost:8080/metrics
 # Prometheus-formatted metrics
 ```
 
-## 🤝 Support & Community
+## 🆘 Support
 
 ### 📞 Getting Help
 
