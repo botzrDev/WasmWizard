@@ -23,7 +23,7 @@ COPY --chown=builduser:builduser Cargo.toml Cargo.lock ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs && echo "" > src/lib.rs
 
 # Build dependencies (this layer will be cached)
-RUN cargo build --release && rm -f target/release/deps/wasm-wizard*
+RUN cargo build --release && rm -f target/release/deps/wasm_wizard*
 
 # Copy the actual source code
 COPY --chown=builduser:builduser src ./src
@@ -38,8 +38,8 @@ RUN cargo build --release
 FROM debian:bookworm-slim AS runtime
 
 # Security: Set up non-privileged user first
-RUN groupadd -r -g 1001 wasm-wizard && \
-    useradd -r -u 1001 -g wasm-wizard -s /bin/false -d /nonexistent wasm-wizard
+RUN groupadd -r -g 1001 wasm_wizard && \
+    useradd -r -u 1001 -g wasm_wizard -s /bin/false -d /nonexistent wasm_wizard
 
 # Install runtime dependencies with security best practices
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -53,23 +53,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/templates /app/static /app/wasm_modules \
-    && chown -R wasm-wizard:wasm-wizard /app \
+    && chown -R wasm_wizard:wasm_wizard /app \
     && chmod 755 /app \
     && chmod -R 644 /app/templates /app/static \
     && chmod 755 /app/templates /app/static /app/wasm_modules
 
 # Copy the binary from builder stage with proper ownership
-COPY --from=builder --chown=wasm-wizard:wasm-wizard /app/target/release/wasm-wizard /usr/local/bin/wasm-wizard
-RUN chmod 755 /usr/local/bin/wasm-wizard
+COPY --from=builder --chown=wasm_wizard:wasm_wizard /app/target/release/wasm_wizard /usr/local/bin/wasm_wizard
+RUN chmod 755 /usr/local/bin/wasm_wizard
 
 # Copy static files and templates with security permissions
-COPY --chown=wasm-wizard:wasm-wizard templates /app/templates
-COPY --chown=wasm-wizard:wasm-wizard static /app/static
+COPY --chown=wasm_wizard:wasm_wizard templates /app/templates
+COPY --chown=wasm_wizard:wasm_wizard static /app/static
 RUN find /app/templates -type f -exec chmod 444 {} \; && \
     find /app/static -type f -exec chmod 444 {} \;
 
 # Set up the user and working directory
-USER wasm-wizard
+USER wasm_wizard
 WORKDIR /app
 
 # Environment variables for production with security defaults
@@ -77,7 +77,7 @@ ENV ENVIRONMENT=production
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8080
 ENV LOG_LEVEL=info
-ENV RUST_LOG=info,wasm-wizard=info
+ENV RUST_LOG=info,wasm_wizard=info
 ENV WASM_TEMP_DIR=/app/wasm_modules
 # Security: Disable debug features
 ENV RUST_BACKTRACE=0
@@ -92,8 +92,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
 # Security: Drop all capabilities and run with init system
-USER wasm-wizard:wasm-wizard
+USER wasm_wizard:wasm_wizard
 
 # Run the application with dumb-init to handle signals properly
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["wasm-wizard"]
+CMD ["wasm_wizard"]
+
