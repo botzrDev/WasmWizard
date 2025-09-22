@@ -37,6 +37,7 @@ use crate::app::AppState;
 use crate::errors::ApiError;
 use crate::handlers::api_keys;
 use crate::middleware::generate_csrf_token;
+use crate::middleware::pre_auth::AuthContext;
 use actix_web::{web, HttpResponse, Result as ActixResult};
 use askama_actix::{Template, TemplateToResponse};
 
@@ -283,11 +284,16 @@ pub async fn upload_form() -> ActixResult<HttpResponse, ApiError> {
 /// Handle web form API key generation
 pub async fn generate_key_form(
     app_state: web::Data<AppState>,
+    auth_context: AuthContext,
     form: web::Form<api_keys::CreateApiKeyRequest>,
 ) -> ActixResult<HttpResponse, ApiError> {
-    // Use the existing create_api_key function
-    let json_req = web::Json(form.into_inner());
-    api_keys::create_api_key(app_state, json_req).await
+    // Ensure the target email is derived from the authenticated caller
+    let mut payload = form.into_inner();
+    payload.user_email = auth_context.user.email.clone();
+
+    // Use the existing create_api_key function with authenticated context
+    let json_req = web::Json(payload);
+    api_keys::create_api_key(app_state, auth_context, json_req).await
 }
 
 /// Generate CSRF token endpoint

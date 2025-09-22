@@ -109,7 +109,11 @@ pub fn create_app(
         .service(web::resource("/terms").get(web_handlers::terms))
         .service(web::resource("/privacy").get(web_handlers::privacy))
         .service(web::resource("/upload").post(web_handlers::upload_form))
-        .service(web::resource("/generate-key").post(web_handlers::generate_key_form))
+        .service(
+            web::resource("/generate-key")
+                .wrap(PreAuth::new(db_service.clone()))
+                .post(web_handlers::generate_key_form),
+        )
         .service(web::resource("/csrf-token").get(web_handlers::csrf_token))
         // Static file serving (no auth required)
         .service(fs::Files::new("/static", "./static"));
@@ -206,6 +210,7 @@ pub fn create_app(
             .service(
                 web::scope("/admin")
                     .wrap(RateLimitMiddleware::new())
+                    .wrap(PreAuth::new(db_service.clone()))
                     .service(web::resource("/api-keys").post(api_keys::create_api_key))
                     .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))
                     .service(
