@@ -61,10 +61,26 @@ docker-compose -f docker-compose.dev.yml up -d
 ## Development Features
 
 - ✅ **No authentication required** - Test immediately
-- ✅ **Auto database migrations** - Setup handled automatically  
+- ✅ **Auto database migrations** - Setup handled automatically
 - ✅ **Hot reload ready** - Use `cargo watch -x run` for live reload
 - ✅ **Debug logging** - Detailed request/response logging
 - ✅ **Health checks** - Monitor application status
+
+## End-to-End Testing with Cypress
+
+Run the Cypress smoke tests after the API is up and reachable at `http://localhost:8080`.
+
+1. **Install Node dependencies (from the repository root):**
+   ```bash
+   npm install
+   ```
+2. **Start the WasmWizard application:** follow the steps in [Quick Start](#quick-start) above.
+3. **Execute the headless Cypress suite:**
+   ```bash
+   npm run cypress:run
+   ```
+
+To debug interactively, use `npm run cypress:open`, which launches the Cypress runner pointed at `http://localhost:8080`.
 
 ## Architecture
 
