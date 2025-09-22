@@ -104,6 +104,8 @@ When enabling the job:
   default service URL once the application is started).
 - Pre-populate the Cypress cache by adding a step such as `npx cypress install` or by restoring a
   cached `~/.cache/Cypress` directory.
+- When the cache is empty, explicitly run `npx cypress install --force` so the binary is
+  downloaded during the job rather than on the first test command.
 - Export `CYPRESS_INSTALL_BINARY=0` during `npm install` steps if you restore the cached binary to
   avoid redundant downloads.
 

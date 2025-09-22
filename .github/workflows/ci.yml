@@ -285,6 +285,7 @@ jobs:
         node-version: 18
 
     - name: Restore Cypress cache
+      id: cypress-cache
       uses: actions/cache@v4
       with:
         path: ~/.cache/Cypress
@@ -294,6 +295,10 @@ jobs:
       run: npm ci
       env:
         CYPRESS_INSTALL_BINARY: 0
+
+    - name: Download Cypress binary (if cache miss)
+      if: steps.cypress-cache.outputs.cache-hit != 'true'
+      run: npx cypress install --force
 
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
