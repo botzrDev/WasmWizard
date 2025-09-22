@@ -243,6 +243,88 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
+  cypress-smoke:
+    name: 🌐 Cypress Smoke Tests (opt-in)
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: vars.RUN_CYPRESS_SMOKE == 'true'
+    env:
+      DATABASE_URL: postgres://wasm_wizard:wasm_wizard@localhost:5432/wasm_wizard_test
+      REDIS_URL: redis://localhost:6379
+      ENVIRONMENT: test
+      AUTH_REQUIRED: 'false'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: wasm_wizard
+          POSTGRES_USER: wasm_wizard
+          POSTGRES_DB: wasm_wizard_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+
+    - name: Restore Cypress cache
+      id: cypress-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/Cypress
+        key: ${{ runner.os }}-cypress-${{ hashFiles('package-lock.json') }}
+
+    - name: Install Node dependencies
+      run: npm ci
+      env:
+        CYPRESS_INSTALL_BINARY: 0
+
+    - name: Download Cypress binary (if cache miss)
+      if: steps.cypress-cache.outputs.cache-hit != 'true'
+      run: npx cypress install --force
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo build
+      uses: actions/cache@v4
+      with:
+        path: wasmwiz/target
+        key: ${{ runner.os }}-cypress-target-${{ hashFiles('wasmwiz/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cypress-target-
+
+    - name: Run database migrations
+      run: |
+        cd wasmwiz
+        cargo install sqlx-cli --no-default-features --features postgres
+        sqlx migrate run
+
+    - name: Run Cypress smoke suite
+      uses: cypress-io/github-action@v6
+      with:
+        command: npm run cypress:run
+        start: cargo run --manifest-path wasmwiz/Cargo.toml
+        wait-on: http://localhost:8080/health
+        wait-on-timeout: 90
+
   # Performance benchmarking
   benchmark:
     name: 📊 Performance Benchmark

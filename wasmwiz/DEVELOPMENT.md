@@ -61,10 +61,53 @@ docker-compose -f docker-compose.dev.yml up -d
 ## Development Features
 
 - ✅ **No authentication required** - Test immediately
-- ✅ **Auto database migrations** - Setup handled automatically  
+- ✅ **Auto database migrations** - Setup handled automatically
 - ✅ **Hot reload ready** - Use `cargo watch -x run` for live reload
 - ✅ **Debug logging** - Detailed request/response logging
 - ✅ **Health checks** - Monitor application status
+
+## End-to-End Testing with Cypress
+
+Run the Cypress smoke tests after the API is up and reachable at `http://localhost:8080`.
+
+1. **Install Node dependencies (from the repository root):**
+   ```bash
+   # Skip downloading the Cypress binary during dependency install in restricted environments
+   CYPRESS_INSTALL_BINARY=0 npm ci
+   ```
+   - Requires Node.js 18 or newer and npm 9+.
+2. **Start the WasmWizard application:** follow the steps in [Quick Start](#quick-start) above.
+3. **Execute the headless Cypress suite:**
+   ```bash
+   npm run cypress:run
+   ```
+
+To debug interactively, use `npm run cypress:open`, which launches the Cypress runner pointed at `http://localhost:8080`.
+
+> [!TIP]
+> Cypress downloads its binary the first time the test suite runs. If you are behind a proxy or
+> have outbound network restrictions, run `npx cypress install --force` from an environment with
+> access to `https://download.cypress.io/` and cache the resulting `~/.cache/Cypress` directory for
+> reuse in CI.
+
+### Continuous Integration
+
+CI environments can optionally execute the Cypress smoke suite using the opt-in `cypress-smoke` job
+defined in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). The job leverages the
+`cypress-io/github-action`’s underlying utilities (such as `wait-on`) and only runs when the
+`RUN_CYPRESS_SMOKE` repository variable is set to `true`, enabling gradual rollout or gated
+nightly execution.
+
+When enabling the job:
+
+- Ensure the WasmWizard API is reachable at `http://localhost:8080` (for GitHub Actions, this is the
+  default service URL once the application is started).
+- Pre-populate the Cypress cache by adding a step such as `npx cypress install` or by restoring a
+  cached `~/.cache/Cypress` directory.
+- When the cache is empty, explicitly run `npx cypress install --force` so the binary is
+  downloaded during the job rather than on the first test command.
+- Export `CYPRESS_INSTALL_BINARY=0` during `npm install` steps if you restore the cached binary to
+  avoid redundant downloads.
 
 ## Architecture
 
