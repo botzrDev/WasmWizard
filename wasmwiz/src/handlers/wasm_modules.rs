@@ -17,7 +17,7 @@
 use crate::app::AppState;
 use crate::errors::ApiError;
 use crate::middleware::pre_auth::AuthContext;
-use crate::models::{WasmModule, WasmModuleMeta, UploadModuleRequest, UploadModuleResponse};
+use crate::models::{UploadModuleRequest, UploadModuleResponse, WasmModule, WasmModuleMeta};
 use actix_multipart::Multipart;
 use actix_web::{web, HttpResponse, Result as ActixResult};
 use chrono::Utc;
@@ -66,7 +66,7 @@ pub async fn upload_module(
     // Process multipart form data
     while let Ok(Some(mut field)) = payload.try_next().await {
         let field_name = field.name().unwrap_or("").to_string();
-        
+
         match field_name.as_str() {
             "wasm" => {
                 let mut bytes = Vec::new();
@@ -76,43 +76,50 @@ pub async fn upload_module(
                         ApiError::BadRequest("Failed to read WASM data".to_string())
                     })?;
                     bytes.extend_from_slice(&data);
-                    
+
                     // Check size limit during upload to prevent memory exhaustion
                     if bytes.len() > app_state.config.max_wasm_size {
                         return Err(ApiError::PayloadTooLarge("WASM module too large".to_string()));
                     }
                 }
-                
+
                 if bytes.is_empty() {
                     return Err(ApiError::BadRequest("WASM data is empty".to_string()));
                 }
-                
+
                 // Validate WASM format (basic check)
                 if !is_valid_wasm(&bytes) {
                     return Err(ApiError::BadRequest("Invalid WASM format".to_string()));
                 }
-                
+
                 wasm_data = Some(bytes);
             }
             "name" => {
                 let mut field_data = Vec::new();
                 while let Some(chunk) = field.next().await {
-                    let data = chunk.map_err(|_| ApiError::BadRequest("Failed to read name".to_string()))?;
+                    let data = chunk
+                        .map_err(|_| ApiError::BadRequest("Failed to read name".to_string()))?;
                     field_data.extend_from_slice(&data);
                 }
-                name = Some(String::from_utf8(field_data)
-                    .map_err(|_| ApiError::BadRequest("Invalid UTF-8 in name".to_string()))?
-                    .trim().to_string());
+                name = Some(
+                    String::from_utf8(field_data)
+                        .map_err(|_| ApiError::BadRequest("Invalid UTF-8 in name".to_string()))?
+                        .trim()
+                        .to_string(),
+                );
             }
             "description" => {
                 let mut field_data = Vec::new();
                 while let Some(chunk) = field.next().await {
-                    let data = chunk.map_err(|_| ApiError::BadRequest("Failed to read description".to_string()))?;
+                    let data = chunk.map_err(|_| {
+                        ApiError::BadRequest("Failed to read description".to_string())
+                    })?;
                     field_data.extend_from_slice(&data);
                 }
                 let desc = String::from_utf8(field_data)
                     .map_err(|_| ApiError::BadRequest("Invalid UTF-8 in description".to_string()))?
-                    .trim().to_string();
+                    .trim()
+                    .to_string();
                 if !desc.is_empty() {
                     description = Some(desc);
                 }
@@ -120,7 +127,9 @@ pub async fn upload_module(
             "is_public" => {
                 let mut field_data = Vec::new();
                 while let Some(chunk) = field.next().await {
-                    let data = chunk.map_err(|_| ApiError::BadRequest("Failed to read is_public".to_string()))?;
+                    let data = chunk.map_err(|_| {
+                        ApiError::BadRequest("Failed to read is_public".to_string())
+                    })?;
                     field_data.extend_from_slice(&data);
                 }
                 let is_public_str = String::from_utf8(field_data)
@@ -135,7 +144,8 @@ pub async fn upload_module(
     }
 
     // Validate required fields
-    let wasm_data = wasm_data.ok_or_else(|| ApiError::BadRequest("WASM file is required".to_string()))?;
+    let wasm_data =
+        wasm_data.ok_or_else(|| ApiError::BadRequest("WASM file is required".to_string()))?;
     let name = name.ok_or_else(|| ApiError::BadRequest("Module name is required".to_string()))?;
 
     // Validate name length and characters
@@ -213,7 +223,9 @@ pub async fn upload_module(
 
             Ok(HttpResponse::Created().json(response))
         }
-        Err(sqlx::Error::Database(db_err)) if db_err.constraint() == Some("wasm_modules_sha256_hash_key") => {
+        Err(sqlx::Error::Database(db_err))
+            if db_err.constraint() == Some("wasm_modules_sha256_hash_key") =>
+        {
             Err(ApiError::Conflict("Module with this content already exists".to_string()))
         }
         Err(e) => {
@@ -329,16 +341,14 @@ pub async fn delete_module(
     let module_id = path.into_inner();
 
     // Check if module exists and user owns it
-    let module = sqlx::query!(
-        "SELECT id, user_id, name FROM wasm_modules WHERE id = $1",
-        module_id
-    )
-    .fetch_optional(&app_state.db_pool)
-    .await
-    .map_err(|e| {
-        error!("Database error checking module ownership: {}", e);
-        ApiError::DatabaseError("Failed to check module".to_string())
-    })?;
+    let module =
+        sqlx::query!("SELECT id, user_id, name FROM wasm_modules WHERE id = $1", module_id)
+            .fetch_optional(&app_state.db_pool)
+            .await
+            .map_err(|e| {
+                error!("Database error checking module ownership: {}", e);
+                ApiError::DatabaseError("Failed to check module".to_string())
+            })?;
 
     let module = module.ok_or_else(|| ApiError::NotFound("Module not found".to_string()))?;
 
@@ -374,10 +384,10 @@ fn is_valid_wasm(data: &[u8]) -> bool {
     if data.len() < 8 {
         return false;
     }
-    
+
     let magic = &data[0..4];
     let version = &data[4..8];
-    
+
     // WASM magic number: \0asm
     magic == [0x00, 0x61, 0x73, 0x6D] &&
     // WASM version 1

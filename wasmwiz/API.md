@@ -5,7 +5,7 @@
 The Wasm Wizard API provides a secure, scalable platform for executing WebAssembly modules with comprehensive monitoring, authentication, and rate limiting.
 
 **Base URL:** `https://your-domain.com`  
-**Authentication:** API Key (Bearer token)  
+**Authentication:** API Key (Hash-based Bearer tokens)  
 **Content Type:** `application/json` (except where noted)
 
 ## Authentication
@@ -13,8 +13,10 @@ The Wasm Wizard API provides a secure, scalable platform for executing WebAssemb
 All API requests require authentication using an API key in the `Authorization` header:
 
 ```
-Authorization: Bearer wasm-wizard_your_api_key_here
+Authorization: Bearer ww_your_api_key_here
 ```
+
+API keys are securely generated random strings with a `ww_` prefix. Only SHA-256 hashes of the keys are stored in the database for maximum security.
 
 ### Getting an API Key
 
@@ -122,7 +124,7 @@ Execute a WebAssembly module with provided input data.
 **Example Request (curl):**
 ```bash
 curl -X POST \
-  -H "Authorization: Bearer wasm-wizard_your_key" \
+  -H "Authorization: Bearer ww_your_key" \
   -F "wasm=@hello.wasm" \
   -F "input=Hello World" \
   https://api.wasm-wizard.com/api/wasm/execute
@@ -156,6 +158,107 @@ curl -X POST \
 - Execution timeout: 5 seconds (configurable)
 - Memory limit: 128MB (configurable)
 
+#### POST /api/wasm/upload
+
+Upload a WebAssembly module for storage and later execution.
+
+**Content-Type:** `multipart/form-data`  
+**Rate Limited:** Yes (varies by subscription tier)
+
+**Request Body:**
+- `wasm` (file, required): WebAssembly module binary
+- `name` (text, required): Human-readable name for the module
+- `description` (text, optional): Description of what the module does
+- `is_public` (text, optional): "true" to make module publicly accessible (default: "false")
+
+**Example Request (curl):**
+```bash
+curl -X POST \
+  -H "Authorization: Bearer ww_your_key" \
+  -F "wasm=@fibonacci.wasm" \
+  -F "name=Fibonacci Calculator" \
+  -F "description=Calculates Fibonacci sequences" \
+  -F "is_public=false" \
+  https://api.wasm-wizard.com/api/wasm/upload
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "name": "Fibonacci Calculator",
+  "size_bytes": 1024,
+  "sha256_hash": "abc123...",
+  "upload_time": "2024-01-01T12:00:00Z"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Invalid WASM format, missing name, or invalid data
+- `401 Unauthorized`: Missing or invalid API key
+- `409 Conflict`: Module with identical content already exists
+- `413 Payload Too Large`: WASM module exceeds size limit
+
+#### GET /api/wasm/modules
+
+List WebAssembly modules owned by the authenticated user.
+
+**Query Parameters:**
+- `page` (optional): Page number for pagination (default: 1)
+- `limit` (optional): Results per page, max 100 (default: 20)
+- `include_public` (optional): Include public modules from other users (default: false)
+
+**Example Request:**
+```bash
+curl -X GET \
+  -H "Authorization: Bearer ww_your_key" \
+  "https://api.wasm-wizard.com/api/wasm/modules?page=1&limit=10"
+```
+
+**Response (200 OK):**
+```json
+{
+  "modules": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Fibonacci Calculator",
+      "description": "Calculates Fibonacci sequences",
+      "size_bytes": 1024,
+      "sha256_hash": "abc123...",
+      "upload_time": "2024-01-01T12:00:00Z",
+      "last_executed": "2024-01-01T13:30:00Z",
+      "execution_count": 42,
+      "is_public": false
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 1,
+  "has_next": false
+}
+```
+
+#### DELETE /api/wasm/modules/{id}
+
+Delete a WebAssembly module owned by the authenticated user.
+
+**Path Parameters:**
+- `id`: UUID of the module to delete
+
+**Example Request:**
+```bash
+curl -X DELETE \
+  -H "Authorization: Bearer ww_your_key" \
+  https://api.wasm-wizard.com/api/wasm/modules/550e8400-e29b-41d4-a716-446655440001
+```
+
+**Response (204 No Content):** Empty response body on successful deletion
+
+**Error Responses:**
+- `401 Unauthorized`: Missing or invalid API key
+- `403 Forbidden`: Module belongs to another user
+- `404 Not Found`: Module does not exist
+
 ### Authentication & API Keys
 
 #### POST /api/auth/keys
@@ -165,7 +268,7 @@ Generate a new API key for the authenticated user.
 **Response (201 Created):**
 ```json
 {
-  "api_key": "wasm-wizard_abc123def456789...",
+  "api_key": "ww_abc123def456789...",
   "api_key_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
@@ -212,6 +315,12 @@ Main application dashboard with WASM execution interface.
 API key management interface.
 
 **Response:** HTML page for viewing and managing API keys
+
+#### GET /upload
+
+WASM module upload interface for the web application.
+
+**Response:** HTML page with file upload form for WebAssembly modules
 
 ## Rate Limiting
 
