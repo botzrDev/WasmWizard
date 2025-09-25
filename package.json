@@ -7,12 +7,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-org/wasm-wizard.git"
+    "url": "git+https://github.com/botzrDev/WasmWizard.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/wasm-wizard/issues"
+    "url": "https://github.com/botzrDev/WasmWizard/issues"
   },
-  "homepage": "https://github.com/your-org/wasm-wizard#readme",
+  "homepage": "https://github.com/botzrDev/WasmWizard#readme",
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run"

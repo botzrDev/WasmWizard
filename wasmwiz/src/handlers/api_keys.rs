@@ -174,6 +174,49 @@ pub async fn deactivate_api_key(
     })))
 }
 
+/// List API keys for the authenticated user
+pub async fn list_user_api_keys(
+    auth_context: AuthContext,
+    app_state: web::Data<AppState>,
+) -> ActixResult<HttpResponse, ApiError> {
+    info!("Listing API keys for authenticated user: {}", auth_context.user.email);
+
+    // Get user's API keys
+    let api_keys = app_state
+        .db_service
+        .get_user_api_keys(auth_context.user.id)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch user API keys: {}", e);
+            ApiError::InternalError(anyhow::anyhow!("Failed to fetch API keys"))
+        })?;
+
+    // Convert to response format
+    let mut api_key_infos = Vec::new();
+    for api_key in api_keys {
+        // Get tier information
+        let tier_name = if let Ok(Some(tier)) = app_state
+            .db_service
+            .find_subscription_tier_by_id(api_key.tier_id)
+            .await
+        {
+            tier.name
+        } else {
+            "Unknown".to_string()
+        };
+
+        api_key_infos.push(ApiKeyInfo {
+            id: api_key.id,
+            key_hash: format!("{}...", &api_key.key_hash[..8]), // Show only first 8 chars
+            is_active: api_key.is_active,
+            created_at: api_key.created_at.to_rfc3339(),
+            tier_name,
+        });
+    }
+
+    Ok(HttpResponse::Ok().json(api_key_infos))
+}
+
 // Helper functions
 
 fn generate_api_key() -> String {

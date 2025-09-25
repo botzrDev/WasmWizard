@@ -94,4 +94,12 @@ pub struct ApiKey {
 
     /// Timestamp when the API key was last updated.
     pub updated_at: DateTime<Utc>,
+
+    /// Optional expiration date for the API key.
+    /// If None, the key never expires.
+    pub expires_at: Option<DateTime<Utc>>,
+
+    /// Timestamp when the API key was last used for authentication.
+    /// Used for cleanup and analytics purposes.
+    pub last_used_at: Option<DateTime<Utc>>,
 }

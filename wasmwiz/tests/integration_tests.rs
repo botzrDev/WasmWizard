@@ -214,9 +214,10 @@ async fn test_admin_api_key_auth_failure() {
 
     let resp = test::call_service(&app, req).await;
 
-    // Should succeed for now since admin auth is not implemented
-    // TODO: Update this test when admin auth is implemented
-    assert!(resp.status().is_success());
+    // Should now fail with proper admin authentication requirements
+    // Admin endpoints are now properly secured even in development mode
+    assert!(resp.status().is_client_error() || resp.status().is_server_error());
+    assert!(!resp.status().is_success());
 }
 
 #[actix_web::test]

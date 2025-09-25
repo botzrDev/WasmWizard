@@ -2,18 +2,13 @@
 
 **Execute WebAssembly modules with enterprise-grade security and lightning-fast performance**
 
-[![Build Status](https://img.shields.io/github/actions/w### Core Components
-
-- **🚀 Actix-Web**: High-performance web framework
-- **⚡ Wasmer**: WebAssembly runtime engine
-- **🐘 PostgreSQL**: Data persistence and metadata
-- **🔴 Redis**: Caching and rate limiting
-- **📊 Prometheus**: Metrics and monitoringw/status/botzrDev/WasmWizard/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWizard/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/botzrDev/WasmWizard/ci.yml?branch=master&style=for-the-badge)](https://github.com/botzrDev/WasmWizard/actions)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Docker Ready](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Stars](https://img.shields.io/github/stars/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/stargazers)
 [![Contributors](https://img.shields.io/github/contributors/botzrDev/WasmWizard?style=for-the-badge)](https://github.com/botzrDev/WasmWizard/graphs/contributors)
+
 > A production-ready WebAssembly execution platform that makes running WASM modules as easy as calling an API. Built with Rust for maximum performance and security.
 
 ## ✨ What is WasmWizard?
@@ -97,18 +92,18 @@ WasmWizard is an **open-source project** built by and for the developer communit
 
 1. **⭐ Star this repo** to show your support
 2. **🐛 [Report bugs](https://github.com/botzrDev/WasmWizard/issues)** or request features
-3. **📖 [Read the docs](./wasmwizard/API.md)** and try the examples
+3. **📖 [Read the docs](./wasmwiz/API.md)** and try the examples
 4. **🔧 [Submit a PR](https://github.com/botzrDev/WasmWizard/pulls)** with your improvements
 
 ### 📖 Documentation
 
 | Guide | Description |
 |-------|-------------|
-| [**API Reference**](./wasmwizard/API.md) | Complete REST API documentation |
-| [**Development Setup**](./wasmwizard/DEVELOPMENT.md) | Local development environment |
-| [**Configuration**](./wasmwizard/CONFIGURATION.md) | Environment variables and settings |
-| [**Troubleshooting**](./wasmwizard/TROUBLESHOOTING.md) | Common issues and solutions |
-| [**Security**](./wasmwizard/SECURITY.md) | Security best practices |
+| [**API Reference**](./wasmwiz/API.md) | Complete REST API documentation |
+| [**Development Setup**](./wasmwiz/DEVELOPMENT.md) | Local development environment |
+| [**Configuration**](./wasmwiz/CONFIGURATION.md) | Environment variables and settings |
+| [**Troubleshooting**](./wasmwiz/TROUBLESHOOTING.md) | Common issues and solutions |
+| [**Security**](./wasmwiz/SECURITY.md) | Security best practices |
 
 ## 🏗️ Architecture Overview
 
