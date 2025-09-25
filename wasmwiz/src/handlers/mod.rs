@@ -53,4 +53,5 @@ pub mod admin;
 pub mod api_keys;
 pub mod execute;
 pub mod health;
+pub mod wasm_modules;
 pub mod web;

@@ -1,6 +1,6 @@
 // src/app.rs
 use crate::config::Config;
-use crate::handlers::{admin, api_keys, execute, health, web as web_handlers};
+use crate::handlers::{admin, api_keys, execute, health, wasm_modules, web as web_handlers};
 use crate::middleware::distributed_rate_limit::{create_rate_limiter, RateLimitService};
 use crate::middleware::pre_auth::PreAuth;
 
@@ -132,9 +132,27 @@ pub fn create_app(
                             .post(execute::execute_wasm)
                             .wrap(TierAccessMiddleware::new(RequiredTier::Free)),
                     )
+                    // WASM module management endpoints (Free tier and up)
+                    .service(
+                        web::scope("/wasm")
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Free))
+                            .service(web::resource("/upload").post(wasm_modules::upload_module))
+                            .service(web::resource("/modules").get(wasm_modules::list_modules))
+                            .service(web::resource("/modules/{id}").delete(wasm_modules::delete_module))
+                    )
+                    // API key management endpoints (Free tier and up)
+                    .service(
+                        web::scope("/auth")
+                            .wrap(TierAccessMiddleware::new(RequiredTier::Free))
+                            .service(web::resource("/keys").post(api_keys::create_api_key))
+                            .service(web::resource("/keys").get(api_keys::list_user_api_keys))
+                            .service(web::resource("/keys/{id}").delete(api_keys::deactivate_api_key))
+                            // TODO: Implement JWT refresh endpoint
+                            //.service(web::resource("/refresh").post(api_keys::refresh_token))
+                    )
                     // Basic tier endpoints
                     .service(
-                        web::scope("/modules").wrap(TierAccessMiddleware::new(RequiredTier::Basic)), // Module management endpoints would go here
+                        web::scope("/modules").wrap(TierAccessMiddleware::new(RequiredTier::Basic)), // Extended module features would go here
                     )
                     // Pro tier endpoints
                     .service(
@@ -199,7 +217,8 @@ pub fn create_app(
                     ),
             );
     } else {
-        // Development mode - no auth required
+        // Development mode - limited auth requirements but still secure admin
+        tracing::warn!("Running in development mode with reduced authentication requirements");
         app = app
             .service(
                 web::scope("/api")
@@ -210,6 +229,7 @@ pub fn create_app(
             .service(
                 web::scope("/admin")
                     .wrap(RateLimitMiddleware::new())
+                    .wrap(MasterAdminMiddleware::support_admin_or_above())
                     .wrap(PreAuth::new(db_service.clone()))
                     .service(web::resource("/api-keys").post(api_keys::create_api_key))
                     .service(web::resource("/api-keys/{email}").get(api_keys::list_api_keys))

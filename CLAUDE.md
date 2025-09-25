@@ -12,7 +12,7 @@ Wasm Wizard is a production-ready WebAssembly management and execution platform 
 - **WebAssembly Runtime**: Wasmer with WASI sandboxing (5s max runtime, 128MB memory limits)
 - **Database**: PostgreSQL 15+ with SQLx for migrations
 - **Caching/Rate Limiting**: Redis 7 with distributed enforcement
-- **Authentication**: JWT-based API keys with SHA-256 hashing and role-based tiers
+- **Authentication**: Hash-based API keys with SHA-256 storage and role-based tiers
 - **Templates**: Server-side rendering using Askama
 - **Deployment**: Docker containers with Kubernetes support
 
@@ -139,7 +139,7 @@ kubectl apply -f k8s/
 - Input/output validation and sanitization
 
 ### Authentication & Security
-- JWT-based API keys stored as SHA-256 hashes
+- Hash-based API keys stored as SHA-256 hashes
 - Three-tier rate limiting (Free: 10 req/min, Basic: 100 req/min, Pro: 1000 req/min)
 - Token bucket algorithm with Redis backing
 - Security headers (HSTS, CSP, X-Frame-Options)
@@ -189,7 +189,7 @@ kubectl apply -f k8s/
 - `POST /api/auth/keys` - Generate API key
 - `GET /api/auth/keys` - List user's keys
 - `DELETE /api/auth/keys/{id}` - Revoke key
-- `POST /api/auth/refresh` - Refresh JWT token
+- `POST /api/auth/refresh` - Refresh JWT token (TODO: Not implemented yet)
 
 ### Web Interface
 - `GET /` - Dashboard
@@ -216,6 +216,25 @@ These pose minimal risk due to:
 - No direct usage of vulnerable functionality
 - Comprehensive monitoring and network-level protections
 - Regular dependency update monitoring
+
+### Health Check Endpoints
+The application provides multiple health check endpoints for different monitoring needs:
+
+- **`/health`** - Comprehensive health check with database, filesystem, and system resource checks
+- **`/healthz`** - Kubernetes liveness probe (basic application responsiveness)  
+- **`/readyz`** - Kubernetes readiness probe (includes dependency checks)
+- **`/metrics`** - Prometheus metrics endpoint for monitoring and alerting
+
+### Authentication Architecture
+WasmWizard uses **hash-based API key authentication** (not JWT tokens):
+
+- API keys are generated as random strings with `ww_` prefix
+- Only SHA-256 hashes of keys are stored in the database
+- Keys are validated by hashing the provided key and comparing with stored hash
+- Optional expiration dates supported for enhanced security
+- Last usage tracking for cleanup and analytics
+
+**Important:** Despite references to "JWT-based API keys" in some documentation, the actual implementation uses secure hash-based storage for better security and performance.
 
 ### Dependency Update Strategy
 ```bash
