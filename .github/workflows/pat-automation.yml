@@ -1,0 +1,228 @@
+name: GitHub PAT Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'PAT action to perform'
+        required: true
+        type: choice
+        options:
+          - create
+          - list
+          - cleanup
+        default: 'create'
+      
+      description:
+        description: 'PAT description (required for create)'
+        required: false
+        type: string
+        default: 'WasmWizard Automated PAT'
+      
+      scopes:
+        description: 'Comma-separated list of scopes'
+        required: false
+        type: string
+        default: 'repo,read:org'
+      
+      expiration_hours:
+        description: 'Expiration time in hours'
+        required: false
+        type: string
+        default: '24'
+      
+      repositories:
+        description: 'Comma-separated list of repositories (optional)'
+        required: false
+        type: string
+      
+      revoke_token_id:
+        description: 'Token ID to revoke (for revoke action)'
+        required: false
+        type: string
+
+  schedule:
+    # Run cleanup daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  # Security: Use secure defaults
+  PAT_EXPIRATION_HOURS: ${{ github.event.inputs.expiration_hours || '24' }}
+  PAT_SCOPES: ${{ github.event.inputs.scopes || 'repo,read:org' }}
+
+jobs:
+  pat-automation:
+    name: 🔐 GitHub PAT Automation
+    runs-on: ubuntu-latest
+    
+    # Only allow this workflow to run on the main repository
+    # Prevents accidental execution in forks
+    if: github.repository == 'botzrDev/WasmWizard'
+    
+    permissions:
+      # Minimal permissions required
+      contents: read
+      actions: read
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup GitHub CLI
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: |
+        # Install GitHub CLI
+        type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+        sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        sudo apt update
+        sudo apt install gh jq -y
+        
+    - name: Authenticate GitHub CLI
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "$GITHUB_TOKEN" | gh auth login --with-token
+        gh auth status
+        
+    - name: Execute PAT Manager - Create
+      if: github.event.inputs.action == 'create' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == '')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -euo pipefail
+        
+        DESCRIPTION="${{ github.event.inputs.description || 'WasmWizard Automated PAT' }}"
+        SCOPES="${{ github.event.inputs.scopes || 'repo,read:org' }}"
+        HOURS="${{ github.event.inputs.expiration_hours || '24' }}"
+        REPOS="${{ github.event.inputs.repositories || '' }}"
+        
+        echo "🔐 Creating GitHub PAT..."
+        echo "Description: $DESCRIPTION"
+        echo "Scopes: $SCOPES"
+        echo "Expiration: $HOURS hours"
+        
+        cd wasmwiz
+        if [[ -n "$REPOS" ]]; then
+          TOKEN=$(./scripts/github-pat-manager.sh create -d "$DESCRIPTION" -s "$SCOPES" -e "$HOURS" -r "$REPOS")
+        else
+          TOKEN=$(./scripts/github-pat-manager.sh create -d "$DESCRIPTION" -s "$SCOPES" -e "$HOURS")
+        fi
+        
+        # Security: Never log the actual token
+        echo "✅ PAT created successfully"
+        echo "📋 Use the token securely in your workflows"
+        
+        # Store token securely in job summary (masked)
+        echo "## 🔐 GitHub PAT Created" >> $GITHUB_STEP_SUMMARY
+        echo "- **Description**: $DESCRIPTION" >> $GITHUB_STEP_SUMMARY
+        echo "- **Scopes**: $SCOPES" >> $GITHUB_STEP_SUMMARY  
+        echo "- **Expires**: $HOURS hours" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ✅ Created successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "⚠️ **Security Note**: Token has been created but is not displayed for security reasons." >> $GITHUB_STEP_SUMMARY
+        
+    - name: Execute PAT Manager - List
+      if: github.event.inputs.action == 'list'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "📋 Listing active GitHub PATs..."
+        cd wasmwiz
+        ./scripts/github-pat-manager.sh list
+        
+    - name: Execute PAT Manager - Cleanup
+      if: github.event.inputs.action == 'cleanup' || github.event_name == 'schedule'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "🧹 Cleaning up expired GitHub PATs..."
+        cd wasmwiz
+        ./scripts/github-pat-manager.sh cleanup
+        
+        # Add cleanup summary
+        echo "## 🧹 PAT Cleanup Completed" >> $GITHUB_STEP_SUMMARY
+        echo "- **Action**: Expired PAT cleanup" >> $GITHUB_STEP_SUMMARY
+        echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ✅ Completed" >> $GITHUB_STEP_SUMMARY
+
+  # Example usage job - demonstrates how to use a created PAT
+  example-usage:
+    name: 📖 Example PAT Usage
+    runs-on: ubuntu-latest
+    needs: pat-automation
+    if: github.event.inputs.action == 'create' && github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Example - Use PAT for deployment
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "📖 Example: Using created PAT for deployment tasks"
+        echo ""
+        echo "In a real deployment workflow, you would:"
+        echo "1. Create a PAT with specific scopes for the task"
+        echo "2. Use the PAT for repository operations (clone, push, etc.)"
+        echo "3. Automatically revoke the PAT after completion"
+        echo ""
+        echo "Example commands:"
+        echo "  git clone https://x-access-token:\$PAT@github.com/botzrDev/WasmWizard.git"
+        echo "  # Perform deployment operations"
+        echo "  ./scripts/github-pat-manager.sh revoke -i \$TOKEN_ID"
+        echo ""
+        echo "🔒 Security Benefits:"
+        echo "  - Short-lived tokens (hours vs. permanent)"
+        echo "  - Specific scope limitations"
+        echo "  - Automatic cleanup and revocation"
+        echo "  - Audit trail of token usage"
+
+  # Security validation job
+  security-check:
+    name: 🛡️ Security Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Validate PAT Manager Script
+      run: |
+        echo "🛡️ Performing security validation..."
+        
+        # Check script permissions
+        SCRIPT_PATH="wasmwiz/scripts/github-pat-manager.sh"
+        if [[ ! -f "$SCRIPT_PATH" ]]; then
+          echo "❌ PAT manager script not found"
+          exit 1
+        fi
+        
+        # Check for sensitive content in logs
+        if grep -r "token\|pat\|github_token" "$SCRIPT_PATH" | grep -i "echo\|print\|log" | grep -v "log_info\|log_warn\|log_error"; then
+          echo "⚠️ Potential token logging detected - review needed"
+        else
+          echo "✅ No obvious token logging detected"
+        fi
+        
+        # Check file permissions
+        PERMS=$(stat -c "%a" "$SCRIPT_PATH")
+        echo "Script permissions: $PERMS"
+        
+        # Validate script syntax
+        if bash -n "$SCRIPT_PATH"; then
+          echo "✅ Script syntax validation passed"
+        else
+          echo "❌ Script syntax validation failed"
+          exit 1
+        fi
+        
+        echo ""
+        echo "🛡️ Security validation completed"

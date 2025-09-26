@@ -102,6 +102,7 @@ WasmWizard is an **open-source project** built by and for the developer communit
 | [**API Reference**](./wasmwiz/API.md) | Complete REST API documentation |
 | [**Development Setup**](./wasmwiz/DEVELOPMENT.md) | Local development environment |
 | [**Configuration**](./wasmwiz/CONFIGURATION.md) | Environment variables and settings |
+| [**PAT Automation**](./wasmwiz/PAT_AUTOMATION.md) | 🔐 GitHub Personal Access Token automation |
 | [**Troubleshooting**](./wasmwiz/TROUBLESHOOTING.md) | Common issues and solutions |
 | [**Security**](./wasmwiz/SECURITY.md) | Security best practices |
 

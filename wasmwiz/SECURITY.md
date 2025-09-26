@@ -32,6 +32,11 @@ This checklist ensures Wasm Wizard meets production security standards.
   - [ ] Role-based access control implemented
   - [ ] Strong password policies enforced
   - [ ] Session management secure
+  - [ ] **GitHub PAT automation configured** (see [PAT_AUTOMATION.md](./PAT_AUTOMATION.md))
+    - [ ] Temporary PATs with time-based expiration
+    - [ ] Minimal scope assignment per use case
+    - [ ] Automatic cleanup of expired tokens
+    - [ ] Secure token storage (metadata only)
 
 - [ ] **Input Validation**
   - [ ] All inputs sanitized and validated
