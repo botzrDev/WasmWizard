@@ -1,0 +1,35 @@
+# GitHub PAT Manager - Sensitive Files
+# Never commit these files as they may contain sensitive information
+
+# PAT metadata store (contains token metadata, not actual tokens)
+.wasmwiz-pats.json
+/tmp/.wasmwiz-pats.json
+
+# Log files
+*.log
+pat-manager.log
+deployment.log
+contributor-access.log
+
+# Generated contributor instruction files (contain actual PAT tokens)
+contributor-instructions-*.txt
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Local test files
+test-*.sh
+local-test-*
+
+# Environment files that might contain tokens
+.env.local
+.env.test
+
+# Debug output
+debug-*
+trace-*

@@ -19,6 +19,7 @@ curl http://localhost:8080/health
 
 ### Pre-Deployment
 - [ ] **Security**: Generate unique secrets with `./scripts/generate_secrets.sh`
+- [ ] **GitHub PATs**: Configure automated PAT management (see [PAT_AUTOMATION.md](./PAT_AUTOMATION.md))
 - [ ] **Infrastructure**: Ensure adequate resources (8GB RAM, 4 CPU cores minimum)
 - [ ] **Network**: Configure firewall rules and TLS certificates
 - [ ] **Database**: Set up PostgreSQL with proper backups
