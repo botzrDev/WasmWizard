@@ -106,6 +106,8 @@ fn test_auth_context_creation() {
         is_active: true,
         created_at: Utc::now(),
         updated_at: Utc::now(),
+        expires_at: None,
+        last_used_at: None,
     };
 
     let user = User {

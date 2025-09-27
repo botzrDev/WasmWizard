@@ -1,11 +1,19 @@
-use actix_web::test;
+use actix_web::{body::to_bytes, http::StatusCode, test, web};
+use chrono::Utc;
 use serde_json::{json, Value};
 use sqlx::{migrate::Migrator, PgPool};
+use std::sync::Arc;
 use std::{env, path::Path, sync::Once};
 use testcontainers::{clients, images::postgres::Postgres, Docker};
 use uuid::Uuid;
 use wasm_wizard::app::create_app;
-use wasm_wizard::{establish_connection_pool, Config};
+use wasm_wizard::{establish_connection_pool, AppState, Config};
+use wasm_wizard::{
+    handlers::api_keys::{create_api_key, CreateApiKeyRequest, CreateApiKeyResponse},
+    middleware::pre_auth::AuthContext,
+    models::{ApiKey, SubscriptionTier, User},
+    services::DatabaseService,
+};
 
 static INIT: Once = Once::new();
 
@@ -57,6 +65,77 @@ async fn setup_test_environment() -> PgPool {
     migrator.run(&pool).await.expect("Failed to run migrations");
 
     pool
+}
+
+#[actix_web::test]
+async fn create_api_key_persists_default_null_columns() {
+    let pool = setup_test_environment().await;
+    let config = Arc::new(Config::from_env().expect("Failed to load test configuration"));
+    let db_service = DatabaseService::new(pool.clone());
+
+    let app_state = web::Data::new(AppState {
+        db_pool: pool.clone(),
+        db_service: db_service.clone(),
+        config: Arc::clone(&config),
+        redis_service: None,
+    });
+
+    let tier =
+        sqlx::query_as::<_, SubscriptionTier>("SELECT * FROM subscription_tiers WHERE name = $1")
+            .bind("Free")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to fetch Free tier");
+
+    let user_email = format!("integration-user-{}@example.com", Uuid::new_v4());
+    let auth_user = User {
+        id: Uuid::new_v4(),
+        email: user_email.clone(),
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+    };
+
+    let auth_context = AuthContext {
+        api_key: ApiKey {
+            id: Uuid::new_v4(),
+            key_hash: "test_hash".to_string(),
+            user_id: auth_user.id,
+            tier_id: tier.id,
+            is_active: true,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            expires_at: None,
+            last_used_at: None,
+        },
+        user: auth_user,
+        tier: tier.clone(),
+    };
+
+    let request = web::Json(CreateApiKeyRequest {
+        user_email: user_email.clone(),
+        tier_name: tier.name.clone(),
+    });
+
+    let response = create_api_key(app_state, auth_context, request)
+        .await
+        .expect("create_api_key should succeed");
+
+    assert_eq!(response.status(), StatusCode::CREATED);
+
+    let body = to_bytes(response.into_body())
+        .await
+        .expect("body should read");
+    let payload: CreateApiKeyResponse =
+        serde_json::from_slice(&body).expect("response should deserialize");
+
+    let stored_api_key = sqlx::query_as::<_, ApiKey>("SELECT * FROM api_keys WHERE id = $1")
+        .bind(payload.api_key_id)
+        .fetch_one(&pool)
+        .await
+        .expect("API key should exist");
+
+    assert!(stored_api_key.expires_at.is_none());
+    assert!(stored_api_key.last_used_at.is_none());
 }
 
 async fn create_test_api_key(pool: &PgPool) -> (String, Uuid) {
