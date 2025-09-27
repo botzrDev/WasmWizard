@@ -117,8 +117,18 @@ impl DatabaseService {
     pub async fn create_api_key(&self, api_key: &ApiKey) -> Result<()> {
         sqlx::query(
             r#"
-            INSERT INTO api_keys (id, key_hash, user_id, tier_id, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO api_keys (
+                id,
+                key_hash,
+                user_id,
+                tier_id,
+                is_active,
+                created_at,
+                updated_at,
+                expires_at,
+                last_used_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             "#,
         )
         .bind(api_key.id)
@@ -128,6 +138,8 @@ impl DatabaseService {
         .bind(api_key.is_active)
         .bind(api_key.created_at)
         .bind(api_key.updated_at)
+        .bind(api_key.expires_at)
+        .bind(api_key.last_used_at)
         .execute(&self.pool)
         .await?;
 
@@ -250,8 +262,18 @@ impl DatabaseService {
 
         sqlx::query(
             r#"
-            INSERT INTO api_keys (id, key_hash, user_id, tier_id, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, true, NOW(), NOW())
+            INSERT INTO api_keys (
+                id,
+                key_hash,
+                user_id,
+                tier_id,
+                is_active,
+                created_at,
+                updated_at,
+                expires_at,
+                last_used_at
+            )
+            VALUES ($1, $2, $3, $4, true, NOW(), NOW(), NULL, NULL)
             "#
         )
         .bind(api_key_id)
@@ -324,6 +346,7 @@ impl DatabaseService {
         let rows = sqlx::query!(
             r#"
             SELECT ak.id, ak.key_hash, ak.user_id, ak.tier_id, ak.is_active, ak.created_at, ak.updated_at,
+                   ak.expires_at, ak.last_used_at,
                    u.email as user_email,
                    st.name as tier_name,
                    COUNT(ul.id) as total_executions,
@@ -352,6 +375,8 @@ impl DatabaseService {
                     is_active: row.is_active,
                     created_at: row.created_at,
                     updated_at: row.updated_at,
+                    expires_at: row.expires_at,
+                    last_used_at: row.last_used_at,
                 },
                 user_email: row.user_email,
                 tier_name: row.tier_name,
