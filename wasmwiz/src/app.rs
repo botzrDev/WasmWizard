@@ -10,6 +10,7 @@ use crate::middleware::{
     InputValidationMiddleware, MasterAdminMiddleware, RequiredTier, SecurityHeadersMiddleware,
     TierAccessMiddleware,
 };
+use crate::monitoring::MetricsMiddleware;
 use crate::services::{DatabaseService, RedisService};
 use actix_files as fs;
 use actix_web::{web, App};
@@ -87,6 +88,7 @@ pub fn create_app(
             redis_service: redis_service.clone(),
         }))
         .app_data(rate_limit_data.clone())
+        .wrap(MetricsMiddleware)
         .wrap(security_middleware)
         .wrap(input_validation_middleware)
         // .wrap(DistributedRateLimitMiddleware::new()) // Temporarily disabled

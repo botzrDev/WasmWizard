@@ -70,6 +70,7 @@ use crate::errors::ApiError;
 use crate::middleware::pre_auth::AuthContext;
 use crate::models::api_payloads::ExecuteResponse;
 use crate::models::usage_log::UsageLog;
+use crate::monitoring::METRICS;
 use crate::utils::file_system;
 use std::fs;
 
@@ -286,6 +287,7 @@ pub async fn execute_wasm(
         warn!("Failed to clean up temp file {:?}: {}", temp_path, e);
     }
 
+    let was_success = result.is_ok();
     let (response, usage_log) = match result {
         Ok(output) => {
             info!("WASM execution completed successfully in {}ms", execution_time_ms);
@@ -320,6 +322,10 @@ pub async fn execute_wasm(
             (response, usage_log)
         }
     };
+
+    let execution_time_secs = execution_time_ms as f64 / 1000.0;
+    let memory_used_bytes = (wasm_size + input_size) as f64;
+    METRICS.record_wasm_execution(execution_time_secs, memory_used_bytes, was_success);
 
     if let Err(e) = app_state.db_service.create_usage_log(&usage_log).await {
         error!("Failed to log usage: {}", e);
@@ -458,8 +464,9 @@ pub async fn execute_wasm_no_auth(
     }
 
     let execution_duration = start_time.elapsed();
+    let was_success = result.is_ok();
 
-    match result {
+    let response = match result {
         Ok(output) => {
             info!("WASM execution completed successfully in {:?}", execution_duration);
 
@@ -468,7 +475,7 @@ pub async fn execute_wasm_no_auth(
                 error: None,
             };
 
-            Ok(HttpResponse::Ok().json(response))
+            HttpResponse::Ok().json(response)
         }
         Err(e) => {
             error!("WASM execution failed: {}", e);
@@ -478,9 +485,17 @@ pub async fn execute_wasm_no_auth(
                 error: Some(e.to_string()),
             };
 
-            Ok(HttpResponse::BadRequest().json(response))
+            HttpResponse::BadRequest().json(response)
         }
-    }
+    };
+
+    METRICS.record_wasm_execution(
+        execution_duration.as_secs_f64(),
+        (wasm_size + input_size) as f64,
+        was_success,
+    );
+
+    Ok(response)
 }
 
 fn is_valid_wasm(data: &[u8]) -> bool {

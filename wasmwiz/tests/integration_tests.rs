@@ -1,4 +1,4 @@
-use actix_web::test;
+use actix_web::{http::StatusCode, test};
 use serde_json::{json, Value};
 use sqlx::{migrate::Migrator, PgPool};
 use std::{env, path::Path, sync::Once};
@@ -141,6 +141,15 @@ fn create_multipart_wasm_request(wasm_data: &[u8], input: &str) -> String {
     body.push_str(&format!("--{}--\r\n", boundary));
 
     body
+}
+
+fn extract_metric_value(metrics: &str, name: &str) -> f64 {
+    metrics
+        .lines()
+        .find(|line| line.starts_with(name))
+        .and_then(|line| line.split_whitespace().nth(1))
+        .and_then(|value| value.parse::<f64>().ok())
+        .unwrap_or(0.0)
 }
 
 #[actix_web::test]
@@ -369,6 +378,56 @@ async fn test_full_wasm_execution_flow() {
             .expect("Failed to count usage logs");
 
     assert!(usage_count.0 > 0, "Usage should be logged even if execution fails");
+}
+
+#[actix_web::test]
+async fn test_metrics_record_wasm_execution_activity() {
+    let pool = setup_test_environment().await;
+    let config = Config::from_env().expect("Failed to load test configuration");
+    let app = test::init_service(create_app(pool.clone(), config.clone())).await;
+
+    let (api_key, _) = create_test_api_key(&pool).await;
+
+    let baseline_resp =
+        test::call_service(&app, test::TestRequest::get().uri("/metrics").to_request()).await;
+    assert!(baseline_resp.status().is_success());
+    let baseline_body = test::read_body(baseline_resp).await;
+    let baseline_metrics =
+        String::from_utf8(baseline_body.to_vec()).expect("metrics should be UTF-8");
+
+    let http_requests_before = extract_metric_value(&baseline_metrics, "http_requests_total");
+    let wasm_executions_before = extract_metric_value(&baseline_metrics, "wasm_executions_total");
+
+    let wasm_data = create_simple_wasm_module();
+    let multipart_body = create_multipart_wasm_request(&wasm_data, "metrics test input");
+
+    let execute_resp = test::call_service(
+        &app,
+        test::TestRequest::post()
+            .uri("/api/execute")
+            .insert_header(("authorization", format!("Bearer {}", api_key)))
+            .insert_header((
+                "content-type",
+                "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",
+            ))
+            .set_payload(multipart_body)
+            .to_request(),
+    )
+    .await;
+
+    assert_ne!(execute_resp.status(), StatusCode::UNAUTHORIZED);
+
+    let metrics_resp =
+        test::call_service(&app, test::TestRequest::get().uri("/metrics").to_request()).await;
+    assert!(metrics_resp.status().is_success());
+    let metrics_body = test::read_body(metrics_resp).await;
+    let metrics_text = String::from_utf8(metrics_body.to_vec()).expect("metrics should be UTF-8");
+
+    let http_requests_after = extract_metric_value(&metrics_text, "http_requests_total");
+    let wasm_executions_after = extract_metric_value(&metrics_text, "wasm_executions_total");
+
+    assert!(http_requests_after >= http_requests_before + 2.0);
+    assert!(wasm_executions_after >= wasm_executions_before + 1.0);
 }
 
 #[actix_web::test]

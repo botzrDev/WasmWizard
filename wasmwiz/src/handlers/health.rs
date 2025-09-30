@@ -217,10 +217,13 @@ pub async fn readiness_probe(pool: web::Data<AppState>) -> Result<HttpResponse> 
 
 /// Prometheus metrics endpoint
 pub async fn prometheus_metrics() -> Result<HttpResponse> {
-    use prometheus::{gather, Encoder, TextEncoder};
+    use crate::monitoring::METRICS;
+    use prometheus::{Encoder, TextEncoder};
 
     let encoder = TextEncoder::new();
-    let metric_families = gather();
+    METRICS.update_system_metrics();
+    let registry = METRICS.registry();
+    let metric_families = registry.gather();
     let mut buffer = Vec::new();
     encoder.encode(&metric_families, &mut buffer).unwrap();
 
