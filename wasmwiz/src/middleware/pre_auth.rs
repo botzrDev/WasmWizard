@@ -10,6 +10,7 @@ use actix_web::{
     error::ErrorUnauthorized,
     Error, FromRequest, HttpMessage, HttpRequest, Result,
 };
+use chrono::Utc;
 use futures_util::future::{ready, LocalBoxFuture, Ready};
 use sha2::{Digest, Sha256};
 use std::rc::Rc;
@@ -127,7 +128,30 @@ where
             let key_hash_str = format!("{:x}", key_hash);
 
             match db_service.get_api_key_with_details(&key_hash_str).await {
-                Ok(Some((api_key_record, user, tier))) => {
+                Ok(Some((mut api_key_record, user, tier))) => {
+                    let now = Utc::now();
+
+                    if let Some(expires_at) = api_key_record.expires_at {
+                        if expires_at < now {
+                            let (request, _pl) = req.into_parts();
+                            let response = actix_web::HttpResponse::Unauthorized()
+                                .json(serde_json::json!({"error": "API key has expired."}))
+                                .map_into_boxed_body();
+                            return Ok(ServiceResponse::new(request, response).map_into_left_body());
+                        }
+                    }
+
+                    if let Err(err) = db_service.update_api_key_last_used(api_key_record.id).await {
+                        tracing::error!("failed to update api key last_used_at: {err}");
+                        let (request, _pl) = req.into_parts();
+                        let response = actix_web::HttpResponse::InternalServerError()
+                            .json(serde_json::json!({"error": "An internal error occurred."}))
+                            .map_into_boxed_body();
+                        return Ok(ServiceResponse::new(request, response).map_into_left_body());
+                    }
+
+                    api_key_record.last_used_at = Some(now);
+
                     let auth_context = AuthContext {
                         api_key: api_key_record,
                         user,

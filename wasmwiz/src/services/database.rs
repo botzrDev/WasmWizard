@@ -28,6 +28,20 @@ impl DatabaseService {
         Self { pool }
     }
 
+    /// Update the last_used_at timestamp for an API key
+    pub async fn update_api_key_last_used(&self, api_key_id: Uuid) -> Result<()> {
+        sqlx::query("UPDATE api_keys SET last_used_at = NOW(), updated_at = NOW() WHERE id = $1")
+            .bind(api_key_id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    pub(crate) fn pool(&self) -> &PgPool {
+        &self.pool
+    }
+
     /// Find an API key by its hash
     pub async fn find_api_key_by_hash(&self, key_hash: &str) -> Result<Option<ApiKey>> {
         let api_key = sqlx::query_as::<_, ApiKey>(

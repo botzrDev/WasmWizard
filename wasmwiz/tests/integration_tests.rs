@@ -1,10 +1,12 @@
 use actix_web::test;
+use chrono::{Duration, Utc};
 use serde_json::{json, Value};
 use sqlx::{migrate::Migrator, PgPool};
 use std::{env, path::Path, sync::Once};
 use testcontainers::{clients, images::postgres::Postgres, Docker};
 use uuid::Uuid;
 use wasm_wizard::app::create_app;
+use wasm_wizard::services::{cleanup::cleanup_inactive_api_keys, DatabaseService};
 use wasm_wizard::{establish_connection_pool, Config};
 
 static INIT: Once = Once::new();
@@ -369,6 +371,135 @@ async fn test_full_wasm_execution_flow() {
             .expect("Failed to count usage logs");
 
     assert!(usage_count.0 > 0, "Usage should be logged even if execution fails");
+}
+
+#[actix_web::test]
+async fn test_authentication_updates_last_used_timestamp() {
+    let pool = setup_test_environment().await;
+    let config = Config::from_env().expect("Failed to load test configuration");
+    let app = test::init_service(create_app(pool.clone(), config.clone())).await;
+
+    let (api_key, api_key_id) = create_test_api_key(&pool).await;
+
+    let initial_last_used = sqlx::query_scalar::<_, Option<chrono::DateTime<Utc>>>(
+        "SELECT last_used_at FROM api_keys WHERE id = $1",
+    )
+    .bind(api_key_id)
+    .fetch_one(&pool)
+    .await
+    .expect("Failed to fetch last_used_at before authentication");
+
+    assert!(initial_last_used.is_none());
+
+    let wasm_data = create_simple_wasm_module();
+    let multipart_body = create_multipart_wasm_request(&wasm_data, "test input");
+    let request_start = Utc::now() - Duration::seconds(1);
+
+    let req = test::TestRequest::post()
+        .uri("/api/execute")
+        .insert_header(("authorization", format!("Bearer {}", api_key)))
+        .insert_header((
+            "content-type",
+            "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",
+        ))
+        .set_payload(multipart_body)
+        .to_request();
+
+    let _resp = test::call_service(&app, req).await;
+
+    let updated_last_used = sqlx::query_scalar::<_, Option<chrono::DateTime<Utc>>>(
+        "SELECT last_used_at FROM api_keys WHERE id = $1",
+    )
+    .bind(api_key_id)
+    .fetch_one(&pool)
+    .await
+    .expect("Failed to fetch last_used_at after authentication");
+
+    let updated_timestamp = updated_last_used.expect("last_used_at should be populated after auth");
+    assert!(updated_timestamp >= request_start);
+}
+
+#[actix_web::test]
+async fn test_cleanup_job_deactivates_inactive_keys() {
+    let pool = setup_test_environment().await;
+    let db_service = DatabaseService::new(pool.clone());
+
+    let (_api_key, api_key_id) = create_test_api_key(&pool).await;
+
+    let stale_timestamp = Utc::now() - Duration::days(120);
+    sqlx::query("UPDATE api_keys SET last_used_at = $1, updated_at = NOW() WHERE id = $2")
+        .bind(stale_timestamp)
+        .bind(api_key_id)
+        .execute(&pool)
+        .await
+        .expect("Failed to backfill last_used_at for test key");
+
+    let deactivated_count = cleanup_inactive_api_keys(&db_service, 90)
+        .await
+        .expect("Cleanup job should succeed");
+
+    assert_eq!(deactivated_count, 1);
+
+    let is_active: (bool,) = sqlx::query_as("SELECT is_active FROM api_keys WHERE id = $1")
+        .bind(api_key_id)
+        .fetch_one(&pool)
+        .await
+        .expect("Failed to fetch API key active flag");
+
+    assert!(!is_active.0, "API key should be deactivated by cleanup job");
+}
+
+#[actix_web::test]
+async fn test_expired_api_key_is_rejected() {
+    let pool = setup_test_environment().await;
+    let config = Config::from_env().expect("Failed to load test configuration");
+    let app = test::init_service(create_app(pool.clone(), config.clone())).await;
+
+    let (api_key, api_key_id) = create_test_api_key(&pool).await;
+
+    let expired_at = Utc::now() - Duration::hours(1);
+    sqlx::query("UPDATE api_keys SET expires_at = $1 WHERE id = $2")
+        .bind(expired_at)
+        .bind(api_key_id)
+        .execute(&pool)
+        .await
+        .expect("Failed to expire API key for test");
+
+    let initial_last_used = sqlx::query_scalar::<_, Option<chrono::DateTime<Utc>>>(
+        "SELECT last_used_at FROM api_keys WHERE id = $1",
+    )
+    .bind(api_key_id)
+    .fetch_one(&pool)
+    .await
+    .expect("Failed to fetch last_used_at before expired auth attempt");
+
+    assert!(initial_last_used.is_none());
+
+    let wasm_data = create_simple_wasm_module();
+    let multipart_body = create_multipart_wasm_request(&wasm_data, "test input");
+
+    let req = test::TestRequest::post()
+        .uri("/api/execute")
+        .insert_header(("authorization", format!("Bearer {}", api_key)))
+        .insert_header((
+            "content-type",
+            "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",
+        ))
+        .set_payload(multipart_body)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 401);
+
+    let updated_last_used = sqlx::query_scalar::<_, Option<chrono::DateTime<Utc>>>(
+        "SELECT last_used_at FROM api_keys WHERE id = $1",
+    )
+    .bind(api_key_id)
+    .fetch_one(&pool)
+    .await
+    .expect("Failed to fetch last_used_at after expired auth attempt");
+
+    assert!(updated_last_used.is_none(), "Expired keys should not update last_used_at");
 }
 
 #[actix_web::test]
