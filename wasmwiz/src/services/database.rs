@@ -28,6 +28,11 @@ impl DatabaseService {
         Self { pool }
     }
 
+    /// Get a reference to the database pool
+    pub fn pool(&self) -> &PgPool {
+        &self.pool
+    }
+
     /// Find an API key by its hash
     pub async fn find_api_key_by_hash(&self, key_hash: &str) -> Result<Option<ApiKey>> {
         let api_key = sqlx::query_as::<_, ApiKey>(
@@ -329,7 +334,7 @@ impl DatabaseService {
                     created_at: row.created_at,
                     updated_at: row.updated_at,
                 },
-                tier_name: row.tier_name.unwrap_or_else(|| "Free".to_string()),
+                tier_name: row.tier_name,
                 api_key_count: row.api_key_count.unwrap_or(0),
                 total_executions: row.total_executions.unwrap_or(0),
                 last_activity: row.last_activity,

@@ -4,10 +4,7 @@ use crate::middleware::redis_rate_limit::RedisRateLimiter;
 use crate::services::RedisService;
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::{
-        header::{HeaderName, HeaderValue},
-        HeaderMap,
-    },
+    http::header::{HeaderMap, HeaderName, HeaderValue},
     Error, HttpMessage, HttpResponse, Result,
 };
 use futures_util::future::{ready, LocalBoxFuture, Ready};
@@ -185,7 +182,12 @@ where
         Box::pin(async move {
             // Extract AuthContext - if not present, let the request continue
             // so that PreAuth middleware can handle authentication
-            let auth_context = match req.extensions().get::<AuthContext>().cloned() {
+            let auth_context = {
+                let extensions = req.extensions();
+                extensions.get::<AuthContext>().cloned()
+            };
+            
+            let auth_context = match auth_context {
                 Some(context) => context,
                 None => {
                     tracing::debug!(

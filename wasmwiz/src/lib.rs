@@ -56,6 +56,7 @@
 pub mod app;
 pub mod config;
 pub mod errors;
+pub mod filters;
 pub mod handlers;
 pub mod logging;
 pub mod middleware;

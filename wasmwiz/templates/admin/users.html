@@ -185,14 +185,8 @@
                             </td>
                             <td>{{ user_stats.api_key_count }}</td>
                             <td>{{ user_stats.total_executions }}</td>
-                            <td>
-                                {% if user_stats.last_activity %}
-                                    {{ user_stats.last_activity }}
-                                {% else %}
-                                    Never
-                                {% endif %}
-                            </td>
-                            <td>{{ user_stats.user.created_at }}</td>
+                            <td>{{ user_stats.last_activity|opt_datetime }}</td>
+                            <td>{{ user_stats.user.created_at|datetime }}</td>
                             <td>
                                 <button class="btn btn-primary" onclick="changeTier('{{ user_stats.user.id }}')">Change Tier</button>
                                 <a href="/admin/api-keys?user={{ user_stats.user.email }}" class="btn btn-secondary">View Keys</a>

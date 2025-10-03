@@ -1,0 +1,3 @@
+[general]
+# Askama configuration for Wasm Wizard templates
+dirs = ["templates"]

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT ul.timestamp, ul.status, ul.execution_duration_ms, ul.error_message,\n                   u.email as user_email, st.name as tier_name\n            FROM usage_logs ul\n            JOIN api_keys ak ON ul.api_key_id = ak.id\n            JOIN users u ON ak.user_id = u.id\n            JOIN subscription_tiers st ON ak.tier_id = st.id\n            ORDER BY ul.timestamp DESC\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "execution_duration_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "error_message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "tier_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "25ee94c0bbf52db27de9aa7e86ca34a0cce8aac8449ab62ac8f76eff3a9d2aa1"
+}

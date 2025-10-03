@@ -88,7 +88,7 @@ async fn main() -> Result<()> {
     let config = Arc::new(config);
 
     // 3. Initialize logging based on environment
-    init_logging(&config).context("failed to initialise structured logging")?;
+    init_logging(&config).map_err(|e| anyhow::anyhow!("failed to initialise structured logging: {}", e))?;
 
     info!(
         environment = ?config.environment,
