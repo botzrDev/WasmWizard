@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, name, description, size_bytes, sha256_hash,\n                   upload_time, last_executed, execution_count, is_public\n            FROM wasm_modules \n            WHERE user_id = $1\n            ORDER BY upload_time DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "size_bytes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "sha256_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "upload_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_executed",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "execution_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "is_public",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "fa50e4e0d0973612038bf2157384a2cd8736795b918990bb4c94c6c2d21c8b0e"
+}

@@ -334,7 +334,7 @@ impl DatabaseService {
                     created_at: row.created_at,
                     updated_at: row.updated_at,
                 },
-                tier_name: row.tier_name.unwrap_or_else(|| "Free".to_string()),
+                tier_name: row.tier_name,
                 api_key_count: row.api_key_count.unwrap_or(0),
                 total_executions: row.total_executions.unwrap_or(0),
                 last_activity: row.last_activity,

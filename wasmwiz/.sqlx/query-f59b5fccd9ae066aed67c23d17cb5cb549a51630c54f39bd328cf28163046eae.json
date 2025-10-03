@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE api_keys SET is_active = FALSE, updated_at = NOW()\n         WHERE last_used_at IS NOT NULL AND last_used_at < $1 AND is_active = TRUE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f59b5fccd9ae066aed67c23d17cb5cb549a51630c54f39bd328cf28163046eae"
+}

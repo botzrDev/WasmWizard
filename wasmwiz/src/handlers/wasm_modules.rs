@@ -17,7 +17,7 @@
 use crate::app::AppState;
 use crate::errors::ApiError;
 use crate::middleware::pre_auth::AuthContext;
-use crate::models::{UploadModuleRequest, UploadModuleResponse, WasmModule, WasmModuleMeta};
+use crate::models::{UploadModuleResponse, WasmModule, WasmModuleMeta};
 use actix_multipart::Multipart;
 use actix_web::{web, HttpResponse, Result as ActixResult};
 use chrono::Utc;
@@ -65,7 +65,7 @@ pub async fn upload_module(
 
     // Process multipart form data
     while let Ok(Some(mut field)) = payload.try_next().await {
-        let field_name = field.name().unwrap_or("").to_string();
+        let field_name = field.name().to_string();
 
         match field_name.as_str() {
             "wasm" => {

@@ -1,6 +1,9 @@
 use crate::app::AppState;
-use crate::filters;
 use crate::middleware::pre_auth::AuthContext;
+
+// Import filters for Askama templates
+#[allow(unused_imports)]
+use crate::filters;
 use crate::models::{ApiKey, SubscriptionTier, User};
 use actix_web::{web, HttpResponse, Result as ActixResult};
 use askama::Template;

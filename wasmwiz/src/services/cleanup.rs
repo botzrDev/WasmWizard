@@ -2,7 +2,7 @@
 use crate::services::DatabaseService;
 use std::time::Duration;
 use tokio::time::interval;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 /// Start a background task that periodically cleans up old data
 pub fn start_cleanup_tasks(db_service: DatabaseService) {
@@ -66,7 +66,7 @@ pub async fn cleanup_inactive_api_keys(
         "UPDATE api_keys SET is_active = FALSE, updated_at = NOW() 
          WHERE expires_at IS NOT NULL AND expires_at < NOW() AND is_active = TRUE"
     )
-    .execute(&db_service.pool())
+    .execute(db_service.pool())
     .await?;
 
     let expired_count = expired_result.rows_affected();
@@ -82,7 +82,7 @@ pub async fn cleanup_inactive_api_keys(
          WHERE last_used_at IS NOT NULL AND last_used_at < $1 AND is_active = TRUE",
         cutoff_date
     )
-    .execute(&db_service.pool())
+    .execute(db_service.pool())
     .await?;
 
     let inactive_count = inactive_result.rows_affected();

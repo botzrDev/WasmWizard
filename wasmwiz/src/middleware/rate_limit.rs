@@ -182,7 +182,12 @@ where
         Box::pin(async move {
             // Extract AuthContext - if not present, let the request continue
             // so that PreAuth middleware can handle authentication
-            let auth_context = match req.extensions().get::<AuthContext>().cloned() {
+            let auth_context = {
+                let extensions = req.extensions();
+                extensions.get::<AuthContext>().cloned()
+            };
+            
+            let auth_context = match auth_context {
                 Some(context) => context,
                 None => {
                     tracing::debug!(

@@ -1,5 +1,4 @@
-use std::io::{Cursor, Read};
-use std::sync::{Arc, Mutex};
+use std::io::Read;
 use std::time::Duration;
 
 use thiserror::Error;
