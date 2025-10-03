@@ -242,7 +242,7 @@ pub async fn list_modules(
     query: web::Query<ListModulesQuery>,
 ) -> ActixResult<HttpResponse, ApiError> {
     let page = query.page.unwrap_or(1).max(1);
-    let limit = query.limit.unwrap_or(20).min(100).max(1);
+    let limit = query.limit.unwrap_or(20).clamp(1, 100);
     let include_public = query.include_public.unwrap_or(false);
     let offset = (page - 1) * limit;
 

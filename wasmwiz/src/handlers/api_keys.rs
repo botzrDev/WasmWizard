@@ -320,6 +320,6 @@ fn caller_has_privileged_authority(auth_context: &AuthContext) -> bool {
     let caller_email = auth_context.user.email.to_ascii_lowercase();
 
     caller_email.ends_with("@wasm-wizard.dev")
-        || matches!(AdminRole::from_email(&caller_email), Some(_))
+        || AdminRole::from_email(&caller_email).is_some()
         || auth_context.tier.name.eq_ignore_ascii_case("enterprise")
 }

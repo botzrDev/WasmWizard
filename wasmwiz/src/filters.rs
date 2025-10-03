@@ -1,7 +1,6 @@
 /// Askama template filters module
 /// 
 /// This module defines custom filters for Askama templates.
-
 use chrono::{DateTime, Utc};
 
 /// Format a DateTime for display

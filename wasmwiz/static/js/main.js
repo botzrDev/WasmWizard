@@ -1336,7 +1336,7 @@ async function revokeApiKey(keyId) {
             throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
         
-        const result = await response.json();
+        await response.json();
         
         showToast('API key revoked successfully', 'success');
         return true;
@@ -1351,7 +1351,12 @@ async function revokeApiKey(keyId) {
 function getSessionId() {
     let sessionId = localStorage.getItem('wasm-wizard-session-id');
     if (!sessionId) {
-        sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        // Use crypto.randomUUID if available, otherwise fall back to Math.random
+        if (crypto.randomUUID) {
+            sessionId = 'session_' + crypto.randomUUID();
+        } else {
+            sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
         localStorage.setItem('wasm-wizard-session-id', sessionId);
     }
     return sessionId;
