@@ -49,7 +49,7 @@ pub async fn execute_wasm_bytes(
     config: &Config,
     tier: &SubscriptionTier,
 ) -> Result<String, WasmExecutionError> {
-    if wasm_bytes.len() < 4 || &wasm_bytes[0..4] != [0x00, 0x61, 0x73, 0x6D] {
+    if wasm_bytes.len() < 4 || wasm_bytes[0..4] != [0x00, 0x61, 0x73, 0x6D] {
         return Err(WasmExecutionError::InvalidFormat);
     }
 

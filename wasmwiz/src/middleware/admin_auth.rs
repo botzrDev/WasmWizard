@@ -11,6 +11,12 @@ use std::{
 
 pub struct AdminAuthMiddleware;
 
+impl Default for AdminAuthMiddleware {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl AdminAuthMiddleware {
     pub fn new() -> Self {
         Self

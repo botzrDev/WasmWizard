@@ -6,13 +6,14 @@
 set -euo pipefail
 
 # Configuration
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Declare SCRIPT_DIR separately to avoid masking return values
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 readonly PAT_MANAGER="${SCRIPT_DIR}/../github-pat-manager.sh"
 readonly CONTRIBUTOR_LOG="${SCRIPT_DIR}/contributor-access.log"
 
 # Colors for output
 readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
 readonly RED='\033[0;31m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
@@ -95,7 +96,9 @@ generate_contributor_instructions() {
     local repositories="$4"
     local pat_token="$5"
     
-    local instructions_file="${SCRIPT_DIR}/contributor-instructions-$(date '+%Y%m%d-%H%M%S').txt"
+    # Declare instructions_file separately to avoid masking return values
+    local instructions_file
+    instructions_file="${SCRIPT_DIR}/contributor-instructions-$(date '+%Y%m%d-%H%M%S').txt"
     
     cat << EOF > "$instructions_file"
 ========================================
