@@ -93,34 +93,27 @@ pub async fn execute_wasm_bytes(
 fn run_wasm_blocking(
     wasm_bytes: &[u8],
     input: &str,
-    memory_limit: usize,
+    _memory_limit: usize,
 ) -> Result<String, WasmExecutionError> {
     use wasmer::{Instance, Module, Store};
-    use wasmer::{StoreLimiter, StoreLimitsBuilder};
-    use wasmer_wasi::{Pipe, WasiEnv, WasiState};
+    use wasmer_wasi::{Pipe, WasiState};
 
     let mut store = Store::default();
-    let mut store_limits = StoreLimitsBuilder::new()
-        .memory_size(memory_limit as u64)
-        .instances(1)
-        .tables(10)
-        .build();
-
-    store.set_limiter(|_| -> &mut dyn StoreLimiter { &mut store_limits });
 
     let module =
         Module::new(&store, wasm_bytes).map_err(|e| WasmExecutionError::Compile(e.to_string()))?;
 
-    let stdin_pipe =
-        Pipe::from_shared(Arc::new(Mutex::new(Cursor::new(input.as_bytes().to_vec()))));
-    let stdout_pipe = Pipe::new();
-    let stdout_reader = stdout_pipe.clone();
-    let stderr_pipe = Pipe::new();
-
+    // Create pipes for stdin/stdout
+    let mut stdin = Pipe::new();
+    let mut stdout = Pipe::new();
+    
+    // Write input to stdin pipe
+    use std::io::Write;
+    stdin.write_all(input.as_bytes())?;
+    
     let mut wasi_env = WasiState::new("wasm-wizard")
-        .stdin(Box::new(stdin_pipe))
-        .stdout(Box::new(stdout_pipe))
-        .stderr(Box::new(stderr_pipe))
+        .stdin(Box::new(stdin))
+        .stdout(Box::new(stdout.clone()))
         .finalize(&mut store)
         .map_err(|e| WasmExecutionError::Instantiation(e.to_string()))?;
 
@@ -131,12 +124,24 @@ fn run_wasm_blocking(
     let instance = Instance::new(&mut store, &module, &import_object)
         .map_err(|e| WasmExecutionError::Instantiation(e.to_string()))?;
 
+    // Initialize WASI
     wasi_env
-        .start_instance(&mut store, &instance)
+        .initialize(&mut store, &instance)
         .map_err(|e| WasmExecutionError::Runtime(e.to_string()))?;
 
-    let mut output = String::new();
-    stdout_reader.read_to_string(&mut output)?;
+    // Get the start function and call it
+    let start = instance
+        .exports
+        .get_function("_start")
+        .map_err(|e| WasmExecutionError::Runtime(format!("_start function not found: {}", e)))?;
+    
+    start
+        .call(&mut store, &[])
+        .map_err(|e| WasmExecutionError::Runtime(e.to_string()))?;
 
+    // Read output from stdout pipe
+    let mut output = String::new();
+    stdout.read_to_string(&mut output)?;
+    
     Ok(output)
 }

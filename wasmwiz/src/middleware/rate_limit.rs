@@ -4,10 +4,7 @@ use crate::middleware::redis_rate_limit::RedisRateLimiter;
 use crate::services::RedisService;
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::{
-        header::{HeaderName, HeaderValue},
-        HeaderMap,
-    },
+    http::header::{HeaderMap, HeaderName, HeaderValue},
     Error, HttpMessage, HttpResponse, Result,
 };
 use futures_util::future::{ready, LocalBoxFuture, Ready};

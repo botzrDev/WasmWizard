@@ -21,7 +21,7 @@ use crate::models::{UploadModuleRequest, UploadModuleResponse, WasmModule, WasmM
 use actix_multipart::Multipart;
 use actix_web::{web, HttpResponse, Result as ActixResult};
 use chrono::Utc;
-use futures::{StreamExt, TryStreamExt};
+use futures_util::{StreamExt, TryStreamExt};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tracing::{error, info, warn};
@@ -230,7 +230,7 @@ pub async fn upload_module(
         }
         Err(e) => {
             error!("Database error storing WASM module: {}", e);
-            Err(ApiError::DatabaseError("Failed to store module".to_string()))
+            Err(ApiError::DbError("Failed to store module".to_string()))
         }
     }
 }
@@ -266,7 +266,7 @@ pub async fn list_modules(
         .await
         .map_err(|e| {
             error!("Database error listing modules: {}", e);
-            ApiError::DatabaseError("Failed to list modules".to_string())
+            ApiError::DbError("Failed to list modules".to_string())
         })?;
 
         let total: i64 = sqlx::query_scalar!(
@@ -277,7 +277,7 @@ pub async fn list_modules(
         .await
         .map_err(|e| {
             error!("Database error counting modules: {}", e);
-            ApiError::DatabaseError("Failed to count modules".to_string())
+            ApiError::DbError("Failed to count modules".to_string())
         })?
         .unwrap_or(0);
 
@@ -301,7 +301,7 @@ pub async fn list_modules(
         .await
         .map_err(|e| {
             error!("Database error listing user modules: {}", e);
-            ApiError::DatabaseError("Failed to list modules".to_string())
+            ApiError::DbError("Failed to list modules".to_string())
         })?;
 
         let total: i64 = sqlx::query_scalar!(
@@ -312,7 +312,7 @@ pub async fn list_modules(
         .await
         .map_err(|e| {
             error!("Database error counting user modules: {}", e);
-            ApiError::DatabaseError("Failed to count modules".to_string())
+            ApiError::DbError("Failed to count modules".to_string())
         })?
         .unwrap_or(0);
 
@@ -347,7 +347,7 @@ pub async fn delete_module(
             .await
             .map_err(|e| {
                 error!("Database error checking module ownership: {}", e);
-                ApiError::DatabaseError("Failed to check module".to_string())
+                ApiError::DbError("Failed to check module".to_string())
             })?;
 
     let module = module.ok_or_else(|| ApiError::NotFound("Module not found".to_string()))?;
@@ -363,7 +363,7 @@ pub async fn delete_module(
         .await
         .map_err(|e| {
             error!("Database error deleting module: {}", e);
-            ApiError::DatabaseError("Failed to delete module".to_string())
+            ApiError::DbError("Failed to delete module".to_string())
         })?;
 
     if result.rows_affected() == 0 {

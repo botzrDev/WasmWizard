@@ -89,6 +89,11 @@ pub enum ApiError {
     #[display(fmt = "Payload Too Large: {}", _0)]
     PayloadTooLarge(String),
 
+    /// Request conflicts with existing resource.
+    /// Maps to HTTP 409 Conflict.
+    #[display(fmt = "Conflict: {}", _0)]
+    Conflict(String),
+
     /// Client has exceeded rate limits.
     /// Maps to HTTP 429 Too Many Requests.
     #[display(fmt = "Rate Limit Exceeded: {}", _0)]
@@ -186,6 +191,7 @@ impl ResponseError for ApiError {
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
             ApiError::PayloadTooLarge(_) => StatusCode::PAYLOAD_TOO_LARGE,
+            ApiError::Conflict(_) => StatusCode::CONFLICT,
             ApiError::TooManyRequests(_) => StatusCode::TOO_MANY_REQUESTS,
             ApiError::RateLimited => StatusCode::TOO_MANY_REQUESTS,
             ApiError::UnprocessableEntity(_)
