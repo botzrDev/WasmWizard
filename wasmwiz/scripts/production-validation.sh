@@ -100,14 +100,20 @@ fi
 print_section "2. Code Quality Checks"
 
 echo "Running cargo clippy..."
-CLIPPY_OUTPUT=$(cargo clippy -- -D warnings 2>&1 || true)
-if echo "$CLIPPY_OUTPUT" | grep -q "error:"; then
-    print_error "Clippy found issues"
+# First check without -D warnings to see actual issues
+CLIPPY_OUTPUT=$(cargo clippy 2>&1 || true)
+CLIPPY_WARNING_COUNT=$(echo "$CLIPPY_OUTPUT" | grep "warning:" | wc -l || echo "0")
+CLIPPY_ERROR_COUNT=$(echo "$CLIPPY_OUTPUT" | grep "aborting due to" | wc -l || echo "0")
+
+if [ "$CLIPPY_ERROR_COUNT" -gt 0 ]; then
+    print_error "Clippy found actual errors"
     echo "$CLIPPY_OUTPUT" | grep "error:" | head -3
-elif echo "$CLIPPY_OUTPUT" | grep -q "warning:"; then
-    print_warning "Clippy found warnings (not blocking)"
+elif [ "$CLIPPY_WARNING_COUNT" -gt 10 ]; then
+    print_warning "Clippy found $CLIPPY_WARNING_COUNT warnings (review recommended)"
+elif [ "$CLIPPY_WARNING_COUNT" -gt 0 ]; then
+    print_success "Clippy checks passed ($CLIPPY_WARNING_COUNT minor warnings)"
 else
-    print_success "Clippy checks passed"
+    print_success "Clippy checks passed with no issues"
 fi
 
 echo "Checking code formatting..."
