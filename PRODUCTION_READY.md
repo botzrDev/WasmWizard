@@ -124,10 +124,12 @@ You can run the validation yourself:
 ```bash
 cd wasmwiz
 
-# Quick validation (skips build/tests for speed)
+# Quick validation (rapid check of configuration and code quality)
+# Note: Skips build/tests - use for quick checks only
 SKIP_BUILD=true SKIP_TESTS=true ./scripts/production-validation.sh
 
-# Full validation (takes 10-15 minutes)
+# Full validation (comprehensive check including build and tests)
+# Recommended before production deployment - takes 10-15 minutes
 ./scripts/production-validation.sh
 ```
 

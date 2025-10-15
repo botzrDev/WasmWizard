@@ -12,7 +12,7 @@
 
 > A production-ready WebAssembly execution platform that makes running WASM modules as easy as calling an API. Built with Rust for maximum performance and security.
 
-✅ **[Validated Production Ready](./PRODUCTION_READY.md)** - 100% readiness score, 0 critical errors
+✅ **[Validated Production Ready](./PRODUCTION_READY.md)** - 100% readiness (0 critical errors, 21 non-blocking warnings)
 
 ## ✨ What is WasmWizard?
 
