@@ -70,7 +70,7 @@ pub async fn cleanup_inactive_api_keys(
     .await?;
 
     let expired_count = expired_result.rows_affected();
-    
+
     if expired_count > 0 {
         info!("Marked {} expired API keys as inactive", expired_count);
     }
@@ -86,7 +86,7 @@ pub async fn cleanup_inactive_api_keys(
     .await?;
 
     let inactive_count = inactive_result.rows_affected();
-    
+
     if inactive_count > 0 {
         info!("Marked {} inactive API keys as inactive", inactive_count);
     }

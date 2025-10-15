@@ -204,16 +204,17 @@ impl DatabaseService {
 
     /// Count total API keys
     pub async fn count_api_keys(&self) -> Result<i64> {
-        let result = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM api_keys WHERE is_active = true")
-            .fetch_one(&self.pool)
-            .await?;
+        let result =
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM api_keys WHERE is_active = true")
+                .fetch_one(&self.pool)
+                .await?;
         Ok(result)
     }
 
     /// Count executions today
     pub async fn count_executions_today(&self) -> Result<i64> {
         let result = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM usage_logs WHERE timestamp >= CURRENT_DATE"
+            "SELECT COUNT(*) FROM usage_logs WHERE timestamp >= CURRENT_DATE",
         )
         .fetch_one(&self.pool)
         .await?;
@@ -226,7 +227,7 @@ impl DatabaseService {
             "SELECT COUNT(DISTINCT u.id) FROM users u
              JOIN api_keys ak ON u.id = ak.user_id
              JOIN usage_logs ul ON ak.id = ul.api_key_id
-             WHERE ul.timestamp >= CURRENT_DATE"
+             WHERE ul.timestamp >= CURRENT_DATE",
         )
         .fetch_one(&self.pool)
         .await?;
@@ -237,7 +238,7 @@ impl DatabaseService {
     pub async fn create_user(&self, email: &str) -> Result<Uuid> {
         let user_id = Uuid::new_v4();
         sqlx::query(
-            "INSERT INTO users (id, email, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())"
+            "INSERT INTO users (id, email, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())",
         )
         .bind(user_id)
         .bind(email)
@@ -249,7 +250,7 @@ impl DatabaseService {
     /// Get tier by name
     pub async fn get_tier_by_name(&self, name: &str) -> Result<Option<SubscriptionTier>> {
         let tier = sqlx::query_as::<_, SubscriptionTier>(
-            "SELECT * FROM subscription_tiers WHERE name = $1"
+            "SELECT * FROM subscription_tiers WHERE name = $1",
         )
         .bind(name)
         .fetch_optional(&self.pool)
@@ -279,7 +280,7 @@ impl DatabaseService {
                 last_used_at
             )
             VALUES ($1, $2, $3, $4, true, NOW(), NOW(), NULL, NULL)
-            "#
+            "#,
         )
         .bind(api_key_id)
         .bind(&key_hash)
@@ -293,18 +294,18 @@ impl DatabaseService {
 
     /// Update user tier
     pub async fn update_user_tier(&self, user_id: Uuid, tier_id: Uuid) -> Result<()> {
-        sqlx::query(
-            "UPDATE api_keys SET tier_id = $1, updated_at = NOW() WHERE user_id = $2"
-        )
-        .bind(tier_id)
-        .bind(user_id)
-        .execute(&self.pool)
-        .await?;
+        sqlx::query("UPDATE api_keys SET tier_id = $1, updated_at = NOW() WHERE user_id = $2")
+            .bind(tier_id)
+            .bind(user_id)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 
     /// Get all users with stats (placeholder - simplified)
-    pub async fn get_all_users_with_stats(&self) -> Result<Vec<crate::handlers::admin::UserWithStats>> {
+    pub async fn get_all_users_with_stats(
+        &self,
+    ) -> Result<Vec<crate::handlers::admin::UserWithStats>> {
         use crate::handlers::admin::UserWithStats;
 
         let rows = sqlx::query!(
@@ -345,7 +346,9 @@ impl DatabaseService {
     }
 
     /// Get all API keys with details (placeholder - simplified)
-    pub async fn get_all_api_keys_with_details(&self) -> Result<Vec<crate::handlers::admin::ApiKeyWithDetails>> {
+    pub async fn get_all_api_keys_with_details(
+        &self,
+    ) -> Result<Vec<crate::handlers::admin::ApiKeyWithDetails>> {
         use crate::handlers::admin::ApiKeyWithDetails;
 
         let rows = sqlx::query!(
@@ -398,21 +401,32 @@ impl DatabaseService {
         use crate::handlers::admin::UsageStats;
 
         let total_executions = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM usage_logs")
-            .fetch_one(&self.pool).await.unwrap_or(0);
+            .fetch_one(&self.pool)
+            .await
+            .unwrap_or(0);
 
         let executions_today = self.count_executions_today().await.unwrap_or(0);
 
         let executions_this_week = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM usage_logs WHERE timestamp >= CURRENT_DATE - INTERVAL '7 days'"
-        ).fetch_one(&self.pool).await.unwrap_or(0);
+            "SELECT COUNT(*) FROM usage_logs WHERE timestamp >= CURRENT_DATE - INTERVAL '7 days'",
+        )
+        .fetch_one(&self.pool)
+        .await
+        .unwrap_or(0);
 
         let executions_this_month = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM usage_logs WHERE timestamp >= CURRENT_DATE - INTERVAL '30 days'"
-        ).fetch_one(&self.pool).await.unwrap_or(0);
+            "SELECT COUNT(*) FROM usage_logs WHERE timestamp >= CURRENT_DATE - INTERVAL '30 days'",
+        )
+        .fetch_one(&self.pool)
+        .await
+        .unwrap_or(0);
 
         let success_count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM usage_logs WHERE status = 'success'"
-        ).fetch_one(&self.pool).await.unwrap_or(0);
+            "SELECT COUNT(*) FROM usage_logs WHERE status = 'success'",
+        )
+        .fetch_one(&self.pool)
+        .await
+        .unwrap_or(0);
 
         let success_rate = if total_executions > 0 {
             (success_count as f64 / total_executions as f64) * 100.0
@@ -435,7 +449,10 @@ impl DatabaseService {
     }
 
     /// Get recent executions
-    pub async fn get_recent_executions(&self, limit: i64) -> Result<Vec<crate::handlers::admin::RecentExecution>> {
+    pub async fn get_recent_executions(
+        &self,
+        limit: i64,
+    ) -> Result<Vec<crate::handlers::admin::RecentExecution>> {
         use crate::handlers::admin::RecentExecution;
 
         let rows = sqlx::query!(
@@ -472,7 +489,7 @@ impl DatabaseService {
     /// Get all tiers
     pub async fn get_all_tiers(&self) -> Result<Vec<SubscriptionTier>> {
         let tiers = sqlx::query_as::<_, SubscriptionTier>(
-            "SELECT * FROM subscription_tiers ORDER BY max_executions_per_minute ASC"
+            "SELECT * FROM subscription_tiers ORDER BY max_executions_per_minute ASC",
         )
         .fetch_all(&self.pool)
         .await?;

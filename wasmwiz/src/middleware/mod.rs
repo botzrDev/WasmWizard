@@ -65,10 +65,8 @@ pub mod redis_rate_limit;
 pub mod security;
 pub mod tier_access;
 
-pub use admin_auth::AdminAuthMiddleware;
-pub use auth::AuthContext;
 pub use csrf::generate_csrf_token;
 pub use input_validation::InputValidationMiddleware;
-pub use master_admin::{AdminRole, MasterAdminMiddleware};
+pub use master_admin::MasterAdminMiddleware;
 pub use security::SecurityHeadersMiddleware;
 pub use tier_access::{RequiredTier, TierAccessMiddleware};

@@ -105,11 +105,11 @@ fn run_wasm_blocking(
     // Create pipes for stdin/stdout
     let mut stdin = Pipe::new();
     let mut stdout = Pipe::new();
-    
+
     // Write input to stdin pipe
     use std::io::Write;
     stdin.write_all(input.as_bytes())?;
-    
+
     let mut wasi_env = WasiState::new("wasm-wizard")
         .stdin(Box::new(stdin))
         .stdout(Box::new(stdout.clone()))
@@ -133,7 +133,7 @@ fn run_wasm_blocking(
         .exports
         .get_function("_start")
         .map_err(|e| WasmExecutionError::Runtime(format!("_start function not found: {}", e)))?;
-    
+
     start
         .call(&mut store, &[])
         .map_err(|e| WasmExecutionError::Runtime(e.to_string()))?;
@@ -141,6 +141,6 @@ fn run_wasm_blocking(
     // Read output from stdout pipe
     let mut output = String::new();
     stdout.read_to_string(&mut output)?;
-    
+
     Ok(output)
 }

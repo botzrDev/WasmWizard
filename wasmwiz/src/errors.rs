@@ -244,7 +244,8 @@ impl From<WasiError> for ApiError {
         ApiError::WasmRuntimeError(format!("WASI error during execution: {}", err))
     }
 }
-*/ // End temporarily disabled block
+*/
+// End temporarily disabled block
 
 impl From<actix_multipart::MultipartError> for ApiError {
     fn from(err: actix_multipart::MultipartError) -> Self {

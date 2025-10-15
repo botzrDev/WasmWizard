@@ -117,35 +117,33 @@ where
                 }
                 Some(false) => {
                     // Authenticated but insufficient tier
-                    let response = HttpResponse::PaymentRequired()
-                        .json(serde_json::json!({
-                            "error": "Upgrade required",
-                            "message": format!(
-                                "This feature requires {} tier or higher.",
-                                match required_tier {
-                                    RequiredTier::Free => "Free",
-                                    RequiredTier::Basic => "Basic",
-                                    RequiredTier::Pro => "Pro",
-                                    RequiredTier::Enterprise => "Enterprise",
-                                }
-                            ),
-                            "required_tier": match required_tier {
+                    let response = HttpResponse::PaymentRequired().json(serde_json::json!({
+                        "error": "Upgrade required",
+                        "message": format!(
+                            "This feature requires {} tier or higher.",
+                            match required_tier {
                                 RequiredTier::Free => "Free",
                                 RequiredTier::Basic => "Basic",
                                 RequiredTier::Pro => "Pro",
                                 RequiredTier::Enterprise => "Enterprise",
-                            },
-                            "upgrade_url": "/pricing"
-                        }));
+                            }
+                        ),
+                        "required_tier": match required_tier {
+                            RequiredTier::Free => "Free",
+                            RequiredTier::Basic => "Basic",
+                            RequiredTier::Pro => "Pro",
+                            RequiredTier::Enterprise => "Enterprise",
+                        },
+                        "upgrade_url": "/pricing"
+                    }));
                     Ok(req.into_response(response).map_into_left_body())
                 }
                 None => {
                     // Not authenticated
-                    let response = HttpResponse::Unauthorized()
-                        .json(serde_json::json!({
-                            "error": "Authentication required",
-                            "message": "Please provide a valid API key to access this feature"
-                        }));
+                    let response = HttpResponse::Unauthorized().json(serde_json::json!({
+                        "error": "Authentication required",
+                        "message": "Please provide a valid API key to access this feature"
+                    }));
                     Ok(req.into_response(response).map_into_left_body())
                 }
             }

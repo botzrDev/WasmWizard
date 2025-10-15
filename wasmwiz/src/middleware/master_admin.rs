@@ -11,9 +11,9 @@ use std::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AdminRole {
-    MasterAdmin,    // Full system access
-    SystemAdmin,    // User and tier management
-    SupportAdmin,   // View-only access and support functions
+    MasterAdmin,  // Full system access
+    SystemAdmin,  // User and tier management
+    SupportAdmin, // View-only access and support functions
 }
 
 impl AdminRole {
@@ -21,7 +21,8 @@ impl AdminRole {
         // Master admins - full system control
         if email == "admin@wasm-wizard.dev"
             || email == "master@wasm-wizard.dev"
-            || email == "root@wasm-wizard.dev" {
+            || email == "root@wasm-wizard.dev"
+        {
             return Some(AdminRole::MasterAdmin);
         }
 
@@ -165,36 +166,45 @@ where
             match admin_check {
                 Some((true, role, email)) => {
                     // User has admin access, log and continue
-                    tracing::info!("Admin access granted: {} ({:?}) accessing {}", email, role, path);
+                    tracing::info!(
+                        "Admin access granted: {} ({:?}) accessing {}",
+                        email,
+                        role,
+                        path
+                    );
                     service.call(req).await.map(|res| res.map_into_right_body())
                 }
                 Some((false, role, email)) => {
                     // User is admin but insufficient privileges
-                    tracing::warn!("Admin access denied: {} ({:?}) attempted to access {}", email, role, path);
-                    let response = HttpResponse::Forbidden()
-                        .json(serde_json::json!({
-                            "error": "Insufficient privileges",
-                            "message": format!(
-                                "Your {} role does not have access to this endpoint. Required: {:?}",
-                                match role {
-                                    AdminRole::MasterAdmin => "Master Admin",
-                                    AdminRole::SystemAdmin => "System Admin",
-                                    AdminRole::SupportAdmin => "Support Admin",
-                                },
-                                required_role
-                            ),
-                            "user_role": match role {
+                    tracing::warn!(
+                        "Admin access denied: {} ({:?}) attempted to access {}",
+                        email,
+                        role,
+                        path
+                    );
+                    let response = HttpResponse::Forbidden().json(serde_json::json!({
+                        "error": "Insufficient privileges",
+                        "message": format!(
+                            "Your {} role does not have access to this endpoint. Required: {:?}",
+                            match role {
                                 AdminRole::MasterAdmin => "Master Admin",
                                 AdminRole::SystemAdmin => "System Admin",
                                 AdminRole::SupportAdmin => "Support Admin",
                             },
-                            "required_role": match required_role {
-                                AdminRole::MasterAdmin => "Master Admin",
-                                AdminRole::SystemAdmin => "System Admin",
-                                AdminRole::SupportAdmin => "Support Admin",
-                            },
-                            "endpoint": path
-                        }));
+                            required_role
+                        ),
+                        "user_role": match role {
+                            AdminRole::MasterAdmin => "Master Admin",
+                            AdminRole::SystemAdmin => "System Admin",
+                            AdminRole::SupportAdmin => "Support Admin",
+                        },
+                        "required_role": match required_role {
+                            AdminRole::MasterAdmin => "Master Admin",
+                            AdminRole::SystemAdmin => "System Admin",
+                            AdminRole::SupportAdmin => "Support Admin",
+                        },
+                        "endpoint": path
+                    }));
                     Ok(req.into_response(response).map_into_left_body())
                 }
                 None => {

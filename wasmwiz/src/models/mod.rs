@@ -82,8 +82,7 @@ pub mod wasm_module;
 
 // Re-export structs for easier access
 pub use api_key::ApiKey;
-pub use api_payloads::*;
 pub use subscription_tier::SubscriptionTier;
 pub use usage_log::UsageLog;
 pub use user::User;
-pub use wasm_module::{WasmModule, WasmModuleMeta, UploadModuleRequest, UploadModuleResponse};
+pub use wasm_module::{UploadModuleResponse, WasmModule, WasmModuleMeta};
