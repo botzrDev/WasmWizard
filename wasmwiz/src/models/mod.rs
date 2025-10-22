@@ -73,6 +73,7 @@
 //! All models implement `serde::Serialize` and `serde::Deserialize` for JSON
 //! serialization, and `sqlx::FromRow` for database mapping.
 
+pub mod advertisement;
 pub mod api_key;
 pub mod api_payloads;
 pub mod subscription_tier;
@@ -81,6 +82,7 @@ pub mod user;
 pub mod wasm_module;
 
 // Re-export structs for easier access
+pub use advertisement::{AdManager, AdPlacement, Advertisement};
 pub use api_key::ApiKey;
 pub use api_payloads::*;
 pub use subscription_tier::SubscriptionTier;

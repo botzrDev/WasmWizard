@@ -1,8 +1,8 @@
-// src/app.rs
 use crate::config::Config;
 use crate::handlers::{admin, api_keys, execute, health, wasm_modules, web as web_handlers};
 use crate::middleware::distributed_rate_limit::{create_rate_limiter, RateLimitService};
 use crate::middleware::pre_auth::PreAuth;
+use crate::models::AdManager;
 
 use crate::middleware::rate_limit_middleware::RateLimitMiddleware;
 
@@ -23,6 +23,7 @@ pub struct AppState {
     pub config: Arc<Config>,
     #[allow(dead_code)] // Reserved for future Redis integration
     pub redis_service: Option<RedisService>,
+    pub ad_manager: Arc<AdManager>,
 }
 
 pub fn create_app(
@@ -75,6 +76,43 @@ pub fn create_app(
     };
     let rate_limit_service = RateLimitService::new(shared_limiter);
 
+    // Initialize advertisement manager
+    let mut ad_manager = AdManager::new();
+    if config.ads_enabled {
+        use crate::models::{AdPlacement, Advertisement};
+        
+        // Configure advertisements based on environment settings
+        if let Some(ref client_id) = config.adsense_client_id {
+            // Header advertisement
+            ad_manager.add_ad(
+                Advertisement::new("header-ad".to_string(), AdPlacement::Header)
+                    .with_adsense(client_id.clone(), "HEADER_SLOT_ID".to_string())
+                    .with_format("horizontal".to_string())
+                    .with_priority(10)
+            );
+
+            // Sidebar advertisement
+            ad_manager.add_ad(
+                Advertisement::new("sidebar-ad".to_string(), AdPlacement::Sidebar)
+                    .with_adsense(client_id.clone(), "SIDEBAR_SLOT_ID".to_string())
+                    .with_format("vertical".to_string())
+                    .with_priority(10)
+            );
+
+            // Footer advertisement
+            ad_manager.add_ad(
+                Advertisement::new("footer-ad".to_string(), AdPlacement::Footer)
+                    .with_adsense(client_id.clone(), "FOOTER_SLOT_ID".to_string())
+                    .with_format("horizontal".to_string())
+                    .with_priority(10)
+            );
+        }
+        tracing::info!("Advertisement system initialized");
+    } else {
+        tracing::info!("Advertisements disabled via configuration");
+    }
+    let ad_manager = Arc::new(ad_manager);
+
     let security_middleware = SecurityHeadersMiddleware::new(Arc::clone(&config));
     let input_validation_middleware = InputValidationMiddleware::new();
     let rate_limit_data = web::Data::new(rate_limit_service.clone());
@@ -85,6 +123,7 @@ pub fn create_app(
             db_service: db_service.clone(),
             config: Arc::clone(&config),
             redis_service: redis_service.clone(),
+            ad_manager: Arc::clone(&ad_manager),
         }))
         .app_data(rate_limit_data.clone())
         .wrap(security_middleware)

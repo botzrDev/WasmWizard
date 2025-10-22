@@ -41,6 +41,25 @@ use crate::middleware::pre_auth::AuthContext;
 use actix_web::{web, HttpResponse, Result as ActixResult};
 use askama_actix::{Template, TemplateToResponse};
 
+/// Helper function to get advertisement data from AppState
+fn get_ad_data(app_state: &AppState) -> (bool, String, String, String) {
+    use crate::models::AdPlacement;
+    
+    let adsense_enabled = app_state.config.ads_enabled && app_state.config.adsense_client_id.is_some();
+    let adsense_client_id = app_state.config.adsense_client_id.clone().unwrap_or_default();
+    
+    let (header_ad, footer_ad) = if app_state.config.ads_enabled {
+        (
+            app_state.ad_manager.render_placement(AdPlacement::Header),
+            app_state.ad_manager.render_placement(AdPlacement::Footer),
+        )
+    } else {
+        (String::new(), String::new())
+    };
+    
+    (adsense_enabled, adsense_client_id, header_ad, footer_ad)
+}
+
 /// Template for the main application page.
 ///
 /// Renders the index.html template with CSRF protection and navigation state.
@@ -53,6 +72,14 @@ pub struct IndexTemplate {
     pub csrf_token: String,
     /// Active page identifier for navigation highlighting
     pub active_page: &'static str,
+    /// AdSense enabled flag
+    pub adsense_enabled: bool,
+    /// AdSense client ID
+    pub adsense_client_id: String,
+    /// Header advertisement HTML
+    pub header_ad: String,
+    /// Footer advertisement HTML
+    pub footer_ad: String,
 }
 
 /// Template for the API keys management page.
@@ -61,12 +88,13 @@ pub struct IndexTemplate {
 #[derive(Template)]
 #[template(path = "api_keys.html")]
 pub struct ApiKeysTemplate {
-    /// Page title for browser tab
     pub title: String,
-    /// CSRF token for form protection
     pub csrf_token: String,
-    /// Active page identifier for navigation highlighting
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the documentation page.
@@ -75,6 +103,10 @@ pub struct ApiKeysTemplate {
 pub struct DocsTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the examples page.
@@ -83,6 +115,10 @@ pub struct DocsTemplate {
 pub struct ExamplesTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the pricing page.
@@ -91,6 +127,10 @@ pub struct ExamplesTemplate {
 pub struct PricingTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the FAQ page.
@@ -99,6 +139,10 @@ pub struct PricingTemplate {
 pub struct FaqTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the support page.
@@ -107,6 +151,10 @@ pub struct FaqTemplate {
 pub struct SupportTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the security page.
@@ -115,6 +163,10 @@ pub struct SupportTemplate {
 pub struct SecurityTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the terms of service page.
@@ -123,6 +175,10 @@ pub struct SecurityTemplate {
 pub struct TermsTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Template for the privacy policy page.
@@ -131,6 +187,10 @@ pub struct TermsTemplate {
 pub struct PrivacyTemplate {
     pub title: String,
     pub active_page: &'static str,
+    pub adsense_enabled: bool,
+    pub adsense_client_id: String,
+    pub header_ad: String,
+    pub footer_ad: String,
 }
 
 /// Serve the main WASM execution interface.
@@ -152,10 +212,16 @@ pub struct PrivacyTemplate {
 /// - Validates user permissions
 pub async fn index(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
     let csrf_token = generate_csrf_token(&app_state.config.api_salt);
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = IndexTemplate {
         title: "Execute WebAssembly".to_string(),
         csrf_token,
         active_page: "index",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
@@ -180,82 +246,136 @@ pub async fn index(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, 
 /// - Includes CSRF protection for forms
 pub async fn api_keys(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
     let csrf_token = generate_csrf_token(&app_state.config.api_salt);
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = ApiKeysTemplate {
         title: "API Key Management".to_string(),
         csrf_token,
         active_page: "api-keys",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the documentation page.
-pub async fn docs(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn docs(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = DocsTemplate {
         title: "API Documentation".to_string(),
         active_page: "docs",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the examples page.
-pub async fn examples(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn examples(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = ExamplesTemplate {
         title: "WebAssembly Examples".to_string(),
         active_page: "examples",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the pricing page.
-pub async fn pricing(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn pricing(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = PricingTemplate {
         title: "Pricing Plans".to_string(),
         active_page: "pricing",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the FAQ page.
-pub async fn faq(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn faq(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = FaqTemplate {
         title: "Frequently Asked Questions".to_string(),
         active_page: "faq",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the support page.
-pub async fn support(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn support(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = SupportTemplate {
         title: "Get Support".to_string(),
         active_page: "support",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the security page.
-pub async fn security(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn security(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = SecurityTemplate {
         title: "Security & Compliance".to_string(),
         active_page: "security",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the terms of service page.
-pub async fn terms(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn terms(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = TermsTemplate {
         title: "Terms of Service".to_string(),
         active_page: "terms",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
 
 /// Serve the privacy policy page.
-pub async fn privacy(_app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+pub async fn privacy(app_state: web::Data<AppState>) -> ActixResult<HttpResponse, ApiError> {
+    let (adsense_enabled, adsense_client_id, header_ad, footer_ad) = get_ad_data(&app_state);
+    
     let template = PrivacyTemplate {
         title: "Privacy Policy".to_string(),
         active_page: "privacy",
+        adsense_enabled,
+        adsense_client_id,
+        header_ad,
+        footer_ad,
     };
     Ok(template.to_response())
 }
