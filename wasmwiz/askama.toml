@@ -1,3 +1,7 @@
 [general]
 # Askama configuration for Wasm Wizard templates
 dirs = ["templates"]
+
+# Register custom filters
+[[escaping]]
+path = "crate::filters"
