@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Wasm Wizard - WebAssembly Execution API{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <meta name="description" content="Execute WebAssembly modules securely in the cloud">
+    <meta name="description" content="Execute WebAssembly modules securely in the cloud - Free tier available">
+    <meta name="keywords" content="WebAssembly, WASM, cloud execution, serverless, free tier">
     <meta name="theme-color" content="#6b46c1">
     <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Wasm Wizard - WebAssembly Execution API">
-    <meta property="og:description" content="Execute WebAssembly modules securely in the cloud">
+    <meta property="og:title" content="Wasm Wizard - Free WebAssembly Execution API">
+    <meta property="og:description" content="Execute WebAssembly modules securely in the cloud - Free tier available with ad support">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://wasm-wizard.io">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    {% if adsense_enabled %}
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client_id }}"
+            crossorigin="anonymous"></script>
+    {% endif %}
 <script>
 // Ensure correct theme is set on first paint to avoid flash
 (function() {
@@ -82,9 +88,23 @@
         </nav>
     </header>
 
+    <!-- Header Advertisement -->
+    {% if adsense_enabled && !header_ad.is_empty() %}
+    <div class="ad-container ad-header">
+        {{ header_ad|safe }}
+    </div>
+    {% endif %}
+
     <main class="main-content">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Footer Advertisement -->
+    {% if adsense_enabled && !footer_ad.is_empty() %}
+    <div class="ad-container ad-footer">
+        {{ footer_ad|safe }}
+    </div>
+    {% endif %}
 
     <footer class="footer">
         <div class="footer-container">

@@ -1783,3 +1783,148 @@ body {
         border: 1px solid #ccc;
     }
 }
+
+/* Advertisement Styles */
+.ad-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ad-header {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ad-footer {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.ad-sidebar {
+    position: sticky;
+    top: 100px;
+    margin: 1rem 0;
+}
+
+.ad-placeholder {
+    background: var(--background-color);
+    padding: 2rem;
+    text-align: center;
+    border-radius: var(--border-radius);
+    border: 2px dashed var(--border-color);
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.ad-placeholder:hover {
+    border-color: var(--primary-color);
+    background: var(--surface-color);
+}
+
+.ad-placeholder p {
+    margin: 0;
+}
+
+.ad-placeholder p:first-child {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive ad containers */
+@media (max-width: 768px) {
+    .ad-container {
+        margin: 1rem auto;
+        padding: 0 1rem;
+    }
+    
+    .ad-header,
+    .ad-footer {
+        margin: 1rem 0;
+    }
+}
+
+/* Free tier badge */
+.free-tier-badge {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: var(--shadow);
+}
+
+.free-tier-badge::before {
+    content: "🎉";
+}
+
+/* Pricing page enhancements for FREE tier */
+.free-tier-highlight {
+    margin: 2rem 0;
+    display: flex;
+    justify-content: center;
+}
+
+.highlight-card {
+    border: 3px solid var(--primary-color) !important;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(124, 58, 237, 0.05));
+    transform: scale(1.02);
+}
+
+.plan-note {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.ad-support-note {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.ad-support-note p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.ad-support-note strong {
+    color: var(--primary-color);
+}
+
+/* Enhanced CTA buttons for free tier */
+.highlight-card .cta-button.primary {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Mobile responsiveness for ads */
+@media (max-width: 768px) {
+    .highlight-card {
+        transform: none;
+    }
+    
+    .free-tier-highlight {
+        margin: 1rem 0;
+    }
+}

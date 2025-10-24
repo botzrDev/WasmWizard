@@ -8,6 +8,9 @@
         <h1>Simple, Transparent Pricing</h1>
         <p class="lead">Choose the perfect plan for your WebAssembly execution needs</p>
         <p class="pricing-subtitle">All plans include secure sandboxed execution, 99.9% uptime SLA, and enterprise-grade security</p>
+        <div class="free-tier-highlight">
+            <span class="free-tier-badge">🎉 FREE Forever Tier Available - Supported by Ads</span>
+        </div>
     </div>
 
     <!-- Billing Toggle -->
@@ -23,8 +26,8 @@
     <!-- Pricing Cards -->
     <div class="pricing-grid">
         <!-- Free Tier -->
-        <div class="pricing-card free-tier">
-            <div class="plan-badge">Perfect for testing</div>
+        <div class="pricing-card free-tier highlight-card">
+            <div class="plan-badge popular">🎉 FREE Forever</div>
             <div class="plan-header">
                 <h2>Free</h2>
                 <div class="price">
@@ -32,7 +35,8 @@
                     <span class="amount">0</span>
                     <span class="period">/month</span>
                 </div>
-                <p class="plan-description">Get started with WebAssembly execution</p>
+                <p class="plan-description">Perfect for getting started - <strong>No credit card required!</strong></p>
+                <p class="plan-note">💡 Supported by non-intrusive ads</p>
             </div>
 
             <div class="plan-features">
@@ -54,16 +58,23 @@
                         <li>✅ Basic API access</li>
                         <li>✅ Community support</li>
                         <li>✅ 10MB module size limit</li>
-                        <li>❌ Execution logs</li>
-                        <li>❌ Custom timeouts</li>
-                        <li>❌ Priority support</li>
+                        <li>✅ Full documentation access</li>
+                        <li>✅ Ad-supported (no tracking)</li>
+                        <li>❌ No execution logs</li>
+                        <li>❌ No custom timeouts</li>
+                        <li>❌ No priority support</li>
                     </ul>
+                </div>
+                
+                <div class="ad-support-note">
+                    <p><strong>Why free?</strong> Non-intrusive advertisements help us keep this service free for everyone. Upgrade to remove ads and unlock advanced features!</p>
                 </div>
             </div>
 
-            <button class="cta-button secondary" onclick="window.location.href='/api-keys'">
-                Get Started Free
+            <button class="cta-button primary" onclick="window.location.href='/'">
+                Start Free Now - No Signup Required!
             </button>
+            <p class="trial-text">No credit card • No time limit • No BS</p>
         </div>
 
         <!-- Basic Tier -->

@@ -52,12 +52,15 @@
 mod app;
 mod config;
 mod errors;
+mod filters;
 mod handlers;
 mod logging;
 mod middleware;
 mod models;
+mod monitoring;
 mod services;
 mod utils;
+mod wasm;
 
 use std::sync::Arc;
 

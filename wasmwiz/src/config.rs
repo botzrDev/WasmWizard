@@ -90,6 +90,12 @@ pub struct Config {
 
     /// Whether to use nonce-based Content Security Policy.
     pub csp_enable_nonce: bool,
+
+    /// Google AdSense client ID for monetization (e.g., "ca-pub-XXXXXXXXXX")
+    pub adsense_client_id: Option<String>,
+
+    /// Enable advertisement display
+    pub ads_enabled: bool,
 }
 
 /// Deployment environment enumeration.
@@ -191,6 +197,10 @@ impl Config {
             csp_enable_nonce: env::var("CSP_ENABLE_NONCE")
                 .map(|v| v.parse().unwrap_or(false))
                 .unwrap_or(false),
+            adsense_client_id: env::var("ADSENSE_CLIENT_ID").ok(),
+            ads_enabled: env::var("ADS_ENABLED")
+                .map(|v| v.parse().unwrap_or(true))
+                .unwrap_or(true), // Enable ads by default for free tier
         })
     }
 
@@ -300,6 +310,8 @@ impl Default for Config {
             auth_required: false,
             csp_report_uri: None,
             csp_enable_nonce: false,
+            adsense_client_id: None,
+            ads_enabled: true,
         }
     }
 }
