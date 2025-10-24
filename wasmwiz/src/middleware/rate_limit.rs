@@ -186,7 +186,7 @@ where
                 let extensions = req.extensions();
                 extensions.get::<AuthContext>().cloned()
             };
-            
+
             let auth_context = match auth_context {
                 Some(context) => context,
                 None => {

@@ -295,7 +295,8 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            database_url: "postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev".to_string(),
+            database_url: "postgres://wasm-wizard:wasm-wizard@localhost:5432/wasm-wizard_dev"
+                .to_string(),
             redis_url: "redis://127.0.0.1:6379".to_string(),
             redis_enabled: false,
             server_host: "127.0.0.1".to_string(),

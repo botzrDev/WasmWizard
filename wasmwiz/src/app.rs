@@ -177,7 +177,9 @@ pub fn create_app(
                             .wrap(TierAccessMiddleware::new(RequiredTier::Free))
                             .service(web::resource("/upload").post(wasm_modules::upload_module))
                             .service(web::resource("/modules").get(wasm_modules::list_modules))
-                            .service(web::resource("/modules/{id}").delete(wasm_modules::delete_module))
+                            .service(
+                                web::resource("/modules/{id}").delete(wasm_modules::delete_module),
+                            ),
                     )
                     // API key management endpoints (Free tier and up)
                     .service(
@@ -185,9 +187,10 @@ pub fn create_app(
                             .wrap(TierAccessMiddleware::new(RequiredTier::Free))
                             .service(web::resource("/keys").post(api_keys::create_api_key))
                             .service(web::resource("/keys").get(api_keys::list_user_api_keys))
-                            .service(web::resource("/keys/{id}").delete(api_keys::deactivate_api_key))
-                            // TODO: Implement JWT refresh endpoint
-                            //.service(web::resource("/refresh").post(api_keys::refresh_token))
+                            .service(
+                                web::resource("/keys/{id}").delete(api_keys::deactivate_api_key),
+                            ), // TODO: Implement JWT refresh endpoint
+                               //.service(web::resource("/refresh").post(api_keys::refresh_token))
                     )
                     // Basic tier endpoints
                     .service(

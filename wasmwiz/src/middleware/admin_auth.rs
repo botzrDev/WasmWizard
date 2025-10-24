@@ -89,20 +89,18 @@ where
                 }
                 Some(false) => {
                     // User is authenticated but not admin
-                    let response = HttpResponse::Forbidden()
-                        .json(serde_json::json!({
-                            "error": "Admin access required",
-                            "message": "This endpoint requires administrator privileges"
-                        }));
+                    let response = HttpResponse::Forbidden().json(serde_json::json!({
+                        "error": "Admin access required",
+                        "message": "This endpoint requires administrator privileges"
+                    }));
                     Ok(req.into_response(response).map_into_left_body())
                 }
                 None => {
                     // No auth context at all
-                    let response = HttpResponse::Unauthorized()
-                        .json(serde_json::json!({
-                            "error": "Authentication required",
-                            "message": "Admin endpoints require authentication"
-                        }));
+                    let response = HttpResponse::Unauthorized().json(serde_json::json!({
+                        "error": "Authentication required",
+                        "message": "Admin endpoints require authentication"
+                    }));
                     Ok(req.into_response(response).map_into_left_body())
                 }
             }

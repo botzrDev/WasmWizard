@@ -121,8 +121,16 @@ pub async fn admin_dashboard(
     // Get dashboard statistics
     let total_users = app_state.db_service.count_users().await.unwrap_or(0);
     let total_api_keys = app_state.db_service.count_api_keys().await.unwrap_or(0);
-    let total_executions_today = app_state.db_service.count_executions_today().await.unwrap_or(0);
-    let active_users_today = app_state.db_service.count_active_users_today().await.unwrap_or(0);
+    let total_executions_today = app_state
+        .db_service
+        .count_executions_today()
+        .await
+        .unwrap_or(0);
+    let active_users_today = app_state
+        .db_service
+        .count_active_users_today()
+        .await
+        .unwrap_or(0);
 
     let template = AdminDashboardTemplate {
         title: "Admin Dashboard - WasmWiz".to_string(),
@@ -134,7 +142,9 @@ pub async fn admin_dashboard(
         active_users_today,
     };
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(template.render().unwrap()))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .body(template.render().unwrap()))
 }
 
 // User Management
@@ -144,7 +154,10 @@ pub async fn admin_users(
 ) -> ActixResult<HttpResponse> {
     let _admin_role = determine_admin_role(&auth_context.user.email);
 
-    let users = app_state.db_service.get_all_users_with_stats().await
+    let users = app_state
+        .db_service
+        .get_all_users_with_stats()
+        .await
         .unwrap_or_default();
 
     let template = AdminUsersTemplate {
@@ -153,7 +166,9 @@ pub async fn admin_users(
         users,
     };
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(template.render().unwrap()))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .body(template.render().unwrap()))
 }
 
 pub async fn create_user(
@@ -162,7 +177,8 @@ pub async fn create_user(
     form: web::Json<CreateUserRequest>,
 ) -> ActixResult<HttpResponse> {
     // Create new user
-    let user_id = app_state.db_service
+    let user_id = app_state
+        .db_service
         .create_user(&form.email)
         .await
         .map_err(|e| {
@@ -170,18 +186,18 @@ pub async fn create_user(
         })?;
 
     // Get tier ID
-    let tier = app_state.db_service
+    let tier = app_state
+        .db_service
         .get_tier_by_name(&form.tier_name)
         .await
         .map_err(|e| {
             actix_web::error::ErrorInternalServerError(format!("Failed to get tier: {}", e))
         })?
-        .ok_or_else(|| {
-            actix_web::error::ErrorBadRequest("Invalid tier name")
-        })?;
+        .ok_or_else(|| actix_web::error::ErrorBadRequest("Invalid tier name"))?;
 
     // Create default API key for user
-    let _api_key = app_state.db_service
+    let _api_key = app_state
+        .db_service
         .create_api_key_for_user(user_id, tier.id)
         .await
         .map_err(|e| {
@@ -204,18 +220,18 @@ pub async fn update_user_tier(
     let user_id = path.into_inner();
 
     // Get tier ID
-    let tier = app_state.db_service
+    let tier = app_state
+        .db_service
         .get_tier_by_name(&form.tier_name)
         .await
         .map_err(|e| {
             actix_web::error::ErrorInternalServerError(format!("Failed to get tier: {}", e))
         })?
-        .ok_or_else(|| {
-            actix_web::error::ErrorBadRequest("Invalid tier name")
-        })?;
+        .ok_or_else(|| actix_web::error::ErrorBadRequest("Invalid tier name"))?;
 
     // Update user's tier (update their API keys)
-    app_state.db_service
+    app_state
+        .db_service
         .update_user_tier(user_id, tier.id)
         .await
         .map_err(|e| {
@@ -236,7 +252,10 @@ pub async fn admin_api_keys(
 ) -> ActixResult<HttpResponse> {
     let _admin_role = determine_admin_role(&auth_context.user.email);
 
-    let api_keys = app_state.db_service.get_all_api_keys_with_details().await
+    let api_keys = app_state
+        .db_service
+        .get_all_api_keys_with_details()
+        .await
         .unwrap_or_default();
 
     let template = AdminApiKeysTemplate {
@@ -245,7 +264,9 @@ pub async fn admin_api_keys(
         api_keys,
     };
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(template.render().unwrap()))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .body(template.render().unwrap()))
 }
 
 // Analytics
@@ -255,9 +276,15 @@ pub async fn admin_analytics(
 ) -> ActixResult<HttpResponse> {
     let _admin_role = determine_admin_role(&auth_context.user.email);
 
-    let usage_stats = app_state.db_service.get_usage_statistics().await
+    let usage_stats = app_state
+        .db_service
+        .get_usage_statistics()
+        .await
         .unwrap_or_default();
-    let recent_executions = app_state.db_service.get_recent_executions(50).await
+    let recent_executions = app_state
+        .db_service
+        .get_recent_executions(50)
+        .await
         .unwrap_or_default();
 
     let template = AdminAnalyticsTemplate {
@@ -267,7 +294,9 @@ pub async fn admin_analytics(
         recent_executions,
     };
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(template.render().unwrap()))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .body(template.render().unwrap()))
 }
 
 // Tier Management
@@ -277,7 +306,10 @@ pub async fn admin_tiers(
 ) -> ActixResult<HttpResponse> {
     let _admin_role = determine_admin_role(&auth_context.user.email);
 
-    let tiers = app_state.db_service.get_all_tiers().await
+    let tiers = app_state
+        .db_service
+        .get_all_tiers()
+        .await
         .unwrap_or_default();
 
     let template = AdminTiersTemplate {
@@ -286,7 +318,9 @@ pub async fn admin_tiers(
         tiers,
     };
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(template.render().unwrap()))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .body(template.render().unwrap()))
 }
 
 pub async fn create_tier(
@@ -294,7 +328,8 @@ pub async fn create_tier(
     app_state: web::Data<AppState>,
     form: web::Json<CreateTierRequest>,
 ) -> ActixResult<HttpResponse> {
-    let tier_id = app_state.db_service
+    let tier_id = app_state
+        .db_service
         .create_tier(
             &form.name,
             form.max_executions_per_minute,
