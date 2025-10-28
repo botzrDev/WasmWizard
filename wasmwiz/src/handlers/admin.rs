@@ -354,12 +354,23 @@ pub async fn system_status(
     auth_context: AuthContext,
     app_state: web::Data<AppState>,
 ) -> ActixResult<HttpResponse> {
+    // Calculate uptime in seconds
+    let uptime_secs = app_state.start_time.elapsed().as_secs();
+    let uptime_formatted = format!(
+        "{}d {}h {}m {}s",
+        uptime_secs / 86400,
+        (uptime_secs % 86400) / 3600,
+        (uptime_secs % 3600) / 60,
+        uptime_secs % 60
+    );
+
     // System health information
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "status": "healthy",
         "database": "connected",
         "redis": app_state.redis_service.is_some(),
-        "uptime": "system_uptime_placeholder",
+        "uptime": uptime_formatted,
+        "uptime_seconds": uptime_secs,
         "version": env!("CARGO_PKG_VERSION"),
         "admin": auth_context.user.email
     })))

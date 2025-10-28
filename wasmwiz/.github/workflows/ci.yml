@@ -221,7 +221,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, security-audit, code-quality, build-docker]
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    # environment: staging  # Uncomment after creating 'staging' environment in GitHub repo settings
+    environment: staging  # Configure in: GitHub repo → Settings → Environments → New environment
     
     steps:
     - name: Checkout code
@@ -251,15 +251,19 @@ jobs:
     - name: Deploy to staging environment
       run: |
         echo "Deploying to staging environment..."
-        # This would typically involve kubectl commands or cloud deployment
-        # kubectl set image deployment/wasm-wizard wasm-wizard=${{ secrets.REGISTRY_URL }}/wasm-wizard:staging-${{ github.sha }}
+        # Kubernetes deployment (uncomment and configure kubectl after cluster setup):
+        # kubectl set image deployment/wasm-wizard wasm-wizard=${{ secrets.REGISTRY_URL }}/wasm-wizard:staging-${{ github.sha }} --namespace=staging
+        # kubectl rollout status deployment/wasm-wizard --namespace=staging
+        #
+        # Or use alternative deployment method (Helm, ArgoCD, etc.)
+        echo "⚠️  Configure your deployment method in this step"
 
   production-deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [test, security-audit, code-quality, build-docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    # environment: production  # Uncomment after creating 'production' environment in GitHub repo settings
+    environment: production  # Configure in: GitHub repo → Settings → Environments → New environment
     
     steps:
     - name: Checkout code
@@ -289,8 +293,12 @@ jobs:
     - name: Deploy to production
       run: |
         echo "Deploying to production environment..."
-        # This would involve actual deployment commands
-        # kubectl set image deployment/wasm-wizard wasm-wizard=${{ secrets.REGISTRY_URL }}/wasm-wizard:${{ github.sha }}
+        # Kubernetes deployment (uncomment and configure kubectl after cluster setup):
+        # kubectl set image deployment/wasm-wizard wasm-wizard=${{ secrets.REGISTRY_URL }}/wasm-wizard:${{ github.sha }} --namespace=production
+        # kubectl rollout status deployment/wasm-wizard --namespace=production
+        #
+        # Or use alternative deployment method (Helm, ArgoCD, etc.)
+        echo "⚠️  Configure your deployment method in this step"
         
     - name: Create deployment record
       run: |

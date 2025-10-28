@@ -24,6 +24,7 @@ pub struct AppState {
     #[allow(dead_code)] // Reserved for future Redis integration
     pub redis_service: Option<RedisService>,
     pub ad_manager: Arc<AdManager>,
+    pub start_time: std::time::Instant, // Server start time for uptime calculation
 }
 
 pub fn create_app(
@@ -80,13 +81,21 @@ pub fn create_app(
     let mut ad_manager = AdManager::new();
     if config.ads_enabled {
         use crate::models::{AdPlacement, Advertisement};
-        
+
         // Configure advertisements based on environment settings
         if let Some(ref client_id) = config.adsense_client_id {
+            // Get ad slot IDs from config or use descriptive defaults
+            let header_slot = config.adsense_header_slot_id.clone()
+                .unwrap_or_else(|| "AUTO_HEADER_AD".to_string());
+            let sidebar_slot = config.adsense_sidebar_slot_id.clone()
+                .unwrap_or_else(|| "AUTO_SIDEBAR_AD".to_string());
+            let footer_slot = config.adsense_footer_slot_id.clone()
+                .unwrap_or_else(|| "AUTO_FOOTER_AD".to_string());
+
             // Header advertisement
             ad_manager.add_ad(
                 Advertisement::new("header-ad".to_string(), AdPlacement::Header)
-                    .with_adsense(client_id.clone(), "HEADER_SLOT_ID".to_string())
+                    .with_adsense(client_id.clone(), header_slot)
                     .with_format("horizontal".to_string())
                     .with_priority(10)
             );
@@ -94,7 +103,7 @@ pub fn create_app(
             // Sidebar advertisement
             ad_manager.add_ad(
                 Advertisement::new("sidebar-ad".to_string(), AdPlacement::Sidebar)
-                    .with_adsense(client_id.clone(), "SIDEBAR_SLOT_ID".to_string())
+                    .with_adsense(client_id.clone(), sidebar_slot)
                     .with_format("vertical".to_string())
                     .with_priority(10)
             );
@@ -102,12 +111,15 @@ pub fn create_app(
             // Footer advertisement
             ad_manager.add_ad(
                 Advertisement::new("footer-ad".to_string(), AdPlacement::Footer)
-                    .with_adsense(client_id.clone(), "FOOTER_SLOT_ID".to_string())
+                    .with_adsense(client_id.clone(), footer_slot)
                     .with_format("horizontal".to_string())
                     .with_priority(10)
             );
+
+            tracing::info!("Advertisement system initialized with AdSense client ID");
+        } else {
+            tracing::warn!("Ads enabled but no AdSense client ID configured");
         }
-        tracing::info!("Advertisement system initialized");
     } else {
         tracing::info!("Advertisements disabled via configuration");
     }
@@ -124,6 +136,7 @@ pub fn create_app(
             config: Arc::clone(&config),
             redis_service: redis_service.clone(),
             ad_manager: Arc::clone(&ad_manager),
+            start_time: std::time::Instant::now(),
         }))
         .app_data(rate_limit_data.clone())
         .wrap(security_middleware)
@@ -189,8 +202,8 @@ pub fn create_app(
                             .service(web::resource("/keys").get(api_keys::list_user_api_keys))
                             .service(
                                 web::resource("/keys/{id}").delete(api_keys::deactivate_api_key),
-                            ), // TODO: Implement JWT refresh endpoint
-                               //.service(web::resource("/refresh").post(api_keys::refresh_token))
+                            )
+                            // Note: JWT refresh not needed - system uses hash-based API keys
                     )
                     // Basic tier endpoints
                     .service(

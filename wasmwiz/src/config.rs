@@ -94,6 +94,15 @@ pub struct Config {
     /// Google AdSense client ID for monetization (e.g., "ca-pub-XXXXXXXXXX")
     pub adsense_client_id: Option<String>,
 
+    /// Google AdSense header ad slot ID
+    pub adsense_header_slot_id: Option<String>,
+
+    /// Google AdSense sidebar ad slot ID
+    pub adsense_sidebar_slot_id: Option<String>,
+
+    /// Google AdSense footer ad slot ID
+    pub adsense_footer_slot_id: Option<String>,
+
     /// Enable advertisement display
     pub ads_enabled: bool,
 }
@@ -198,6 +207,9 @@ impl Config {
                 .map(|v| v.parse().unwrap_or(false))
                 .unwrap_or(false),
             adsense_client_id: env::var("ADSENSE_CLIENT_ID").ok(),
+            adsense_header_slot_id: env::var("ADSENSE_HEADER_SLOT_ID").ok(),
+            adsense_sidebar_slot_id: env::var("ADSENSE_SIDEBAR_SLOT_ID").ok(),
+            adsense_footer_slot_id: env::var("ADSENSE_FOOTER_SLOT_ID").ok(),
             ads_enabled: env::var("ADS_ENABLED")
                 .map(|v| v.parse().unwrap_or(true))
                 .unwrap_or(true), // Enable ads by default for free tier
@@ -312,6 +324,9 @@ impl Default for Config {
             csp_report_uri: None,
             csp_enable_nonce: false,
             adsense_client_id: None,
+            adsense_header_slot_id: None,
+            adsense_sidebar_slot_id: None,
+            adsense_footer_slot_id: None,
             ads_enabled: true,
         }
     }
